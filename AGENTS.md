@@ -9,7 +9,8 @@
 ## Current State
 
 - This is a single Next.js 16 App Router project using strict TypeScript, Tailwind CSS, pnpm, Drizzle, and SQLite.
-- M1 includes sponsor readiness checks and wallet connection only. Do not imply goal parsing, protection, or execution exists.
+- M1 backend includes sponsor readiness checks and SQLite persistence. The P0 frontend is contract-wired through protected-goal recovery, but its post-M1 API routes remain backend dependencies.
+- Test fixtures may simulate financial records only inside unit/component/Playwright tests; production components must stop safely when an API is absent.
 - The server uses Node.js 22 because the SQLite adapter imports `node:sqlite`.
 
 ## Setup
@@ -30,6 +31,8 @@
 ## Style
 
 - Keep route handlers thin; domain and integration logic belongs under `src/lib`.
+- Keep frontend requests in the typed API client and parse every response with shared Zod contracts.
+- Browser storage may hold a draft, active goal ID, and retry metadata only; server records remain authoritative.
 - Validate external and persistence boundaries with the shared Zod contracts.
 - Use decimal strings and base-unit strings across boundaries; never use floating point for financial values.
 - Keep database column names inside the schema and `db-mappers.ts`.

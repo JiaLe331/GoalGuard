@@ -1,30 +1,34 @@
 # GoalGuard
 
-GoalGuard is a goal-first crypto downside-protection product for MUBA Hacks 2026. Users describe what money is for and when they need it; later milestones will turn that intent into a live Thetanuts protection candidate, independently review it through Gonka, and require explicit wallet approval.
+GoalGuard is a goal-first crypto downside-protection product for MUBA Hacks 2026. Users describe what money is for and when they need it; the guided frontend turns backend-validated intent into a live Thetanuts protection candidate, independent Gonka review, and an explicitly approved wallet flow.
 
-This repository currently implements the **M1 foundation**. It does not parse goals, recommend trades, prepare transactions, sign messages, or execute options.
+This repository implements the **M1 backend foundation and the contract-wired P0 frontend**. The goal, candidate, council, preview, execution, submission, and recovery screens are implemented without production mock data. The corresponding post-M1 API routes are still backend integration dependencies, so the deployed workflow stops safely until those routes are available.
 
 The normative product and data-contract specification is [goalguard_prd.md](./goalguard_prd.md).
 
 ## What works
 
 - Next.js 16 App Router application with a responsive GoalGuard shell.
-- Local-only goal draft composition with an explicit no-recommendation notice.
+- Natural-language goal submission with one-question clarification and durable-goal navigation.
+- Refresh-resumable `/goals/{goalId}` workspace guarded by the active browser goal.
+- Editable goal confirmation, live candidate progress, protection-plan, scenario, and council-review screens.
+- Preview-only and feature-gated wallet execution states, exact approval sequencing, submission recovery, polling, and confirmed protected-goal UI.
 - Injected EIP-1193 wallet connection and Base network validation.
 - Real, opt-in Gonka connectivity check with request-header capture.
 - Real, read-only Thetanuts ETH put and market-data check.
 - Strict Zod contracts for every canonical PRD entity and API payload.
 - Six-table SQLite schema, generated Drizzle migration, and repository adapter.
 - Isolated integration readiness API at `GET /api/integrations/status`.
-- Unit, component, repository, and Playwright smoke tests.
+- Unit, component, repository, and deterministic Playwright workflow tests.
 
 ## Architecture
 
 ```text
 Browser
   ├─ GoalGuard app shell
-  ├─ local draft cache (not financial state)
-  └─ injected EIP-1193 wallet (no signing in M1)
+  ├─ local draft, active goal ID, and retry metadata (not financial truth)
+  ├─ contract-validated guided goal workspace
+  └─ injected EIP-1193 wallet (signing only when server capability allows)
           │
           v
 Next.js Node runtime
@@ -54,7 +58,7 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-The app runs without sponsor credentials and reports those services as **Needs setup**. The database defaults to `data/goalguard.db`; local database files are ignored by Git.
+The app runs without sponsor credentials and reports those services as **Needs setup**. The landing page remains usable; workflow mutations show safe API errors until the post-M1 routes are implemented. The database defaults to `data/goalguard.db`; local database files are ignored by Git.
 
 ## Environment
 
@@ -115,13 +119,13 @@ The checked-in migration under `drizzle/` creates:
 
 After changing `src/lib/db/schema.ts`, run `pnpm db:generate`, inspect the generated SQL, and commit the schema and migration together. SQLite is intended for one persistent Node process. Move the repository adapter to PostgreSQL before deploying multiple instances or ephemeral serverless workers.
 
-## M1 safety boundaries
+## Current safety boundaries
 
-- No goal interpretation or financial recommendation.
-- No mocked prices, candidates, council decisions, or transactions.
+- No production mocked prices, candidates, council decisions, or transactions; deterministic fixtures exist only under tests.
+- No frontend calculation of candidate ranking, consensus, eligibility, or confirmation truth.
 - No transaction preparation, approval, signing, or broadcast.
 - No server-side private key support.
 - Base mainnet is the only wallet network.
 - Live execution stays disabled by default.
 
-The next milestone is the PRD’s goal engine: natural-language input to a validated canonical `Goal`, with the Gonka Request ID stored as a related inference.
+The next backend milestone is to implement the canonical goal parsing/editing, candidate, council, trade preview/execution, submission, and hydration routes already consumed by the frontend. See `docs/frontend-checkpoints.md` for phase gates and remaining dependencies.
