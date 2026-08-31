@@ -62,7 +62,7 @@ export function IntegrationStatus() {
     <section aria-labelledby="readiness-heading">
       <div className="mb-5 flex items-center justify-between gap-4">
         <div>
-          <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#91a398]">M1 readiness</p>
+          <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#91a398]">Service readiness</p>
           <h2 id="readiness-heading" className="text-xl font-semibold text-white">Live foundations</h2>
         </div>
         <Button variant="ghost" className="min-h-9 px-3" onClick={() => void refresh()} disabled={loading}>

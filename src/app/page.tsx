@@ -32,12 +32,12 @@ export default function Home() {
 
         <section id="top" className="grid items-center gap-12 pb-14 pt-12 lg:grid-cols-[1.08fr_0.92fr] lg:pb-24 lg:pt-20">
           <div className="max-w-3xl">
-            <StatusBadge label="M1 foundation · No live execution" tone="warning" />
+            <StatusBadge label="P0 workflow · Live execution gated" tone="warning" />
             <h1 className="mt-7 text-balance text-5xl font-semibold leading-[0.98] tracking-[-0.055em] text-white sm:text-6xl lg:text-[5rem]">
               Protect the purpose <span className="text-[#cbff6b]">behind your money.</span>
             </h1>
             <p className="mt-7 max-w-2xl text-pretty text-lg leading-8 text-[#a8b7ad] sm:text-xl">
-              Tell GoalGuard what matters and when you need it. Every future protection plan starts with live market facts, independent review, and your final say.
+              Tell GoalGuard what matters and when you need it. Every protection plan starts with live market facts, independent review, and your final say.
             </p>
 
             <div className="mt-10 grid gap-4 sm:grid-cols-3">
@@ -78,7 +78,7 @@ export default function Home() {
                 </div>
               ))}
             </div>
-            <p className="mt-7 text-xs leading-5 text-[#75847b]">This scaffold deliberately stops before goal parsing, candidate selection, council decisions, or transaction preparation.</p>
+            <p className="mt-7 text-xs leading-5 text-[#75847b]">The workflow uses only validated backend records. If a required GoalGuard, Gonka, or Thetanuts service is unavailable, the UI stops safely and preserves your goal.</p>
           </Card>
         </section>
 
