@@ -128,4 +128,4 @@ After changing `src/lib/db/schema.ts`, run `pnpm db:generate`, inspect the gener
 - Base mainnet is the only wallet network.
 - Live execution stays disabled by default.
 
-The next backend milestone is to implement the canonical goal parsing/editing, candidate, council, trade preview/execution, submission, and hydration routes already consumed by the frontend. See `docs/frontend-checkpoints.md` for phase gates and remaining dependencies.
+The next backend milestone is to implement the canonical goal parsing/editing, candidate, council, trade preview/execution, submission, and hydration routes already consumed by the frontend. See [development progress](./docs/development-progress.md) for the PRD's three-developer ownership and [frontend checkpoints](./docs/frontend-checkpoints.md) for FE0-FE7 gates and evidence.
