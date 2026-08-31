@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { WalletControl } from "./wallet-control";
+import { WalletProvider } from "./wallet-provider";
 
 afterEach(() => {
   delete window.ethereum;
@@ -20,10 +21,14 @@ function walletProvider(initialChain = "0x2105") {
   return { request, on: vi.fn(), removeListener: vi.fn() };
 }
 
+function renderWallet() {
+  return render(<WalletProvider><WalletControl /></WalletProvider>);
+}
+
 describe("WalletControl", () => {
   it("explains when an injected wallet is unavailable", async () => {
     const user = userEvent.setup();
-    render(<WalletControl />);
+    renderWallet();
     await user.click(screen.getByRole("button", { name: /connect wallet/i }));
     expect(screen.getByRole("status")).toHaveTextContent("Install an EIP-1193 wallet");
   });
@@ -32,7 +37,7 @@ describe("WalletControl", () => {
     const provider = walletProvider();
     window.ethereum = provider;
     const user = userEvent.setup();
-    render(<WalletControl />);
+    renderWallet();
     expect(provider.request).not.toHaveBeenCalled();
     await user.click(screen.getByRole("button", { name: /connect wallet/i }));
     await waitFor(() => expect(screen.getByLabelText(/wallet connected/i)).toHaveTextContent("0x1111…1111"));
@@ -43,7 +48,7 @@ describe("WalletControl", () => {
     const provider = walletProvider("0x1");
     window.ethereum = provider;
     const user = userEvent.setup();
-    render(<WalletControl />);
+    renderWallet();
     await user.click(screen.getByRole("button", { name: /connect wallet/i }));
     const switchButton = await screen.findByRole("button", { name: /switch to base/i });
     await user.click(switchButton);

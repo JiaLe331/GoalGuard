@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
+import { AppProviders } from "@/components/app/app-providers";
+import { getFrontendCapabilities } from "@/lib/config/env";
+
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -9,9 +12,10 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
+  const capabilities = getFrontendCapabilities();
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body><AppProviders capabilities={capabilities}>{children}</AppProviders></body>
     </html>
   );
 }
