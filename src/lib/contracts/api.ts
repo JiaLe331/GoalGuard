@@ -65,6 +65,28 @@ export const ParseGoalResponseSchema = z.object({
   meta: ApiMetaSchema,
 }).strict();
 
+export const UpdateGoalRequestSchema = z.object({
+  goalType: GoalTypeSchema,
+  customGoalLabel: z.string().trim().min(1).max(80).nullable(),
+  underlyingAsset: SupportedAssetSchema,
+  protectedValueUsd: DecimalStringSchema,
+  deadline: ISODateSchema,
+  maxLossBps: z.number().int().min(0).max(9999),
+  maxPremiumUsd: DecimalStringSchema.nullable(),
+}).strict().superRefine((goal, context) => {
+  if (goal.goalType === "custom" && goal.customGoalLabel === null) {
+    context.addIssue({ code: "custom", path: ["customGoalLabel"], message: "A custom goal requires a label." });
+  }
+  if (goal.goalType !== "custom" && goal.customGoalLabel !== null) {
+    context.addIssue({ code: "custom", path: ["customGoalLabel"], message: "Only custom goals may have a custom label." });
+  }
+});
+
+export const UpdateGoalResponseSchema = z.object({
+  data: z.object({ goal: GoalSchema }).strict(),
+  meta: ApiMetaSchema,
+}).strict();
+
 export const GenerateCandidatesRequestSchema = z.object({
   goalId: UUIDSchema,
   refresh: z.boolean().optional(),
@@ -209,6 +231,8 @@ export type GoalDraft = z.infer<typeof GoalDraftSchema>;
 export type InferenceSummary = z.infer<typeof InferenceSummarySchema>;
 export type ParseGoalRequest = z.infer<typeof ParseGoalRequestSchema>;
 export type ParseGoalResponse = z.infer<typeof ParseGoalResponseSchema>;
+export type UpdateGoalRequest = z.infer<typeof UpdateGoalRequestSchema>;
+export type UpdateGoalResponse = z.infer<typeof UpdateGoalResponseSchema>;
 export type GenerateCandidatesRequest = z.infer<typeof GenerateCandidatesRequestSchema>;
 export type CandidateRejection = z.infer<typeof CandidateRejectionSchema>;
 export type GenerateCandidatesResponse = z.infer<typeof GenerateCandidatesResponseSchema>;

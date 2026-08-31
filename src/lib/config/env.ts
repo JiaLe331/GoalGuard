@@ -34,3 +34,12 @@ export function getThetanutsConfiguration(environment: NodeJS.ProcessEnv = proce
   const env = readServerEnvironment(environment);
   return env.THETANUTS_RPC_URL ? { rpcUrl: env.THETANUTS_RPC_URL, chainId: 8453 as const } : null;
 }
+
+export function getFrontendCapabilities(environment: NodeJS.ProcessEnv = process.env) {
+  const env = readServerEnvironment(environment);
+  return {
+    liveExecutionEnabled: env.ENABLE_LIVE_THETANUTS_EXECUTION === "true",
+    chainId: 8453 as const,
+    maxLiveTradePremiumUsd: env.MAX_LIVE_TRADE_PREMIUM_USD,
+  };
+}

@@ -8,6 +8,7 @@ import {
   GoalSchema,
   IntegrationStatusResponseSchema,
   SignedDecimalStringSchema,
+  UpdateGoalRequestSchema,
 } from "@/lib/contracts";
 
 const now = "2026-08-31T12:00:00.000Z";
@@ -94,6 +95,12 @@ describe("canonical entity contracts", () => {
 });
 
 describe("API envelopes", () => {
+  it("keeps draft goal edits strict and canonical", () => {
+    const request = { goalType: "rent", customGoalLabel: null, underlyingAsset: "ETH", protectedValueUsd: "1200", deadline: "2026-09-30", maxLossBps: 500, maxPremiumUsd: "3" };
+    expect(UpdateGoalRequestSchema.parse(request)).toEqual(request);
+    expect(UpdateGoalRequestSchema.safeParse({ ...request, databaseGoalId: ids.goal }).success).toBe(false);
+  });
+
   it("rejects extra fields from public status responses", () => {
     const response = {
       data: {
