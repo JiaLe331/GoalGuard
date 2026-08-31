@@ -1,0 +1,116 @@
+import { describe, expect, it } from "vitest";
+
+import {
+  ApiErrorResponseSchema,
+  BaseUnitStringSchema,
+  CouncilDecisionSchema,
+  DecimalStringSchema,
+  GoalSchema,
+  IntegrationStatusResponseSchema,
+  SignedDecimalStringSchema,
+} from "@/lib/contracts";
+
+const now = "2026-08-31T12:00:00.000Z";
+const ids = {
+  goal: "4b3e798c-e0e8-4ab5-9e37-d4526424eb8f",
+  candidate: "47de2685-f45d-41b0-b843-a7fc12bb4b3b",
+  decision: "2b382784-3fe3-4eb7-8e76-dba5ab229df7",
+};
+
+describe("canonical scalar contracts", () => {
+  it.each(["0", "12", "12.50"])("accepts normalized decimal %s", (value) => {
+    expect(DecimalStringSchema.parse(value)).toBe(value);
+  });
+
+  it.each(["-1", "01", "+1", "1e3", "NaN", "1,000"])("rejects unsafe decimal %s", (value) => {
+    expect(DecimalStringSchema.safeParse(value).success).toBe(false);
+  });
+
+  it("allows a leading minus only for signed decimals", () => {
+    expect(SignedDecimalStringSchema.parse("-10.5")).toBe("-10.5");
+    expect(BaseUnitStringSchema.safeParse("1.5").success).toBe(false);
+  });
+});
+
+describe("canonical entity contracts", () => {
+  it("rejects unknown goal fields and inconsistent custom labels", () => {
+    const baseGoal = {
+      schemaVersion: 1,
+      id: ids.goal,
+      goalType: "rent",
+      customGoalLabel: null,
+      underlyingAsset: "ETH",
+      protectedValueUsd: "1200",
+      deadline: "2026-09-30",
+      maxLossBps: 500,
+      maxPremiumUsd: null,
+      originalUserMessage: "Protect my rent fund.",
+      status: "draft",
+      createdAt: now,
+      updatedAt: now,
+      parseInferenceId: null,
+      selectedCandidateId: null,
+      councilDecisionId: null,
+      tradeId: null,
+    };
+    expect(GoalSchema.safeParse({ ...baseGoal, unexpected: true }).success).toBe(false);
+    expect(GoalSchema.safeParse({ ...baseGoal, customGoalLabel: "Not allowed" }).success).toBe(false);
+  });
+
+  it("requires exactly one review for each council role", () => {
+    const review = (role: "strategist" | "risk_auditor" | "consumer_advocate", index: number) => ({
+      schemaVersion: 1,
+      id: `00000000-0000-4000-8000-00000000000${index}`,
+      decisionId: ids.decision,
+      inferenceId: `10000000-0000-4000-8000-00000000000${index}`,
+      role,
+      model: "model-a",
+      requestId: `gonka-${index}`,
+      verdict: "approve",
+      confidenceBps: 8000,
+      summary: "The supplied deterministic evidence supports the goal.",
+      concerns: [],
+      requiredDisclosures: [],
+      createdAt: now,
+    });
+    const valid = {
+      schemaVersion: 1,
+      id: ids.decision,
+      goalId: ids.goal,
+      candidateId: ids.candidate,
+      attempt: 1,
+      status: "approved",
+      rulesetVersion: "1",
+      approvedReviewCount: 3,
+      rejectedReviewCount: 0,
+      uncertainReviewCount: 0,
+      blockedReasons: [],
+      reviews: [review("strategist", 1), review("risk_auditor", 2), review("consumer_advocate", 3)],
+      createdAt: now,
+    };
+    expect(CouncilDecisionSchema.parse(valid).status).toBe("approved");
+    expect(CouncilDecisionSchema.safeParse({ ...valid, reviews: [review("strategist", 1), review("strategist", 2), review("consumer_advocate", 3)] }).success).toBe(false);
+  });
+});
+
+describe("API envelopes", () => {
+  it("rejects extra fields from public status responses", () => {
+    const response = {
+      data: {
+        database: { status: "ready" },
+        gonka: { status: "unconfigured", model: null, requestId: null },
+        thetanuts: { status: "unconfigured", chainId: 8453, activeEthPutCount: null, marketAsOf: null },
+      },
+      meta: { requestId: ids.goal, timestamp: now },
+    };
+    expect(IntegrationStatusResponseSchema.parse(response)).toEqual(response);
+    expect(IntegrationStatusResponseSchema.safeParse({ ...response, rawPayload: {} }).success).toBe(false);
+  });
+
+  it("keeps non-field API errors explicit", () => {
+    expect(ApiErrorResponseSchema.parse({
+      error: { code: "INTERNAL_ERROR", message: "Unexpected error", retryable: false, fieldErrors: {}, details: null },
+      meta: { requestId: ids.goal, timestamp: now },
+    }).error.fieldErrors).toEqual({});
+  });
+});
