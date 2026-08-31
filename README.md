@@ -98,7 +98,7 @@ pnpm smoke:gonka         # live, opt-in Gonka check; fails if unconfigured/degra
 pnpm smoke:thetanuts     # live, opt-in Thetanuts check; fails if unconfigured
 ```
 
-The live smoke scripts load `.env.local` or `.env`. They are intentionally excluded from CI because they require credentials and external services.
+The live smoke scripts load `.env.local` or `.env`. They are intentionally excluded from the default validation sequence because they require credentials and external services. Automated CI is currently not configured, so run the validation commands locally before committing.
 
 ## Integration status API
 

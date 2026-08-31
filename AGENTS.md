@@ -48,7 +48,7 @@
 ## Maintenance
 
 - Update this file when setup, validation, build, database, or contribution workflows change.
-- Keep instructions tied to commands present in `package.json` and CI.
+- Keep instructions tied to commands present in `package.json`. Automated CI is currently not configured, so validation must be run locally before committing.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
