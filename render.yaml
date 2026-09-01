@@ -1,0 +1,19 @@
+services:
+  - type: worker
+    name: goalguard-trade-monitor
+    runtime: node
+    plan: starter
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
+    startCommand: pnpm worker
+    autoDeploy: false
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: DATABASE_URL
+        sync: false
+      - key: THETANUTS_RPC_URL
+        sync: false
+      - key: THETANUTS_REFERRER_ADDRESS
+        sync: false
+      - key: TRADE_WORKER_NAME
+        value: trade-monitor
