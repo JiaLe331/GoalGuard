@@ -1,53 +1,44 @@
 # GoalGuard
 
-GoalGuard is a goal-first crypto downside-protection product for MUBA Hacks 2026. Users describe what money is for and when they need it; the guided frontend turns backend-validated intent into a live Thetanuts protection candidate, independent Gonka review, and an explicitly approved wallet flow.
-
-This repository implements the **M1 backend foundation and the contract-wired P0 frontend**. The goal, candidate, council, preview, execution, submission, and recovery screens are implemented without production mock data. The corresponding post-M1 API routes are still backend integration dependencies, so the deployed workflow stops safely until those routes are available.
+GoalGuard is a goal-first ETH downside-protection product for MUBA Hacks 2026. A non-professional ETH holder describes a near-term expense, receives a deterministic live Thetanuts OptionBook candidate, sees three independent Gonka council checks, and retains final wallet approval.
 
 The normative product and data-contract specification is [goalguard_prd.md](./goalguard_prd.md).
 
-## What works
+## Implemented P0
 
-- Next.js 16 App Router application with a responsive GoalGuard shell.
-- Natural-language goal submission with one-question clarification and durable-goal navigation.
-- Refresh-resumable `/goals/{goalId}` workspace guarded by the active browser goal.
-- Editable goal confirmation, live candidate progress, protection-plan, scenario, and council-review screens.
-- Preview-only and feature-gated wallet execution states, exact approval sequencing, submission recovery, polling, and confirmed protected-goal UI.
-- Injected EIP-1193 wallet connection and Base network validation.
-- Real, opt-in Gonka connectivity check with request-header capture.
-- Real, read-only Thetanuts ETH put and market-data check.
-- Strict Zod contracts for every canonical PRD entity and API payload.
-- Six-table SQLite schema, generated Drizzle migration, and repository adapter.
-- Isolated integration readiness API at `GET /api/integrations/status`.
-- Unit, component, repository, and deterministic Playwright workflow tests.
+- Next.js 16 App Router UI and same-origin API routes for goal parsing/editing, candidate generation, council review, trade preview/preparation/submission, and canonical hydration.
+- Strict shared Zod contracts; public candidates omit server-only `protocolRaw` data.
+- Deterministic vanilla ETH-put filtering, payoff scenarios, deadline/cost/coverage/liquidity checks, ranking, and explicit no-suitable-candidate refusal.
+- Strategist, Risk Auditor, and Consumer Advocate Gonka calls run independently and require at least two configured models. Any reject, uncertainty, malformed response, or failed call blocks execution.
+- Exact Thetanuts SDK approval/fill encoding, wallet exposure/readiness checks, quote fingerprints, premium cap, referral disclosure, and live-execution feature flag.
+- Supabase PostgreSQL through Drizzle and `postgres.js`, with anonymous HttpOnly session ownership and PGlite repository tests.
+- Render trade monitor with heartbeat, transaction/receipt/position verification, idempotent state transitions, and graceful shutdown.
+- Vercel and Render deployment descriptors, Vitest coverage, and a contract-wired Playwright workflow.
 
 ## Architecture
 
 ```text
-Browser
-  ├─ GoalGuard app shell
-  ├─ local draft, active goal ID, and retry metadata (not financial truth)
-  ├─ contract-validated guided goal workspace
-  └─ injected EIP-1193 wallet (signing only when server capability allows)
-          │
+Browser wallet + Next.js UI
+          │ same-origin session cookie
           v
-Next.js Node runtime
-  ├─ /api/integrations/status
-  ├─ Gonka OpenAI-compatible adapter
-  ├─ Thetanuts read-only SDK adapter ──> Base mainnet
-  └─ GoalGuardRepository ─────────────> SQLite
+Vercel Next.js API
+  ├─ Gonka Router (goal parse + 3 independent reviews)
+  ├─ Thetanuts SDK / Base RPC (market, balances, unsigned calldata)
+  └─ Supabase PostgreSQL (authoritative records)
+          ^
+          │ heartbeat + submitted trades
+Render trade monitor ──> Base receipt + Thetanuts position verification
 ```
 
-Canonical JSON and TypeScript fields are camel-cased. Database columns are snake-cased and remain inside `src/lib/contracts/db-mappers.ts` and the Drizzle schema.
+Browser storage holds only a draft, active goal ID, and retry metadata. Supabase records remain the source of truth. The server never receives a private key.
 
-## Requirements
+## Requirements and setup
 
-- Node.js 22 or newer.
-- pnpm 11.19 or newer.
-- An EIP-1193 browser wallet for the optional wallet check.
-- Gonka and Base RPC credentials only when running live smoke checks.
-
-## Setup
+- Node.js 22+
+- pnpm 11.19+
+- Supabase PostgreSQL pooled and direct connection URLs
+- Gonka credentials and three role model IDs for the AI workflow
+- A Base mainnet RPC for live Thetanuts reads
 
 ```powershell
 pnpm install
@@ -56,76 +47,53 @@ pnpm db:migrate
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
-
-The app runs without sponsor credentials and reports those services as **Needs setup**. The landing page remains usable; workflow mutations show safe API errors until the post-M1 routes are implemented. The database defaults to `data/goalguard.db`; local database files are ignored by Git.
+Open [http://localhost:3000](http://localhost:3000). Missing integrations are reported safely; live signing remains disabled by default.
 
 ## Environment
 
-| Variable | Scope | Purpose |
-|---|---|---|
-| `GONKA_API_KEY` | Server | Gonka broker/router credential. |
-| `GONKA_BASE_URL` | Server | OpenAI-compatible Gonka endpoint. |
-| `GONKA_STRATEGIST_MODEL` | Server | Model used by the M1 smoke check and future strategist. |
-| `GONKA_RISK_AUDITOR_MODEL` | Server | Reserved for the future risk-auditor role. |
-| `GONKA_CONSUMER_ADVOCATE_MODEL` | Server | Reserved for the future consumer-advocate role. |
-| `GONKA_REQUEST_ID_HEADER` | Server | Gonka response header containing its request ID; defaults to `x-request-id`. |
-| `THETANUTS_RPC_URL` | Server | Reliable Base mainnet RPC endpoint. |
-| `NEXT_PUBLIC_BASE_CHAIN_ID` | Public | Must remain `8453` for P0. |
-| `DATABASE_URL` | Server | SQLite file URL, default `file:./data/goalguard.db`. |
-| `ENABLE_LIVE_THETANUTS_EXECUTION` | Server | Must remain `false` until organizer approval. |
-| `MAX_LIVE_TRADE_PREMIUM_USD` | Server | Future live-execution cap; defaults to `3`. |
+| Variable | Purpose |
+|---|---|
+| `GONKA_API_KEY`, `GONKA_BASE_URL` | Server-only Gonka Router configuration. |
+| `GONKA_STRATEGIST_MODEL`, `GONKA_RISK_AUDITOR_MODEL`, `GONKA_CONSUMER_ADVOCATE_MODEL` | Role models; at least two IDs must be distinct. |
+| `GONKA_REQUEST_ID_HEADER` | Gonka audit request-ID header. |
+| `THETANUTS_RPC_URL` | Base mainnet RPC. |
+| `THETANUTS_REFERRER_ADDRESS` | Disclosed referrer passed to fills; required for live execution. |
+| `ENABLE_LIVE_THETANUTS_EXECUTION` | Keep `false` until organizer approval. |
+| `MAX_LIVE_TRADE_PREMIUM_USD` | Hard live premium cap; default `3`. |
+| `MAX_DEADLINE_GAP_HOURS` | Maximum goal deadline-to-expiry gap; default `168`. |
+| `NEXT_PUBLIC_APP_URL` | Exact allowed origin and deployed app URL. |
+| `DATABASE_URL` | Supabase transaction-pooler URL for Vercel and Render. |
+| `DATABASE_DIRECT_URL` | Direct/session URL used only by migration tooling. |
+| `TRADE_WORKER_NAME`, `TRADE_WORKER_POLL_MS`, `TRADE_WORKER_HEARTBEAT_MS` | Render monitor configuration. |
 
-Never put a Gonka key or private signing key in a `NEXT_PUBLIC_*` variable. GoalGuard does not accept private keys.
+Never put credentials or signing keys in `NEXT_PUBLIC_*` variables.
 
 ## Commands
 
 ```powershell
-pnpm dev                 # local development
-pnpm lint                # ESLint
-pnpm typecheck           # strict TypeScript
-pnpm test                # Vitest unit/component/repository tests
-pnpm test:e2e            # Playwright browser smoke test
-pnpm test:e2e:install    # install the local Chromium test browser
-pnpm build               # production build
-pnpm check               # lint + typecheck + unit tests + build
-
-pnpm db:generate         # generate a migration after schema edits
-pnpm db:migrate          # apply committed migrations
-pnpm db:studio           # inspect local data
-
-pnpm smoke:gonka         # live, opt-in Gonka check; fails if unconfigured/degraded
-pnpm smoke:thetanuts     # live, opt-in Thetanuts check; fails if unconfigured
+pnpm dev
+pnpm build
+pnpm start
+pnpm worker
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm test:e2e
+pnpm check
+pnpm db:generate
+pnpm db:migrate
+pnpm db:studio
+pnpm smoke:gonka
+pnpm smoke:thetanuts
 ```
 
-The live smoke scripts load `.env.local` or `.env`. They are intentionally excluded from the default validation sequence because they require credentials and external services. Automated CI is currently not configured, so run the validation commands locally before committing.
+Generate and inspect schema migrations together. Apply migrations once with `DATABASE_DIRECT_URL`; neither Vercel routes nor the Render worker migrate at startup.
 
-## Integration status API
+Follow [docs/supabase-deployment.md](./docs/supabase-deployment.md) to keep the Data API/browser roles closed and configure pooled versus migration connections.
 
-`GET /api/integrations/status` returns independent database, Gonka, and Thetanuts readiness states. A sponsor outage does not hide the other results, and the response never contains API keys, prompts, completions, prices, or raw protocol orders.
+## Safety boundaries
 
-Gonka is `degraded` when inference succeeds but the configured request-ID header is absent. Thetanuts is checked through the official SDK with `asset: "ETH"`, `type: "put"`, and an unexpired-order filter.
-
-## Database workflow
-
-The checked-in migration under `drizzle/` creates:
-
-- `goals`
-- `protection_candidates`
-- `gonka_inferences`
-- `council_decisions`
-- `council_reviews`
-- `trades`
-
-After changing `src/lib/db/schema.ts`, run `pnpm db:generate`, inspect the generated SQL, and commit the schema and migration together. SQLite is intended for one persistent Node process. Move the repository adapter to PostgreSQL before deploying multiple instances or ephemeral serverless workers.
-
-## Current safety boundaries
-
-- No production mocked prices, candidates, council decisions, or transactions; deterministic fixtures exist only under tests.
-- No frontend calculation of candidate ranking, consensus, eligibility, or confirmation truth.
-- No transaction preparation, approval, signing, or broadcast.
-- No server-side private key support.
-- Base mainnet is the only wallet network.
-- Live execution stays disabled by default.
-
-The next backend milestone is to implement the canonical goal parsing/editing, candidate, council, trade preview/execution, submission, and hydration routes already consumed by the frontend. See [development progress](./docs/development-progress.md) for the PRD's three-developer ownership and [frontend checkpoints](./docs/frontend-checkpoints.md) for FE0-FE7 gates and evidence.
+- Base mainnet, ETH, long vanilla puts, and OptionBook only.
+- No fabricated prices, fallback models, autonomous execution, custom smart contract, faucet, RAG, price-prediction ML, or alternative-asset recommendation.
+- Public APIs return allowlisted fields only. Raw Gonka and protocol payloads stay server-side.
+- A client transaction hash never confirms protection. The worker verifies chain, sender, target, calldata, receipt success, and indexed buyer position before activating a protection position.

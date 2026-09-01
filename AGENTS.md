@@ -8,16 +8,16 @@
 
 ## Current State
 
-- This is a single Next.js 16 App Router project using strict TypeScript, Tailwind CSS, pnpm, Drizzle, and SQLite.
-- M1 backend includes sponsor readiness checks and SQLite persistence. The P0 frontend is contract-wired through protected-goal recovery, but its post-M1 API routes remain backend dependencies.
+- This is a Next.js 16 App Router project using strict TypeScript, Tailwind CSS, pnpm, Drizzle, and Supabase PostgreSQL.
+- The P0 API routes, deterministic Thetanuts strategy engine, Gonka council, anonymous session ownership, and Render trade-monitor worker are implemented.
 - Test fixtures may simulate financial records only inside unit/component/Playwright tests; production components must stop safely when an API is absent.
-- The server uses Node.js 22 because the SQLite adapter imports `node:sqlite`.
+- Vercel hosts the same-origin UI/API; Render hosts only the background trade monitor. Node.js 22 is the supported runtime.
 
 ## Setup
 
 - Use `pnpm`; keep `pnpm-lock.yaml` synchronized with `package.json`.
 - Run `pnpm install`, copy `.env.example` to `.env.local`, then run `pnpm db:migrate`.
-- Never commit `.env*`, local databases, API keys, private keys, or wallet secrets.
+- Never commit `.env*`, database credentials, API keys, private keys, or wallet secrets.
 
 ## Validation
 
@@ -43,6 +43,7 @@
 - Preserve explicit user approval and `ENABLE_LIVE_THETANUTS_EXECUTION=false` unless organizer permission is documented.
 - Do not invent sponsor methods, model IDs, protocol addresses, prices, or transaction state.
 - Generate migrations with `pnpm db:generate`; inspect and commit schema and migration changes together.
+- Use `DATABASE_URL` for pooled runtime access and `DATABASE_DIRECT_URL` for migrations; never run migrations at application or worker startup.
 - Preserve audit IDs, request IDs, transaction hashes, and completed reviews once written.
 
 ## Maintenance

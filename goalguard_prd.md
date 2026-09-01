@@ -896,6 +896,20 @@ The exact request/response schemas and status behavior are normative in Section 
 
 This section is normative. Frontend state, backend services, persistence, tests, and API payloads must derive from these contracts. If an abbreviated interface elsewhere in this PRD differs from this section, this section wins.
 
+### 17.0 P0 implementation decisions (2026-09-01)
+
+These decisions are normative and override older abbreviated examples in this PRD:
+
+- `ProtectionCandidate` remains the internal/persistence entity. Public candidate responses use `PublicProtectionCandidate = Omit<ProtectionCandidate, "protocolRaw">`; unknown fields remain rejected.
+- `TradePreview` additionally returns `walletReadiness` for gas, settlement token, and underlying ETH exposure, plus a `referralDisclosure`. Each readiness item contains a symbol, balance and requirement as base-unit strings, and `sufficient`.
+- Canonical errors additionally include `INSUFFICIENT_EXPOSURE` and `TRADE_MONITOR_UNAVAILABLE`.
+- PostgreSQL persistence adds internal `goals.owner_session_hash`; expected execution target/calldata hash/value and verification deadline on `trades`; receipt verification fields on `trades`; council `input_hash`; and a `worker_heartbeats` table. These fields are server-only and do not change the public entity schema version.
+- P0 ownership is an anonymous random 256-bit HttpOnly, Secure-in-production, SameSite=Lax session cookie. Only its SHA-256 hash is stored. User-facing ownership mismatches return `404`.
+- Mutations require an exact `Origin` match with `NEXT_PUBLIC_APP_URL`. Trade execution and submission also require an `Idempotency-Key`.
+- Supabase PostgreSQL is authoritative. Vercel uses the transaction pooler with prepared statements disabled; migrations use `DATABASE_DIRECT_URL`; PGlite is the credential-free repository-test adapter.
+- Vercel hosts the UI and API routes. One Render worker writes a 15-second heartbeat and verifies submitted Base transactions and Thetanuts buyer positions. Signing preparation stops with `503 TRADE_MONITOR_UNAVAILABLE` when the heartbeat is older than 45 seconds.
+- Primary approved-state UI wording is “Council checks passed.” A confirmed result is “Protection position active,” not a guarantee that the real-world goal cannot lose value.
+
 ### 17.1 Contract ownership and naming rules
 
 Create one shared contract package and import it everywhere:
@@ -1965,17 +1979,25 @@ GONKA_CONSUMER_ADVOCATE_MODEL=
 
 # Base / Thetanuts
 THETANUTS_RPC_URL=
+THETANUTS_REFERRER_ADDRESS=
 NEXT_PUBLIC_BASE_CHAIN_ID=8453
 
 # Safety
 ENABLE_LIVE_THETANUTS_EXECUTION=false
 MAX_LIVE_TRADE_PREMIUM_USD=3
+MAX_DEADLINE_GAP_HOURS=168
 
 # Optional app config
 NEXT_PUBLIC_APP_URL=
 
 # Persistence
 DATABASE_URL=
+DATABASE_DIRECT_URL=
+
+# Render trade monitor
+TRADE_WORKER_NAME=trade-monitor
+TRADE_WORKER_POLL_MS=5000
+TRADE_WORKER_HEARTBEAT_MS=15000
 ```
 
 Never place a server-side Gonka key or private signing key in a `NEXT_PUBLIC_*` variable.
