@@ -35,6 +35,8 @@ export interface GoalReadReferences {
   tradeId?: string | null;
 }
 
+const iso = (value: string | Date) => new Date(value).toISOString();
+
 export function goalFromRow(row: GoalRow, references: GoalReadReferences = {}): Goal {
   return GoalSchema.parse({
     schemaVersion: row.schemaVersion,
@@ -48,8 +50,8 @@ export function goalFromRow(row: GoalRow, references: GoalReadReferences = {}): 
     maxPremiumUsd: row.maxPremiumUsd,
     originalUserMessage: row.originalUserMessage,
     status: row.status,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
+    createdAt: iso(row.createdAt),
+    updatedAt: iso(row.updatedAt),
     parseInferenceId: references.parseInferenceId ?? null,
     selectedCandidateId: references.selectedCandidateId ?? null,
     councilDecisionId: references.councilDecisionId ?? null,
@@ -57,10 +59,11 @@ export function goalFromRow(row: GoalRow, references: GoalReadReferences = {}): 
   });
 }
 
-export function goalToRow(goal: Goal): typeof goals.$inferInsert {
+export function goalToRow(goal: Goal, ownerSessionHash: string): typeof goals.$inferInsert {
   const value = GoalSchema.parse(goal);
   return {
     id: value.id,
+    ownerSessionHash,
     schemaVersion: value.schemaVersion,
     goalType: value.goalType,
     customGoalLabel: value.customGoalLabel,
@@ -80,9 +83,10 @@ export function candidateFromRow(row: CandidateRow): ProtectionCandidate {
   const { rejectionReasonsJson, protocolRawJson, scenariosJson, ...columns } = row;
   return ProtectionCandidateSchema.parse({
     ...columns,
-    rejectionReasons: JSON.parse(rejectionReasonsJson),
-    protocolRaw: JSON.parse(protocolRawJson),
-    scenarios: JSON.parse(scenariosJson),
+    expiry: iso(columns.expiry), marketAsOf: iso(columns.marketAsOf), createdAt: iso(columns.createdAt), updatedAt: iso(columns.updatedAt),
+    rejectionReasons: rejectionReasonsJson,
+    protocolRaw: protocolRawJson,
+    scenarios: scenariosJson,
   });
 }
 
@@ -91,23 +95,23 @@ export function candidateToRow(candidate: ProtectionCandidate): typeof protectio
   const { rejectionReasons, protocolRaw, scenarios, ...columns } = value;
   return {
     ...columns,
-    rejectionReasonsJson: JSON.stringify(rejectionReasons),
-    protocolRawJson: JSON.stringify(protocolRaw),
-    scenariosJson: JSON.stringify(scenarios),
+    rejectionReasonsJson: rejectionReasons,
+    protocolRawJson: protocolRaw,
+    scenariosJson: scenarios,
   };
 }
 
 export function inferenceFromRow(row: InferenceRow): GonkaInference {
   const { rawResponseJson, ...publicColumns } = row;
   void rawResponseJson;
-  return GonkaInferenceSchema.parse(publicColumns);
+  return GonkaInferenceSchema.parse({ ...publicColumns, createdAt: iso(publicColumns.createdAt), completedAt: publicColumns.completedAt ? iso(publicColumns.completedAt) : null });
 }
 
 export function inferenceToRow(inference: GonkaInference, rawResponse?: unknown): typeof gonkaInferences.$inferInsert {
   const value = GonkaInferenceSchema.parse(inference);
   return {
     ...value,
-    rawResponseJson: rawResponse === undefined ? null : JSON.stringify(rawResponse),
+    rawResponseJson: rawResponse ?? null,
   };
 }
 
@@ -115,8 +119,9 @@ export function reviewFromRow(row: ReviewRow): CouncilReview {
   const { concernsJson, requiredDisclosuresJson, ...columns } = row;
   return CouncilReviewSchema.parse({
     ...columns,
-    concerns: JSON.parse(concernsJson),
-    requiredDisclosures: JSON.parse(requiredDisclosuresJson),
+    createdAt: iso(columns.createdAt),
+    concerns: concernsJson,
+    requiredDisclosures: requiredDisclosuresJson,
   });
 }
 
@@ -125,36 +130,66 @@ export function reviewToRow(review: CouncilReview): typeof councilReviews.$infer
   const { concerns, requiredDisclosures, ...columns } = value;
   return {
     ...columns,
-    concernsJson: JSON.stringify(concerns),
-    requiredDisclosuresJson: JSON.stringify(requiredDisclosures),
+    concernsJson: concerns,
+    requiredDisclosuresJson: requiredDisclosures,
   };
 }
 
 export function decisionFromRows(row: DecisionRow, reviewRows: ReviewRow[]): CouncilDecision {
-  const { blockedReasonsJson, ...columns } = row;
+  const { blockedReasonsJson, inputHash, ...columns } = row;
+  void inputHash;
   return CouncilDecisionSchema.parse({
     ...columns,
-    blockedReasons: JSON.parse(blockedReasonsJson),
+    createdAt: iso(columns.createdAt),
+    blockedReasons: blockedReasonsJson,
     reviews: reviewRows.map(reviewFromRow),
   });
 }
 
-export function decisionToRows(decision: CouncilDecision) {
+export function decisionToRows(decision: CouncilDecision, inputHash: string) {
   const value = CouncilDecisionSchema.parse(decision);
   const { blockedReasons, reviews, ...columns } = value;
   return {
     decision: {
       ...columns,
-      blockedReasonsJson: JSON.stringify(blockedReasons),
+      blockedReasonsJson: blockedReasons,
+      inputHash,
     } satisfies typeof councilDecisions.$inferInsert,
     reviews: reviews.map(reviewToRow),
   };
 }
 
 export function tradeFromRow(row: TradeRow): Trade {
-  return TradeSchema.parse(row);
+  const {
+    expectedExecutionTarget, expectedCalldataHash, expectedValueBaseUnits,
+    verificationDeadline, receiptBlockNumber, receiptConfirmations, ...publicColumns
+  } = row;
+  void expectedExecutionTarget;
+  void expectedCalldataHash;
+  void expectedValueBaseUnits;
+  void verificationDeadline;
+  void receiptBlockNumber;
+  void receiptConfirmations;
+  return TradeSchema.parse({
+    ...publicColumns,
+    previewExpiresAt: iso(publicColumns.previewExpiresAt), createdAt: iso(publicColumns.createdAt), updatedAt: iso(publicColumns.updatedAt),
+    submittedAt: publicColumns.submittedAt ? iso(publicColumns.submittedAt) : null, confirmedAt: publicColumns.confirmedAt ? iso(publicColumns.confirmedAt) : null,
+  });
 }
 
-export function tradeToRow(trade: Trade): typeof trades.$inferInsert {
-  return TradeSchema.parse(trade);
+export interface TradeExecutionExpectation {
+  target: string;
+  calldataHash: string;
+  valueBaseUnits: string;
+  verificationDeadline: string;
+}
+
+export function tradeToRow(trade: Trade, expectation: TradeExecutionExpectation): typeof trades.$inferInsert {
+  return {
+    ...TradeSchema.parse(trade),
+    expectedExecutionTarget: expectation.target,
+    expectedCalldataHash: expectation.calldataHash,
+    expectedValueBaseUnits: expectation.valueBaseUnits,
+    verificationDeadline: expectation.verificationDeadline,
+  };
 }

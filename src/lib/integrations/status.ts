@@ -15,7 +15,7 @@ export interface IntegrationChecks {
 
 async function checkDatabase(): Promise<StatusData["database"]> {
   const { db } = getDatabase();
-  db.run(sql`select 1`);
+  await db.execute(sql`select 1`);
   return { status: "ready" };
 }
 

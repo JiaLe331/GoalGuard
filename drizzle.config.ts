@@ -1,16 +1,6 @@
 import { defineConfig } from "drizzle-kit";
 
-const databaseUrl = process.env.DATABASE_URL ?? "file:./data/goalguard.db";
+const databaseUrl = process.env.DATABASE_DIRECT_URL ?? process.env.DATABASE_URL;
+if (!databaseUrl?.startsWith("postgres")) throw new Error("DATABASE_DIRECT_URL (or DATABASE_URL) must be a PostgreSQL URL.");
 
-if (!databaseUrl.startsWith("file:")) {
-  throw new Error("DATABASE_URL must use a file: URL for the SQLite adapter.");
-}
-
-export default defineConfig({
-  dialect: "sqlite",
-  schema: "./src/lib/db/schema.ts",
-  out: "./drizzle",
-  dbCredentials: {
-    url: databaseUrl.slice("file:".length),
-  },
-});
+export default defineConfig({ dialect: "postgresql", schema: "./src/lib/db/schema.ts", out: "./drizzle", dbCredentials: { url: databaseUrl } });

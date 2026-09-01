@@ -1,37 +1,25 @@
-import { mkdirSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { DatabaseSync } from "node:sqlite";
-import { drizzle } from "drizzle-orm/node-sqlite";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 
-export function databasePathFromUrl(databaseUrl = process.env.DATABASE_URL ?? "file:./data/goalguard.db") {
-  if (!databaseUrl.startsWith("file:")) {
-    throw new Error("DATABASE_URL must use a file: URL for the SQLite adapter.");
+export function createDatabase(databaseUrl = process.env.DATABASE_URL) {
+  if (!databaseUrl?.startsWith("postgres")) {
+    throw new Error("DATABASE_URL must be a PostgreSQL connection URL (use the Supabase transaction pooler on Vercel).");
   }
 
-  const path = databaseUrl.slice("file:".length);
-  if (!path) {
-    throw new Error("DATABASE_URL must include a SQLite file path.");
-  }
-
-  return resolve(path);
+  const client = postgres(databaseUrl, {
+    prepare: false,
+    max: 5,
+    idle_timeout: 20,
+    connect_timeout: 10,
+  });
+  return { db: drizzle({ client }), client };
 }
 
-export function createDatabase(databaseUrl?: string) {
-  const path = databasePathFromUrl(databaseUrl);
-  mkdirSync(dirname(path), { recursive: true });
-  const sqlite = new DatabaseSync(path);
-  sqlite.exec("PRAGMA foreign_keys = ON;");
-  sqlite.exec("PRAGMA journal_mode = WAL;");
-  return { db: drizzle({ client: sqlite }), sqlite, path };
-}
-
+export type GoalGuardDatabase = ReturnType<typeof createDatabase>["db"];
 type DatabaseBundle = ReturnType<typeof createDatabase>;
-
 const globalForDatabase = globalThis as typeof globalThis & { goalGuardDatabase?: DatabaseBundle };
 
 export function getDatabase() {
-  if (!globalForDatabase.goalGuardDatabase) {
-    globalForDatabase.goalGuardDatabase = createDatabase();
-  }
+  if (!globalForDatabase.goalGuardDatabase) globalForDatabase.goalGuardDatabase = createDatabase();
   return globalForDatabase.goalGuardDatabase;
 }
