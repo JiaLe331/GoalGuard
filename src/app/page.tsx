@@ -52,7 +52,7 @@ export default function Home() {
           </div>
 
           <Card className="relative p-6 sm:p-8">
-            <div className="absolute -right-3 -top-3 rounded-full border border-[#cbff6b]/20 bg-[#16251b] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#bce77d]">Local-first</div>
+            <div className="absolute -right-3 -top-3 rounded-full border border-[#cbff6b]/20 bg-[#16251b] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#bce77d]">Session-private</div>
             <GoalComposer />
           </Card>
         </section>

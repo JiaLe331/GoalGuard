@@ -5,7 +5,7 @@ import type {
   Goal,
   GoalDraft,
   PreparedTransaction,
-  ProtectionCandidate,
+  PublicProtectionCandidate,
   Trade,
   TradePreview,
 } from "@/lib/contracts";
@@ -44,8 +44,8 @@ export interface WorkflowState {
   stage: WorkflowStage;
   goal: Goal | null;
   draft: GoalDraft;
-  candidates: ProtectionCandidate[];
-  selectedCandidate: ProtectionCandidate | null;
+  candidates: PublicProtectionCandidate[];
+  selectedCandidate: PublicProtectionCandidate | null;
   decision: CouncilDecision | null;
   preview: TradePreview | null;
   trade: Trade | null;
@@ -78,9 +78,9 @@ export type WorkflowAction =
   | { type: "hydrate"; response: GetGoalResponse }
   | { type: "goal_updated"; goal: Goal }
   | { type: "search_started" }
-  | { type: "candidates_found"; goal: Goal; candidates: ProtectionCandidate[]; selected: ProtectionCandidate }
+  | { type: "candidates_found"; goal: Goal; candidates: PublicProtectionCandidate[]; selected: PublicProtectionCandidate }
   | { type: "review_started" }
-  | { type: "review_completed"; goal: Goal; candidate: ProtectionCandidate; decision: CouncilDecision }
+  | { type: "review_completed"; goal: Goal; candidate: PublicProtectionCandidate; decision: CouncilDecision }
   | { type: "preview_started" }
   | { type: "preview_ready"; preview: TradePreview }
   | { type: "execution_preparing" }

@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   const capabilities = getFrontendCapabilities();
   return (
-    <html lang="en">
+    <html lang="en" data-scroll-behavior="smooth">
       <body><AppProviders capabilities={capabilities}>{children}</AppProviders></body>
     </html>
   );

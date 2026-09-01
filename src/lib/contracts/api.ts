@@ -4,7 +4,7 @@ import { GoalTypeSchema, InferencePurposeSchema, InferenceStatusSchema, Supporte
 import {
   CouncilDecisionSchema,
   GoalSchema,
-  ProtectionCandidateSchema,
+  PublicProtectionCandidateSchema,
   TradeSchema,
 } from "./entities";
 import { ApiMetaSchema } from "./errors";
@@ -100,7 +100,7 @@ export const CandidateRejectionSchema = z.object({
 export const GenerateCandidatesResponseSchema = z.object({
   data: z.object({
     goal: GoalSchema,
-    candidates: z.array(ProtectionCandidateSchema),
+    candidates: z.array(PublicProtectionCandidateSchema),
     selectedCandidateId: UUIDSchema.nullable(),
     rejected: z.array(CandidateRejectionSchema),
     marketAsOf: ISODateTimeSchema,
@@ -117,7 +117,7 @@ export const ReviewCandidateRequestSchema = z.object({
 export const ReviewCandidateResponseSchema = z.object({
   data: z.object({
     goal: GoalSchema,
-    candidate: ProtectionCandidateSchema,
+    candidate: PublicProtectionCandidateSchema,
     decision: CouncilDecisionSchema,
     inferences: z.array(InferenceSummarySchema).length(3),
   }).strict(),
@@ -146,13 +146,34 @@ export const PreparedTransactionSchema = z.object({
   valueBaseUnits: BaseUnitStringSchema,
 }).strict();
 
+export const BalanceReadinessSchema = z.object({
+  symbol: z.string().trim().min(1).max(16),
+  balanceBaseUnits: BaseUnitStringSchema,
+  requiredBaseUnits: BaseUnitStringSchema,
+  sufficient: z.boolean(),
+}).strict();
+
+export const WalletReadinessSchema = z.object({
+  gas: BalanceReadinessSchema,
+  settlementToken: BalanceReadinessSchema,
+  underlyingExposure: BalanceReadinessSchema,
+}).strict();
+
+export const ReferralDisclosureSchema = z.object({
+  referrerAddress: EvmAddressSchema.nullable(),
+  mayReceiveFee: z.boolean(),
+  message: z.string().trim().min(1),
+}).strict();
+
 export const TradePreviewSchema = z.object({
   trade: TradeSchema,
-  candidate: ProtectionCandidateSchema,
+  candidate: PublicProtectionCandidateSchema,
   allowance: AllowanceRequirementSchema.nullable(),
   approvalTransaction: PreparedTransactionSchema.nullable(),
   executionTransaction: PreparedTransactionSchema,
   estimatedGasBaseUnits: BaseUnitStringSchema.nullable(),
+  walletReadiness: WalletReadinessSchema,
+  referralDisclosure: ReferralDisclosureSchema,
   warnings: z.array(z.string()),
 }).strict();
 
@@ -201,7 +222,7 @@ export const GetTradeResponseSchema = z.object({
 export const GetGoalResponseSchema = z.object({
   data: z.object({
     goal: GoalSchema,
-    selectedCandidate: ProtectionCandidateSchema.nullable(),
+    selectedCandidate: PublicProtectionCandidateSchema.nullable(),
     councilDecision: CouncilDecisionSchema.nullable(),
     trade: TradeSchema.nullable(),
   }).strict(),
@@ -241,6 +262,8 @@ export type ReviewCandidateResponse = z.infer<typeof ReviewCandidateResponseSche
 export type PreviewTradeRequest = z.infer<typeof PreviewTradeRequestSchema>;
 export type AllowanceRequirement = z.infer<typeof AllowanceRequirementSchema>;
 export type PreparedTransaction = z.infer<typeof PreparedTransactionSchema>;
+export type WalletReadiness = z.infer<typeof WalletReadinessSchema>;
+export type ReferralDisclosure = z.infer<typeof ReferralDisclosureSchema>;
 export type TradePreview = z.infer<typeof TradePreviewSchema>;
 export type PreviewTradeResponse = z.infer<typeof PreviewTradeResponseSchema>;
 export type PrepareExecutionRequest = z.infer<typeof PrepareExecutionRequestSchema>;

@@ -123,7 +123,7 @@ export const goalGuardApi = {
       signal,
     ),
   recordSubmission: (tradeId: string, body: RecordSubmissionRequest, signal?: AbortSignal) =>
-    post<ReturnType<typeof RecordSubmissionResponseSchema.parse>>(`/api/trades/${tradeId}/submission`, body, RecordSubmissionResponseSchema, undefined, signal),
+    post<ReturnType<typeof RecordSubmissionResponseSchema.parse>>(`/api/trades/${tradeId}/submission`, body, RecordSubmissionResponseSchema, { "Idempotency-Key": `submission:${body.txHash}` }, signal),
   getTrade: (tradeId: string, signal?: AbortSignal) =>
     requestGoalGuard<ReturnType<typeof GetTradeResponseSchema.parse>>(`/api/trades/${tradeId}`, { schema: GetTradeResponseSchema, signal }),
 };

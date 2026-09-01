@@ -10,6 +10,7 @@ import type {
   Trade,
   UpdateGoalResponse,
 } from "@/lib/contracts";
+import { publicCandidate } from "@/lib/contracts";
 
 export const fixtureIds = {
   request: "4b3e798c-e0e8-4ab5-9e37-d4526424eb8f",
@@ -75,6 +76,7 @@ export const fixtureCandidate: ProtectionCandidate = {
   createdAt: "2026-08-31T12:00:00.000Z",
   updatedAt: "2026-08-31T12:00:00.000Z",
 };
+export const fixturePublicCandidate = publicCandidate(fixtureCandidate);
 
 const review = (role: "strategist" | "risk_auditor" | "consumer_advocate", index: number) => ({
   schemaVersion: 1 as const,
@@ -159,7 +161,20 @@ export const fixtureTrade: Trade = {
 
 export const parseGoalResponse: ParseGoalResponse = { data: { draft: {}, missingFields: [], clarificationQuestion: null, goal: fixtureGoal, inference: { id: "6b3e798c-e0e8-4ab5-9e37-d4526424eb8f", purpose: "goal_parse", model: "gonka-model-a", requestId: "gonka-parse-1", status: "succeeded" } }, meta: fixtureMeta };
 export const updateGoalResponse: UpdateGoalResponse = { data: { goal: fixtureGoal }, meta: fixtureMeta };
-export const generateCandidatesResponse: GenerateCandidatesResponse = { data: { goal: { ...fixtureGoal, status: "reviewing", selectedCandidateId: fixtureIds.candidate }, candidates: [fixtureCandidate], selectedCandidateId: fixtureIds.candidate, rejected: [], marketAsOf: fixtureCandidate.marketAsOf }, meta: fixtureMeta };
-export const reviewCandidateResponse: ReviewCandidateResponse = { data: { goal: fixtureReadyGoal, candidate: fixtureCandidate, decision: fixtureDecision, inferences: fixtureDecision.reviews.map((item) => ({ id: item.inferenceId, purpose: `${item.role === "strategist" ? "strategist" : item.role}_review` as "strategist_review" | "risk_auditor_review" | "consumer_advocate_review", model: item.model, requestId: item.requestId, status: "succeeded" })) }, meta: fixtureMeta };
+export const generateCandidatesResponse: GenerateCandidatesResponse = { data: { goal: { ...fixtureGoal, status: "reviewing", selectedCandidateId: fixtureIds.candidate }, candidates: [fixturePublicCandidate], selectedCandidateId: fixtureIds.candidate, rejected: [], marketAsOf: fixtureCandidate.marketAsOf }, meta: fixtureMeta };
+export const reviewCandidateResponse: ReviewCandidateResponse = { data: { goal: fixtureReadyGoal, candidate: fixturePublicCandidate, decision: fixtureDecision, inferences: fixtureDecision.reviews.map((item) => ({ id: item.inferenceId, purpose: `${item.role === "strategist" ? "strategist" : item.role}_review` as "strategist_review" | "risk_auditor_review" | "consumer_advocate_review", model: item.model, requestId: item.requestId, status: "succeeded" })) }, meta: fixtureMeta };
 export const getDraftGoalResponse: GetGoalResponse = { data: { goal: fixtureGoal, selectedCandidate: null, councilDecision: null, trade: null }, meta: fixtureMeta };
-export const previewTradeResponse: PreviewTradeResponse = { data: { trade: fixtureTrade, candidate: fixtureCandidate, allowance: { tokenAddress: fixtureCandidate.settlementTokenAddress, spenderAddress: "0x2222222222222222222222222222222222222222", currentAmountBaseUnits: "0", requiredAmountBaseUnits: "2500000", approvalRequired: true }, approvalTransaction: { chainId: 8453, to: fixtureCandidate.settlementTokenAddress, data: "0x1234", valueBaseUnits: "0" }, executionTransaction: { chainId: 8453, to: "0x3333333333333333333333333333333333333333", data: "0xabcd", valueBaseUnits: "0" }, estimatedGasBaseUnits: "250000", warnings: [] }, meta: fixtureMeta };
+export const previewTradeResponse: PreviewTradeResponse = {
+  data: {
+    trade: fixtureTrade,
+    candidate: fixturePublicCandidate,
+    allowance: { tokenAddress: fixtureCandidate.settlementTokenAddress, spenderAddress: "0x2222222222222222222222222222222222222222", currentAmountBaseUnits: "0", requiredAmountBaseUnits: "2500000", approvalRequired: true },
+    approvalTransaction: { chainId: 8453, to: fixtureCandidate.settlementTokenAddress, data: "0x1234", valueBaseUnits: "0" },
+    executionTransaction: { chainId: 8453, to: "0x3333333333333333333333333333333333333333", data: "0xabcd", valueBaseUnits: "0" },
+    estimatedGasBaseUnits: "250000",
+    walletReadiness: { gas: { symbol: "ETH", balanceBaseUnits: "1000000000000000000", requiredBaseUnits: "100000000000000", sufficient: true }, settlementToken: { symbol: "USDC", balanceBaseUnits: "10000000", requiredBaseUnits: "2500000", sufficient: true }, underlyingExposure: { symbol: "ETH", balanceBaseUnits: "1000000000000000000", requiredBaseUnits: "10000000000000000", sufficient: true } },
+    referralDisclosure: { referrerAddress: null, mayReceiveFee: false, message: "No GoalGuard referrer fee is configured." },
+    warnings: [],
+  },
+  meta: fixtureMeta,
+};

@@ -47,7 +47,7 @@ export function IntegrationStatus() {
   }, [refresh]);
 
   const items = data ? [
-    { name: "Local data", description: "SQLite audit records", ...data.database },
+    { name: "Supabase data", description: "PostgreSQL audit records", ...data.database },
     { name: "Gonka", description: data.gonka.model ?? "AI router", ...data.gonka },
     {
       name: "Thetanuts",

@@ -7,9 +7,12 @@ import {
   DecimalStringSchema,
   GoalSchema,
   IntegrationStatusResponseSchema,
+  PublicProtectionCandidateSchema,
+  PreviewTradeResponseSchema,
   SignedDecimalStringSchema,
   UpdateGoalRequestSchema,
 } from "@/lib/contracts";
+import { fixtureCandidate, previewTradeResponse } from "@/test/fixtures/goalguard";
 
 const now = "2026-08-31T12:00:00.000Z";
 const ids = {
@@ -95,6 +98,19 @@ describe("canonical entity contracts", () => {
 });
 
 describe("API envelopes", () => {
+  it("redacts protocolRaw from public candidates and rejects attempts to add it back", () => {
+    const { protocolRaw, ...publicFields } = fixtureCandidate;
+    void protocolRaw;
+    expect(PublicProtectionCandidateSchema.parse(publicFields)).not.toHaveProperty("protocolRaw");
+    expect(PublicProtectionCandidateSchema.safeParse(fixtureCandidate).success).toBe(false);
+  });
+
+  it("requires strict wallet readiness and referral disclosure in trade previews", () => {
+    expect(PreviewTradeResponseSchema.parse(previewTradeResponse)).toEqual(previewTradeResponse);
+    const malformed = structuredClone(previewTradeResponse);
+    Object.assign(malformed.data.walletReadiness.gas, { privateRpcResult: "unsafe" });
+    expect(PreviewTradeResponseSchema.safeParse(malformed).success).toBe(false);
+  });
   it("keeps draft goal edits strict and canonical", () => {
     const request = { goalType: "rent", customGoalLabel: null, underlyingAsset: "ETH", protectedValueUsd: "1200", deadline: "2026-09-30", maxLossBps: 500, maxPremiumUsd: "3" };
     expect(UpdateGoalRequestSchema.parse(request)).toEqual(request);

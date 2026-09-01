@@ -111,6 +111,10 @@ export const ProtectionCandidateSchema = z.object({
   }
 });
 
+// protocolRaw is deliberately an internal-only persistence field. Public API
+// responses must be built with this schema so upstream payloads cannot leak.
+export const PublicProtectionCandidateSchema = ProtectionCandidateSchema.omit({ protocolRaw: true });
+
 export const GonkaInferenceSchema = z.object({
   schemaVersion: z.literal(1),
   id: UUIDSchema,
@@ -235,6 +239,7 @@ export const TradeSchema = z.object({
 export type Goal = z.infer<typeof GoalSchema>;
 export type ScenarioResult = z.infer<typeof ScenarioResultSchema>;
 export type ProtectionCandidate = z.infer<typeof ProtectionCandidateSchema>;
+export type PublicProtectionCandidate = z.infer<typeof PublicProtectionCandidateSchema>;
 export type GonkaInference = z.infer<typeof GonkaInferenceSchema>;
 export type CouncilReview = z.infer<typeof CouncilReviewSchema>;
 export type CouncilDecision = z.infer<typeof CouncilDecisionSchema>;

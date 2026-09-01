@@ -15,7 +15,7 @@ import {
   UpdateGoalRequestSchema,
   type CouncilDecision,
   type Goal,
-  type ProtectionCandidate,
+  type PublicProtectionCandidate,
   type Trade,
   type TradePreview,
   type UpdateGoalRequest,
@@ -150,7 +150,7 @@ export function CouncilDrawer({ decision, open, onClose }: { decision: CouncilDe
   return (
     <Drawer open={open} onClose={onClose} title="GoalGuard review">
       <Alert tone={decision.status === "approved" ? "success" : decision.status === "disputed" ? "warning" : "error"} title={`Decision: ${decision.status}`}>
-        {decision.status === "approved" ? "All three independent roles approved this candidate." : "This plan cannot progress to a trade in its current state."}
+        {decision.status === "approved" ? "All three independent council checks passed for this candidate." : "This plan cannot progress to a trade in its current state."}
       </Alert>
       <div className="mt-6 space-y-4">
         {decision.reviews.map((review) => (
@@ -182,8 +182,8 @@ export function ProtectionPlanPanel({
   onPreview,
 }: {
   goal: Goal;
-  candidate: ProtectionCandidate;
-  alternatives: ProtectionCandidate[];
+  candidate: PublicProtectionCandidate;
+  alternatives: PublicProtectionCandidate[];
   decision: CouncilDecision;
   busy: boolean;
   onOpenCouncil: () => void;
@@ -196,7 +196,7 @@ export function ProtectionPlanPanel({
       <Card className="p-6 sm:p-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Protection plan</p><h1 className="mt-2 text-3xl font-semibold text-white">{goal.customGoalLabel ?? goalLabels[goal.goalType]} protection</h1></div>
-          <StatusBadge label={decision.status} tone={approved ? "ready" : decision.status === "disputed" ? "warning" : "error"} />
+          <StatusBadge label={approved ? "Council checks passed" : decision.status} tone={approved ? "ready" : decision.status === "disputed" ? "warning" : "error"} />
         </div>
         <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {[
@@ -227,7 +227,7 @@ export function ProtectionPlanPanel({
         </div>
       </Card>
       <div className="space-y-5">
-        <Card className="p-6"><p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">Independent review</p><h2 className="mt-2 text-xl font-semibold text-white">{decision.approvedReviewCount}/3 roles approved</h2><p className="mt-2 text-sm leading-6 text-[#9daca2]">Review attempt {decision.attempt}. AI explanations cannot change the deterministic financial values.</p><Button className="mt-5 w-full" variant="secondary" onClick={onOpenCouncil}>Open GoalGuard review</Button></Card>
+        <Card className="p-6"><p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">Independent review</p><h2 className="mt-2 text-xl font-semibold text-white">{decision.approvedReviewCount}/3 council checks passed</h2><p className="mt-2 text-sm leading-6 text-[#9daca2]">Review attempt {decision.attempt}. AI explanations cannot change the deterministic financial values.</p><Button className="mt-5 w-full" variant="secondary" onClick={onOpenCouncil}>Open GoalGuard review</Button></Card>
         {!approved ? <Alert tone={decision.status === "disputed" ? "warning" : "error"} title={decision.status === "disputed" ? "Council disputed" : "Plan blocked"}>This candidate cannot proceed to trade preview. Open the review to see which role raised a concern.</Alert> : null}
         <div className="flex flex-col gap-3">
           <Button onClick={onPreview} disabled={!approved || busy}>{busy ? "Preparing…" : "Preview exact trade"}</Button>
@@ -280,6 +280,10 @@ export function TradePreviewPanel({
       {partial ? <Alert className="mt-5" tone="warning" title="Proportional micro-hedge demo">This candidate covers {formatPercentFromBps(preview.candidate.goalCoverageBps)} of the goal and does not fully protect the original amount.</Alert> : null}
       {!executionEnabled ? <Alert className="mt-5" tone="warning" title="Live execution is disabled">You can review the full plan, but signing is unavailable until organizer approval. The live premium cap is {formatUsd(maxPremiumUsd)}.</Alert> : null}
       {preview.warnings.map((warning) => <Alert key={warning} className="mt-3" tone="warning">{warning}</Alert>)}
+      <div className="mt-5 grid gap-3 sm:grid-cols-3" aria-label="Wallet readiness">
+        {Object.entries(preview.walletReadiness).map(([key, item]) => <div key={key} className="rounded-2xl border border-white/[0.07] bg-black/10 p-4"><p className="text-xs capitalize text-[var(--muted)]">{key.replace(/([A-Z])/g, " $1")}</p><p className={item.sufficient ? "mt-1 font-semibold text-[var(--accent)]" : "mt-1 font-semibold text-[var(--danger-soft)]"}>{item.sufficient ? "Ready" : `${item.symbol} needed`}</p></div>)}
+      </div>
+      <Alert className="mt-3" tone={preview.referralDisclosure.mayReceiveFee ? "warning" : "info"}>{preview.referralDisclosure.message}</Alert>
       <label className="mt-6 flex items-start gap-3 rounded-2xl border border-white/[0.08] p-4 text-sm leading-6 text-[#c2cec5]"><input type="checkbox" checked={acknowledged} onChange={(event) => setAcknowledged(event.target.checked)} className="mt-1 size-4 accent-[#cbff6b]" />I understand that protection depends on the executed position and its settlement conditions at expiry.</label>
       <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end"><Button variant="ghost" onClick={onBack}>Back to plan</Button>{executionEnabled ? <Button disabled={!acknowledged || expired || busy} onClick={onConfirm}>{busy ? "Revalidating…" : expired ? "Preview expired" : "Prepare wallet transaction"}</Button> : null}</div>
     </Card>
@@ -317,18 +321,18 @@ export function TransactionStatusPanel({
   );
 }
 
-export function ProtectedGoalPanel({ goal, candidate, decision, trade, explorerUrl }: { goal: Goal; candidate: ProtectionCandidate; decision: CouncilDecision; trade: Trade; explorerUrl: string | null }) {
+export function ProtectedGoalPanel({ goal, candidate, decision, trade, explorerUrl }: { goal: Goal; candidate: PublicProtectionCandidate; decision: CouncilDecision; trade: Trade; explorerUrl: string | null }) {
   const title = goal.customGoalLabel ?? goalLabels[goal.goalType];
   return (
     <Card className="mx-auto max-w-4xl overflow-hidden">
-      <div className="border-b border-[#91e95f]/20 bg-[#91e95f]/10 p-7 sm:p-10"><StatusBadge label="Protected" tone="ready" /><h1 className="mt-4 text-4xl font-semibold text-white">{title} is protected.</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-[#c5d5c8]">The backend verified the Base transaction and position. Protection still depends on the executed option and settlement conditions.</p></div>
+      <div className="border-b border-[#91e95f]/20 bg-[#91e95f]/10 p-7 sm:p-10"><StatusBadge label="Position active" tone="ready" /><h1 className="mt-4 text-4xl font-semibold text-white">Protection position active for {title}.</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-[#c5d5c8]">The backend verified the Base transaction and position. Protection still depends on the executed option and settlement conditions.</p></div>
       <div className="p-7 sm:p-10"><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{[
         ["Amount to preserve", formatUsd(goal.protectedValueUsd)],
         ["Protection cost", formatUsd(trade.premiumUsd)],
         ["Protection ends on", formatDate(candidate.expiry)],
         ["Estimated protected value", formatUsd(candidate.estimatedFloorUsd)],
         ["Trade confirmed", trade.confirmedAt ? formatDate(trade.confirmedAt, { hour: "numeric", minute: "2-digit" }) : "Verified"],
-        ["Council decision", `Attempt ${decision.attempt} · approved`],
+        ["Council decision", `Attempt ${decision.attempt} · checks passed`],
       ].map(([label, value]) => <div key={label} className="rounded-2xl border border-white/[0.07] bg-black/10 p-4"><p className="text-xs text-[var(--muted)]">{label}</p><p className="mt-1 font-semibold text-white">{value}</p></div>)}</div>
       {trade.txHash ? <a href={explorerUrl ?? baseTransactionUrl(trade.txHash)} target="_blank" rel="noreferrer" className="mt-6 inline-flex text-sm font-semibold text-[var(--accent)] underline underline-offset-4">View verified transaction <span aria-hidden="true">↗</span></a> : null}
       <Accordion title="Audit references"><p className="break-all font-mono text-xs">Decision: {decision.id}</p>{decision.reviews.map((review) => <p key={review.id} className="mt-2 break-all font-mono text-xs">{roleLabels[review.role]}: {review.requestId}</p>)}</Accordion>

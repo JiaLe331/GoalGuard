@@ -54,7 +54,7 @@ test("completes the contract-wired frontend through a preview-only trade", async
 
   await page.getByRole("button", { name: /find protection options/i }).click();
   await expect(page.getByRole("heading", { name: /rent protection/i })).toBeVisible();
-  await expect(page.getByText("3/3 roles approved")).toBeVisible();
+  await expect(page.getByText("3/3 council checks passed")).toBeVisible();
 
   await page.getByRole("button", { name: /preview exact trade/i }).click();
   await expect(page.getByLabel(/wallet connected/i)).toBeVisible();
