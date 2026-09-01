@@ -1,3 +1,4 @@
+import "server-only";
 import { ThetanutsClient } from "@thetanuts-finance/thetanuts-client";
 import { JsonRpcProvider } from "ethers";
 
@@ -10,6 +11,11 @@ export type ThetanutsSmokeResult =
 export function createReadOnlyThetanutsClient(rpcUrl: string) {
   const provider = new JsonRpcProvider(rpcUrl, 8453, { staticNetwork: true });
   return new ThetanutsClient({ chainId: 8453, provider });
+}
+
+export function createConfiguredThetanutsClient(rpcUrl: string, referrerAddress?: string | null) {
+  const provider = new JsonRpcProvider(rpcUrl, 8453, { staticNetwork: true });
+  return new ThetanutsClient({ chainId: 8453, provider, ...(referrerAddress ? { referrer: referrerAddress } : {}) });
 }
 
 export async function runThetanutsSmokeTest(environment: NodeJS.ProcessEnv = process.env): Promise<ThetanutsSmokeResult> {
