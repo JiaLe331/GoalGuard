@@ -112,8 +112,8 @@ export const goalGuardApi = {
     post<ReturnType<typeof GenerateCandidatesResponseSchema.parse>>("/api/protection/candidates", body, GenerateCandidatesResponseSchema, undefined, signal),
   reviewCandidate: (body: ReviewCandidateRequest, signal?: AbortSignal) =>
     post<ReturnType<typeof ReviewCandidateResponseSchema.parse>>("/api/council/review", body, ReviewCandidateResponseSchema, undefined, signal),
-  previewTrade: (body: PreviewTradeRequest, signal?: AbortSignal) =>
-    post<ReturnType<typeof PreviewTradeResponseSchema.parse>>("/api/trades/preview", body, PreviewTradeResponseSchema, undefined, signal),
+  previewTrade: (body: PreviewTradeRequest, idempotencyKey: string, signal?: AbortSignal) =>
+    post<ReturnType<typeof PreviewTradeResponseSchema.parse>>("/api/trades/preview", body, PreviewTradeResponseSchema, { "Idempotency-Key": idempotencyKey }, signal),
   prepareExecution: (body: PrepareExecutionRequest, idempotencyKey: string, signal?: AbortSignal) =>
     post<ReturnType<typeof PrepareExecutionResponseSchema.parse>>(
       "/api/trades/execute",
@@ -122,8 +122,8 @@ export const goalGuardApi = {
       { "Idempotency-Key": idempotencyKey },
       signal,
     ),
-  recordSubmission: (tradeId: string, body: RecordSubmissionRequest, signal?: AbortSignal) =>
-    post<ReturnType<typeof RecordSubmissionResponseSchema.parse>>(`/api/trades/${tradeId}/submission`, body, RecordSubmissionResponseSchema, { "Idempotency-Key": `submission:${body.txHash}` }, signal),
+  recordSubmission: (tradeId: string, body: RecordSubmissionRequest, idempotencyKey: string, signal?: AbortSignal) =>
+    post<ReturnType<typeof RecordSubmissionResponseSchema.parse>>(`/api/trades/${tradeId}/submission`, body, RecordSubmissionResponseSchema, { "Idempotency-Key": idempotencyKey }, signal),
   getTrade: (tradeId: string, signal?: AbortSignal) =>
     requestGoalGuard<ReturnType<typeof GetTradeResponseSchema.parse>>(`/api/trades/${tradeId}`, { schema: GetTradeResponseSchema, signal }),
 };

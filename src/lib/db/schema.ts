@@ -109,6 +109,24 @@ export const trades = pgTable.withRLS("trades", {
   index("trades_goal_created_idx").on(table.goalId, table.createdAt), index("trades_wallet_created_idx").on(table.walletAddress, table.createdAt), index("trades_status_updated_idx").on(table.status, table.updatedAt),
 ]);
 
+export const tradeRequestIdempotency = pgTable.withRLS("trade_request_idempotency", {
+  key: varchar("key", { length: 128 }).primaryKey(),
+  operation: text("operation").notNull(),
+  ownerSessionHash: varchar("owner_session_hash", { length: 64 }).notNull(),
+  requestHash: varchar("request_hash", { length: 64 }).notNull(),
+  status: text("status").notNull(),
+  tradeId: uuid("trade_id").references(() => trades.id, { onDelete: "restrict" }),
+  responseJson: jsonb("response_json").$type<unknown>(),
+  createdAt: utcTimestamp("created_at").notNull(),
+  updatedAt: utcTimestamp("updated_at").notNull(),
+}, (table) => [
+  check("trade_idempotency_key_length_check", sql`length(${table.key}) BETWEEN 16 AND 128`),
+  check("trade_idempotency_operation_check", sql`${table.operation} IN ('preview', 'execute', 'submission')`),
+  check("trade_idempotency_status_check", sql`${table.status} IN ('in_progress', 'completed')`),
+  index("trade_idempotency_owner_created_idx").on(table.ownerSessionHash, table.createdAt),
+  index("trade_idempotency_trade_idx").on(table.tradeId),
+]);
+
 export const workerHeartbeats = pgTable.withRLS("worker_heartbeats", {
   workerName: text("worker_name").primaryKey(), instanceId: uuid("instance_id").notNull(), lastSeenAt: utcTimestamp("last_seen_at").notNull(),
 });

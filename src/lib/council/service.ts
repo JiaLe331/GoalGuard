@@ -27,12 +27,14 @@ function normalizedGoal(goal: Goal) {
 }
 
 export async function reviewCandidate(goal: Goal, candidate: ProtectionCandidate, ownerSessionHash: string, forceNewAttempt = false, repository = new PostgresGoalGuardRepository()) {
-  const latest = await repository.getLatestDecision(candidate.id, ownerSessionHash);
-  if (latest && !forceNewAttempt) return latest;
+  const baseInput = { goal: normalizedGoal(goal), candidate: publicCandidate(candidate), rulesetVersion: "1" };
+  const decisionInputHash = hashJson(baseInput);
+  const latestRecord = await repository.getLatestDecisionRecord(candidate.id, ownerSessionHash);
+  const latest = latestRecord?.decision ?? null;
+  if (latest && latestRecord?.inputHash === decisionInputHash && !forceNewAttempt) return latest;
   const config = getGonkaCouncilConfiguration();
   if (!config) throw new ApiRouteError("GONKA_UNAVAILABLE", "Three council roles and at least two distinct Gonka models must be configured.", 503, true);
   const roles: CouncilRole[] = ["strategist", "risk_auditor", "consumer_advocate"];
-  const baseInput = { goal: normalizedGoal(goal), candidate: publicCandidate(candidate), rulesetVersion: "1" };
   const decisionId = randomUUID(); const createdAt = new Date().toISOString();
   const calls = await Promise.allSettled(roles.map(async (role) => {
     const inferenceId = randomUUID(); const model = config.models[role]; const input = { ...baseInput, role }; const inputHash = hashJson(input); const started = Date.now();
@@ -53,6 +55,5 @@ export async function reviewCandidate(goal: Goal, candidate: ProtectionCandidate
   }) as [CouncilReview, CouncilReview, CouncilReview];
   const consensus = councilConsensus(reviews);
   const decision: CouncilDecision = { schemaVersion: 1, id: decisionId, goalId: goal.id, candidateId: candidate.id, attempt: (latest?.attempt ?? 0) + 1, status: consensus.status, rulesetVersion: "1", approvedReviewCount: consensus.approved, rejectedReviewCount: consensus.rejected, uncertainReviewCount: consensus.uncertain, blockedReasons: consensus.blockedReasons, reviews, createdAt };
-  await repository.saveDecision(decision, hashJson(baseInput), ownerSessionHash);
-  return decision;
+  return repository.saveDecision(decision, decisionInputHash, ownerSessionHash, !forceNewAttempt);
 }

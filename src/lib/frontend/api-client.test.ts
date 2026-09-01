@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { GetGoalResponseSchema } from "@/lib/contracts";
-import { getDraftGoalResponse } from "@/test/fixtures/goalguard";
-import { requestGoalGuard } from "./api-client";
+import { fixtureIds, getDraftGoalResponse, previewTradeResponse } from "@/test/fixtures/goalguard";
+import { goalGuardApi, requestGoalGuard } from "./api-client";
 
 describe("GoalGuard API client", () => {
   it("validates successful responses and sends same-origin credentials", async () => {
@@ -19,5 +19,11 @@ describe("GoalGuard API client", () => {
   it("preserves canonical error metadata", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ error: { code: "GONKA_UNAVAILABLE", message: "Review unavailable", retryable: true, fieldErrors: {}, details: null }, meta: getDraftGoalResponse.meta }), { status: 502 }));
     await expect(requestGoalGuard("/api/goals/id", { schema: GetGoalResponseSchema })).rejects.toEqual(expect.objectContaining({ code: "GONKA_UNAVAILABLE", requestId: getDraftGoalResponse.meta.requestId }));
+  });
+
+  it("sends the caller's idempotency key for trade preview", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify(previewTradeResponse), { status: 201, headers: { "Content-Type": "application/json" } }));
+    await goalGuardApi.previewTrade({ goalId: fixtureIds.goal, candidateId: fixtureIds.candidate, councilDecisionId: fixtureIds.decision, walletAddress: "0x1111111111111111111111111111111111111111" }, "preview-request-0000000000000001");
+    expect(fetchMock).toHaveBeenCalledWith("/api/trades/preview", expect.objectContaining({ headers: expect.objectContaining({ "Idempotency-Key": "preview-request-0000000000000001" }) }));
   });
 });

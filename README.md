@@ -34,8 +34,8 @@ Browser storage holds only a draft, active goal ID, and retry metadata. Supabase
 
 ## Requirements and setup
 
-- Node.js 22+
-- pnpm 11.19+
+- Node.js 22.x
+- pnpm 11.25+
 - Supabase PostgreSQL pooled and direct connection URLs
 - Gonka credentials and three role model IDs for the AI workflow
 - A Base mainnet RPC for live Thetanuts reads
@@ -62,6 +62,7 @@ Open [http://localhost:3000](http://localhost:3000). Missing integrations are re
 | `MAX_LIVE_TRADE_PREMIUM_USD` | Hard live premium cap; default `3`. |
 | `MAX_DEADLINE_GAP_HOURS` | Maximum goal deadline-to-expiry gap; default `168`. |
 | `NEXT_PUBLIC_APP_URL` | Exact allowed origin and deployed app URL. |
+| `GOALGUARD_SMOKE_APP_URL`, `GOALGUARD_SMOKE_WALLET_ADDRESS`, `GOALGUARD_SMOKE_GOAL_MESSAGE` | Optional local real-integration workflow smoke configuration; the wallet value is a public address only. |
 | `DATABASE_URL` | Supabase transaction-pooler URL for Vercel and Render. |
 | `DATABASE_DIRECT_URL` | Direct/session URL used only by migration tooling. |
 | `TRADE_WORKER_NAME`, `TRADE_WORKER_POLL_MS`, `TRADE_WORKER_HEARTBEAT_MS` | Render monitor configuration. |
@@ -85,7 +86,10 @@ pnpm db:migrate
 pnpm db:studio
 pnpm smoke:gonka
 pnpm smoke:thetanuts
+pnpm smoke:workflow
 ```
+
+`smoke:workflow` requires the local app to be running against the hosted development database. It records only safe IDs and timestamps, verifies a real goal-to-preview path, and expects execution to stop with `EXECUTION_DISABLED`.
 
 Generate and inspect schema migrations together. Apply migrations once with `DATABASE_DIRECT_URL`; neither Vercel routes nor the Render worker migrate at startup.
 

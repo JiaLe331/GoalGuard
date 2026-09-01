@@ -26,9 +26,12 @@ import { ApiClientError, goalGuardApi } from "@/lib/frontend/api-client";
 import { baseTransactionUrl } from "@/lib/frontend/format";
 import {
   clearExecutionRetry,
+  clearPreviewRetry,
   readActiveGoalId,
   readExecutionRetry,
+  readPreviewRetry,
   saveExecutionRetry,
+  savePreviewRetry,
   storageKeys,
 } from "@/lib/frontend/storage";
 import {
@@ -140,12 +143,17 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
     setBusy(true);
     dispatch({ type: "preview_started" });
     try {
+      const previous = readPreviewRetry();
+      const previewIdentity = { goalId: state.goal.id, candidateId: state.selectedCandidate.id, councilDecisionId: state.decision.id, walletAddress: wallet.address };
+      const idempotencyKey = previous && previous.goalId === previewIdentity.goalId && previous.candidateId === previewIdentity.candidateId && previous.councilDecisionId === previewIdentity.councilDecisionId && previous.walletAddress.toLowerCase() === previewIdentity.walletAddress.toLowerCase() ? previous.idempotencyKey : crypto.randomUUID();
+      savePreviewRetry({ ...previewIdentity, idempotencyKey });
       const response = await goalGuardApi.previewTrade({
         goalId: state.goal.id,
         candidateId: state.selectedCandidate.id,
         councilDecisionId: state.decision.id,
         walletAddress: wallet.address,
-      });
+      }, idempotencyKey);
+      clearPreviewRetry();
       previewWallet.current = wallet.address;
       dispatch({ type: "preview_ready", preview: response.data });
     } catch (reason) { fail(reason, "plan_approved"); }
@@ -161,7 +169,7 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
       const idempotencyKey = previous?.tradeId === state.preview.trade.id && previous.quoteFingerprint === state.preview.trade.quoteFingerprint
         ? previous.idempotencyKey
         : crypto.randomUUID();
-      saveExecutionRetry({ tradeId: state.preview.trade.id, quoteFingerprint: state.preview.trade.quoteFingerprint, idempotencyKey, txHash: null });
+      saveExecutionRetry({ tradeId: state.preview.trade.id, quoteFingerprint: state.preview.trade.quoteFingerprint, idempotencyKey, submissionIdempotencyKey: previous?.submissionIdempotencyKey ?? null, txHash: null });
       const response = await goalGuardApi.prepareExecution({
         tradeId: state.preview.trade.id,
         quoteFingerprint: state.preview.trade.quoteFingerprint,
@@ -188,7 +196,10 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
 
   const recordKnownSubmission = useCallback(async (txHash: string) => {
     if (!state.trade || !wallet.address) return;
-    const response = await goalGuardApi.recordSubmission(state.trade.id, { txHash: txHash as `0x${string}`, walletAddress: wallet.address });
+    const retry = readExecutionRetry();
+    const submissionIdempotencyKey = retry?.submissionIdempotencyKey ?? crypto.randomUUID();
+    if (retry) saveExecutionRetry({ ...retry, submissionIdempotencyKey, txHash });
+    const response = await goalGuardApi.recordSubmission(state.trade.id, { txHash: txHash as `0x${string}`, walletAddress: wallet.address }, submissionIdempotencyKey);
     dispatch({ type: "submitted", trade: response.data.trade, txHash });
     pollStartedAt.current = Date.now();
   }, [state.trade, wallet.address]);

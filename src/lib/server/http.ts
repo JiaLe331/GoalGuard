@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { ZodError, type ZodType } from "zod";
 
 import { ApiErrorResponseSchema, type ApiErrorCode } from "@/lib/contracts";
-import { RepositoryConflictError, RepositoryNotFoundError } from "@/lib/db/repository";
+import { RepositoryConflictError, RepositoryIdempotencyConflictError, RepositoryNotFoundError } from "@/lib/db/repository";
 import { RouteError } from "./session";
 
 export class ApiRouteError extends Error {
@@ -39,6 +39,7 @@ function mapped(error: unknown): { code: ApiErrorCode; message: string; status: 
   if (error instanceof ApiRouteError) return { code: error.code, message: error.message, status: error.status, retryable: error.retryable, details: error.details, fields: {} };
   if (error instanceof RouteError) return { code: error.code as ApiErrorCode, message: error.message, status: error.status, retryable: error.retryable, details: null, fields: {} };
   if (error instanceof RepositoryNotFoundError) return { code: "NOT_FOUND", message: "The requested record was not found.", status: 404, retryable: false, details: null, fields: {} };
+  if (error instanceof RepositoryIdempotencyConflictError) return { code: "IDEMPOTENCY_CONFLICT", message: error.message, status: 409, retryable: false, details: null, fields: {} };
   if (error instanceof RepositoryConflictError) return { code: "CONFLICT", message: error.message, status: 409, retryable: false, details: null, fields: {} };
   console.error("Unhandled GoalGuard route error", error);
   return { code: "INTERNAL_ERROR", message: "GoalGuard could not complete the request.", status: 500, retryable: true, details: null, fields: {} };

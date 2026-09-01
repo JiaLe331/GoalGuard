@@ -1,14 +1,14 @@
 # GoalGuard development progress
 
-Last verified: **2026-09-01**. `goalguard_prd.md`, especially Section 17 and its P0 implementation decisions, remains normative.
+Last verified: **2026-09-02**. `goalguard_prd.md`, especially Section 17 and its P0 implementation decisions, remains normative.
 
 | Milestone | Status | Evidence | Remaining external gate |
 |---|---|---|---|
 | M1 Integration skeleton | Implementation ready | Next.js app, Supabase PostgreSQL adapter, readiness endpoint, sponsor clients, and smoke scripts. | Run sponsor smoke checks with real credentials. |
-| M2 Goal engine | Implementation ready | Gonka structured parsing, one-field clarification, anonymous ownership, parse/edit/hydration routes. | Record a real Gonka request ID. |
+| M2 Goal engine | Implementation ready | Gonka structured parsing, one-field clarification, correct `200`/`201` semantics, anonymous ownership, parse/edit/hydration routes, and fail-closed client tests. | Record a real Gonka request ID. |
 | M3 Strategy engine | Implementation ready | Live OptionBook normalization, vanilla ETH-put eligibility, deterministic decimal calculations, top-three ranking, and refusal path. | Record current live market evidence with configured RPC. |
-| M4 GoalGuard council | Implementation ready | Three independent role calls, two-model minimum, bounded repair, input/request audit metadata, deterministic consensus, and route/UI gating. | Record three real request IDs from one review. |
-| M5 Trade preview/execution | Implementation ready; live disabled | Fresh-order comparison, balances/allowance/exposure, SDK calldata, fingerprints, premium/referral gates, transaction submission validation, and Render monitor. | Organizer approval, healthy deployed worker, and one capped burner-wallet trade. |
+| M4 GoalGuard council | Implementation ready | Three independent role calls, two-model minimum, bounded repair, input-hash-aware caching, atomic attempt allocation, request audit metadata, deterministic consensus, and route/UI gating. | Record three real request IDs from one review. |
+| M5 Trade preview/execution | Implementation ready; live disabled | Current-record checks, request idempotency, fresh-order comparison, balances/allowance/exposure, SDK calldata, fingerprints, premium/referral gates, submission validation, and tested transaction/position monitoring. | Organizer approval, healthy deployed worker, and one capped burner-wallet trade. |
 | M6 Product polish | In progress | Plain-language state wording, wallet readiness, referral disclosure, responsive UI, unit/component tests, and approved preview browser path. | Complete the expanded browser error/recovery matrix and manual device/accessibility QA. |
 | M7 Submission readiness | In progress | Updated PRD, README, environment template, Vercel/Render descriptors, migration, and local validation commands. | Deploy, scan history for secrets, capture sponsor evidence, and prepare submission assets. |
 
@@ -30,3 +30,5 @@ pnpm test:e2e
 ```
 
 Live `smoke:*` commands and the final burner-wallet transaction remain opt-in external acceptance gates.
+
+The credential-free suite now covers structured Gonka parsing, council cache/failure behavior, deterministic strategy calculations, PostgreSQL idempotency, and worker verification. `pnpm smoke:workflow` is the local hosted-Supabase acceptance command for the real goal-to-preview path.

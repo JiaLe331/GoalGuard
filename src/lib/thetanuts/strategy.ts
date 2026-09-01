@@ -53,12 +53,20 @@ function scenario(key: ScenarioResult["key"], price: Decimal, spot: Decimal, pro
 
 export interface CandidateSearchResult { candidates: ProtectionCandidate[]; rejected: CandidateRejection[]; marketAsOf: string; }
 
-export async function generateProtectionCandidates(goal: Goal): Promise<CandidateSearchResult> {
+export interface CandidateGenerationOptions {
+  client?: Pick<ReturnType<typeof createConfiguredThetanutsClient>, "api" | "chainConfig" | "optionBook">;
+  now?: Date;
+  maxDeadlineGapHours?: number;
+}
+
+export async function generateProtectionCandidates(goal: Goal, options: CandidateGenerationOptions = {}): Promise<CandidateSearchResult> {
   const env = readServerEnvironment();
-  if (!env.THETANUTS_RPC_URL) throw new ApiRouteError("THETANUTS_UNAVAILABLE", "Thetanuts is not configured.", 503, true);
-  const client = createConfiguredThetanutsClient(env.THETANUTS_RPC_URL, env.THETANUTS_REFERRER_ADDRESS);
+  if (!options.client && !env.THETANUTS_RPC_URL) throw new ApiRouteError("THETANUTS_UNAVAILABLE", "Thetanuts is not configured.", 503, true);
+  const client = options.client ?? createConfiguredThetanutsClient(env.THETANUTS_RPC_URL!, env.THETANUTS_REFERRER_ADDRESS);
+  const nowMs = options.now?.getTime() ?? Date.now();
+  const maxDeadlineGapHours = options.maxDeadlineGapHours ?? env.MAX_DEADLINE_GAP_HOURS;
   let orders: OrderWithSignature[]; let market;
-  try { [orders, market] = await Promise.all([client.api.filterOrders({ asset: "ETH", type: "put", minExpiry: Math.floor(Date.now() / 1000) }), client.api.getMarketData()]); }
+  try { [orders, market] = await Promise.all([client.api.filterOrders({ asset: "ETH", type: "put", minExpiry: Math.floor(nowMs / 1000) }), client.api.getMarketData()]); }
   catch { throw new ApiRouteError("THETANUTS_UNAVAILABLE", "Thetanuts market data is temporarily unavailable.", 502, true); }
   const spot = new Decimal(market.prices.ETH); if (!spot.isPositive()) throw new ApiRouteError("UPSTREAM_INVALID_RESPONSE", "Thetanuts returned an invalid ETH price.", 502, true);
   const marketAsOf = new Date(market.metadata.lastUpdated).toISOString();
@@ -77,9 +85,9 @@ export async function generateProtectionCandidates(goal: Goal): Promise<Candidat
     if (!raw || raw.implementation.toLowerCase() !== putImplementation.toLowerCase() || strikes.length !== 1) reasons.push("Only a vanilla ETH put is supported.");
     if (order.order.isBuyer || raw?.isLong === false) reasons.push("The order does not let the user buy protection.");
     if (expiryMs < deadline) reasons.push("The option expires before the goal deadline.");
-    if (gapHours > env.MAX_DEADLINE_GAP_HOURS) reasons.push(`The expiry is more than ${env.MAX_DEADLINE_GAP_HOURS} hours after the deadline.`);
+    if (gapHours > maxDeadlineGapHours) reasons.push(`The expiry is more than ${maxDeadlineGapHours} hours after the deadline.`);
     const orderDeadline = Number(order.order.deadline ?? BigInt(raw?.orderExpiryTimestamp ?? 0)) * 1000;
-    if (!orderDeadline || orderDeadline <= Date.now() + 60_000) reasons.push("The order is expired or too close to expiry.");
+    if (!orderDeadline || orderDeadline <= nowMs + 60_000) reasons.push("The order is expired or too close to expiry.");
     if (!order.order.collateralToken || order.order.collateralToken.toLowerCase() !== usdc.address.toLowerCase()) reasons.push("P0 supports USDC-settled OptionBook orders only.");
     if (order.availableAmount <= 0n) reasons.push("The order has no available liquidity.");
     const requiredPremiumBaseUnits = (desiredContracts * order.order.price + 99_999_999n) / 100_000_000n;
