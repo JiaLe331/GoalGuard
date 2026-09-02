@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@thetanuts-finance/thetanuts-client':
-        specifier: 0.2.3
-        version: 0.2.3(debug@4.4.3(supports-color@7.2.0))(ethers@6.17.0)(supports-color@7.2.0)(typescript@5.9.3)(zod@4.1.11)
+        specifier: 0.3.0
+        version: 0.3.0(debug@4.4.3(supports-color@7.2.0))(ethers@6.17.0)(supports-color@7.2.0)(typescript@5.9.3)(zod@4.1.11)
       decimal.js:
         specifier: 10.6.0
         version: 10.6.0
@@ -1173,8 +1173,8 @@ packages:
     peerDependencies:
       '@testing-library/dom': '>=7.21.4'
 
-  '@thetanuts-finance/thetanuts-client@0.2.3':
-    resolution: {integrity: sha512-35hQJ4nQ47b2ebs4Sc9T0M+S6wXJY4902NT+IRiNW4yem+G6eqirFR5j9MTKmKUQY8w5edvuhUqF39Zirlz2qw==}
+  '@thetanuts-finance/thetanuts-client@0.3.0':
+    resolution: {integrity: sha512-+HFZVP8U69OmrKxrdwERA9li7QLMGNWTkgsIKE4B0uNxcYGcTUuYdjEAhG83ntui+gh158lTALc2n+fHSWLoaw==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       ethers: ^6.0.0
@@ -4174,7 +4174,7 @@ snapshots:
     dependencies:
       '@testing-library/dom': 10.4.1
 
-  '@thetanuts-finance/thetanuts-client@0.2.3(debug@4.4.3(supports-color@7.2.0))(ethers@6.17.0)(supports-color@7.2.0)(typescript@5.9.3)(zod@4.1.11)':
+  '@thetanuts-finance/thetanuts-client@0.3.0(debug@4.4.3(supports-color@7.2.0))(ethers@6.17.0)(supports-color@7.2.0)(typescript@5.9.3)(zod@4.1.11)':
     dependencies:
       axios: 1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
       ethers: 6.17.0
