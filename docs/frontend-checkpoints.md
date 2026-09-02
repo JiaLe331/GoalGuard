@@ -18,10 +18,10 @@ This file cross-checks the GoalGuard P0 frontend against the approved FE0-FE7 pl
 | FE1 Goal entry and confirmation | **IMPLEMENTED / BLOCKED** | Natural-language submission, clarification, durable navigation, editing, validation, abort support, and draft preservation are implemented against production routes. | Component tests plus backend parsing, ownership, and persistence tests pass. | Run multi-turn clarification against real Gonka and hosted Supabase. |
 | FE2 Candidate search and plan | **IMPLEMENTED / BLOCKED** | Live request progress, ranked plans, scenarios, refresh, and refusal surfaces are connected to the production candidate route. | Deterministic strategy tests cover exact math, full coverage, ranking inputs, and invalid order direction. | Run the real Thetanuts smoke path and expand browser failure cases. |
 | FE3 GoalGuard council | **IMPLEMENTED / BLOCKED** | Three role cards, verdicts, disclosures, model names, Request IDs, retry control, and trade gating use the production council route. | Service tests cover independent calls, two models, matching-input cache reuse, and failed-role blocking. | Record three real Gonka Request IDs and expand disputed/blocked browser cases. |
-| FE4 Trade preview and confirmation | **IMPLEMENTED / BLOCKED** | Wallet/Base requirements, exact cost, readiness, idempotent preview, warnings, quote countdown, and disabled-execution behavior are integrated. | Client and repository tests cover preview idempotency and current-record constraints; Playwright covers preview-only UX. | Run `smoke:workflow` with a public funded wallet and add browser wallet failure cases. |
-| FE5 Wallet execution and lifecycle | **IMPLEMENTED / BLOCKED** | Distinct durable retry keys, exact approval sequencing, explicit wallet actions, submission retry, polling, and recovery are connected to production routes. | Transaction matching and monitor tests cover mismatch, revert, index delay, and verified confirmation. | Keep disabled until organizer approval; later complete one capped burner-wallet transaction. |
-| FE6 Protected state, recovery, and polish | **IMPLEMENTED / BLOCKED** | Canonical hydration mapping, interrupted-signature recovery, submitted polling, protected summary, explorer link, council audit references, focus management, safe external links, responsive layouts, and non-color statuses exist. | Draft hydration and submitted-not-protected reducer tests pass; landing and preview-only axe scans report no serious/critical violations. | Verify every persisted goal/trade status against real `GET` responses. Add protected/failed/pending browser paths, keyboard-only evidence, reduced-motion and 200% zoom checks, responsive screenshots at all required widths, and a full automated accessibility scan for each major stage. |
-| FE7 Full acceptance and handoff | **PARTIAL / BLOCKED** | The deterministic local suite and production limitations are documented; CI is intentionally not configured. | On 2026-09-02, lint, type-check, **16 Vitest files / 72 tests**, webpack production build, and **3 Chromium tests** passed. | Run sponsor smoke tests, deploy, obtain organizer approval, and complete one capped burner-wallet transaction. |
+| FE4 Unsigned preview and confirmation | **IMPLEMENTED / BLOCKED** | Wallet/Base read-only requirements, exact cost, readiness, idempotent preview, warnings, and quote countdown are integrated. The terminal CTA must generate an unsigned preview. | Client and repository tests cover preview idempotency and current-record constraints; Playwright covers preview-only UX. | Run the read-only `smoke:workflow` path and add browser wallet/network failure cases. |
+| FE5 Signing and submission | **OUT OF SCOPE / DORMANT** | Future compatibility code may remain server-side, but the submitted demo exposes no approval, signing, send, or submission action. | The policy requires execute and submission routes to return `422 EXECUTION_DISABLED`. | Do not implement this checkpoint during the hackathon demo. |
+| FE6 Demo-ready state and polish | **IMPLEMENTED / BLOCKED** | Canonical hydration mapping, council audit references, focus management, safe external links, responsive layouts, non-color statuses, and preview-only accessibility coverage exist. | Landing and preview-only axe scans report no serious/critical violations. | Add the terminal unsigned-preview wording, keyboard-only evidence, reduced-motion and 200% zoom checks, responsive screenshots, and full accessibility scans. |
+| FE7 Full acceptance and handoff | **PARTIAL / BLOCKED** | The deterministic local suite and preview-only production limitations are documented; CI is intentionally not configured. | On 2026-09-02, lint, type-check, **16 Vitest files / 72 tests**, webpack production build, and **3 Chromium tests** passed. | Run read-only sponsor smoke tests, deploy, and capture unsigned-preview evidence. |
 
 ## Current validation record
 
@@ -36,7 +36,7 @@ pnpm test:e2e: PASS (3 Chromium tests)
 CI: NOT CONFIGURED; validation was run locally
 Gonka live smoke: NOT RUN
 Thetanuts live smoke: NOT RUN
-Live wallet execution: BLOCKED by the disabled feature flag and organizer approval
+Wallet signing/broadcast: OUT OF SCOPE; the submitted demo ends at an unsigned preview
 ```
 
 The Playwright workflow intercepts `/api/**` with deterministic canonical fixtures. It proves browser wiring and schema-compatible presentation through preview-only, but it is not evidence that live sponsor flows work.
@@ -50,19 +50,18 @@ The Playwright workflow intercepts `/api/**` with deterministic canonical fixtur
 - Contract strictness, council role uniqueness, and API envelope validation.
 - Wallet absence, explicit connection, and Base switch offer.
 - Database goal round trip and forward-only goal transitions.
-- Draft hydration and the rule that a submitted hash alone is not protection.
-- Approved/disputed/blocked reducer mapping, council role/request-ID display, and disabled-execution signing-CTA suppression.
+- Draft hydration and the terminal preview-only state.
+- Approved/disputed/blocked reducer mapping, council role/request-ID display, and signing-CTA suppression.
 
 ## Acceptance coverage still required
 
 - Multi-turn clarification and editable refresh against the real goal API.
 - No-suitable-candidate, constraint editing, stale candidate, and Thetanuts failure paths.
 - Disputed and blocked council decisions, malformed reviews, and explicit retry attempts.
-- Quote expiry, wallet rejection, account/network invalidation, balance/cap failures, and allowance variants.
-- Approval then execution ordering, submission recovery, idempotency conflicts, pending/failed/confirmed polling, and reload during each transaction stage.
-- Protected-state rendering from a backend-verified receipt and protocol position.
+- Quote expiry, wallet rejection, account/network invalidation, balance/cap failures, and allowance-preview variants.
+- Terminal unsigned-preview idempotency, refresh, and the mandatory no-signature/no-funds/no-position disclosure.
 - Keyboard-only happy path, reduced motion, 200% zoom, all required responsive widths, and screenshots for every major stage.
-- Live sponsor evidence and the organizer-approved capped burner-wallet walkthrough.
+- Live-data/read-only sponsor evidence and the unsigned-preview walkthrough.
 
 ## Review evidence template
 
@@ -80,4 +79,4 @@ Known blockers:
 Gate result: PASS / BLOCKED
 ```
 
-Live execution must remain **BLOCKED** until organizer approval is recorded, sponsor integrations are ready, the server capability is enabled, and the premium cap is verified with a burner wallet. A client-submitted transaction hash alone must never pass FE5 or FE6.
+`ENABLE_LIVE_THETANUTS_EXECUTION=false` is fixed for the submitted and demonstrated build; it is not an organizer-approval switch. The frontend must never request a signature or broadcast. A demo preview is not a transaction or protected position.

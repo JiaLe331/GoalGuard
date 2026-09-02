@@ -8,14 +8,14 @@ Last verified: **2026-09-02**. `goalguard_prd.md`, especially Section 17 and its
 | M2 Goal engine | Implementation ready | Gonka structured parsing, one-field clarification, correct `200`/`201` semantics, anonymous ownership, parse/edit/hydration routes, and fail-closed client tests. | Record a real Gonka request ID. |
 | M3 Strategy engine | Implementation ready | Live OptionBook normalization, vanilla ETH-put eligibility, deterministic decimal calculations, top-three ranking, and refusal path. | Record current live market evidence with configured RPC. |
 | M4 GoalGuard council | Implementation ready | Three independent role calls, two-model minimum, bounded repair, input-hash-aware caching, atomic attempt allocation, request audit metadata, deterministic consensus, and route/UI gating. | Record three real request IDs from one review. |
-| M5 Trade preview/execution | Implementation ready; live disabled | Current-record checks, request idempotency, fresh-order comparison, balances/allowance/exposure, SDK calldata, fingerprints, premium/referral gates, submission validation, and tested transaction/position monitoring. | Organizer approval, healthy deployed worker, and one capped burner-wallet trade. |
+| M5 Trade preview | In progress | Current-record checks, request idempotency, fresh-order comparison, balances/allowance/exposure, SDK calldata, fingerprints, premium/referral gates, and unsigned preview foundations exist. | Complete the demo-only terminal preview path; no execution acceptance is required or authorized. |
 | M6 Product polish | In progress | Plain-language state wording, wallet readiness, referral disclosure, responsive UI, unit/component tests, and approved preview browser path. | Complete the expanded browser error/recovery matrix and manual device/accessibility QA. |
-| M7 Submission readiness | In progress | Updated PRD, README, environment template, Vercel/Render descriptors, migration, and local validation commands. | Deploy, scan history for secrets, capture sponsor evidence, and prepare submission assets. |
+| M7 Submission readiness | In progress | Updated PRD, README, environment template, Vercel/Render descriptors, migration, and local validation commands. | Deploy, scan history for secrets, capture preview-only sponsor evidence, and prepare submission assets. |
 
 ## Safety state
 
-- Live execution defaults to disabled and requires organizer approval, RPC, disclosed referrer, premium cap, and a healthy trade monitor.
-- A client hash cannot activate protection. The worker verifies chain, sender, target, calldata, value, receipt success, and indexed Thetanuts buyer position.
+- `ENABLE_LIVE_THETANUTS_EXECUTION=false` is mandatory for the submitted and demonstrated build. It is not an organizer-approval switch.
+- The demo flow ends at a real unsigned Base-mainnet preview. It does not request a signature, broadcast, create a transaction hash, activate protection, or require trade-monitor health.
 - No private keys, custom contract, faucet, RAG, price-prediction ML, autonomous execution, or alternative-asset recommendation are part of P0.
 - Test fixtures are confined to tests; production services stop on missing or invalid upstream data.
 
@@ -29,6 +29,6 @@ pnpm build
 pnpm test:e2e
 ```
 
-Live `smoke:*` commands and the final burner-wallet transaction remain opt-in external acceptance gates.
+Live `smoke:*` commands remain opt-in and read-only. No burner-wallet transaction is an acceptance gate for this demo-only build.
 
-The credential-free suite now covers structured Gonka parsing, council cache/failure behavior, deterministic strategy calculations, PostgreSQL idempotency, and worker verification. `pnpm smoke:workflow` is the local hosted-Supabase acceptance command for the real goal-to-preview path.
+The credential-free suite now covers structured Gonka parsing, council cache/failure behavior, deterministic strategy calculations, PostgreSQL idempotency, and worker verification. `pnpm smoke:workflow` is the local hosted-Supabase read-only check for the real goal-to-unsigned-preview path.
