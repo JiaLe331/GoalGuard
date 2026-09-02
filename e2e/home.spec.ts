@@ -6,7 +6,9 @@ test("renders the honest GoalGuard P0 entry shell", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: /protect the purpose behind your money/i })).toBeVisible();
   await expect(page.getByRole("heading", { name: /what are you protecting/i })).toBeVisible();
-  await expect(page.getByText(/live execution disabled by default/i)).toBeVisible();
+  await expect(page.getByRole("navigation", { name: /primary navigation/i })).toBeVisible();
+  await expect(page.getByText(/no wallet signature or transaction broadcast/i)).toBeVisible();
+  await expect(page.getByText(/unsigned preview only/i).first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Refresh" })).toBeVisible();
   await expect(page.getByText("Needs setup")).toHaveCount(2);
   await expectNoSeriousAccessibilityViolations(page);
@@ -23,4 +25,16 @@ test("keeps an incomplete Gonka draft and asks exactly one clarification", async
   ).toBeVisible();
   await expect(page.getByRole("textbox", { name: /by what date/i })).toHaveValue("");
   await expect(page.getByRole("button", { name: "Continue" })).toBeVisible();
+});
+
+test("keeps the landing interface usable without horizontal overflow at target widths", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  for (const width of [375, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/");
+    await expect(page.getByRole("heading", { name: /protect the purpose behind your money/i })).toBeVisible();
+    const dimensions = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }));
+    expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.client);
+    await page.screenshot({ animations: "disabled" });
+  }
 });
