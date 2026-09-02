@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { fixtureBlockedDecision, fixtureCandidate, fixtureDecision, fixtureDisputedDecision, fixtureGoal, fixtureReadyGoal, getDraftGoalResponse } from "@/test/fixtures/goalguard";
+import { fixtureBlockedDecision, fixtureCandidate, fixtureDecision, fixtureDisputedDecision, fixtureGoal, fixtureReadyGoal, getDraftGoalResponse, previewTradeResponse } from "@/test/fixtures/goalguard";
 import { initialWorkflowState, workflowReducer } from "./workflow";
 
 describe("workflow reducer", () => {
@@ -17,9 +17,10 @@ describe("workflow reducer", () => {
     expect(next.stage).toBe(`plan_${status}`);
   });
 
-  it("does not mark a submitted hash as protected", () => {
-    const next = workflowReducer(initialWorkflowState, { type: "broadcasted", txHash: `0x${"a".repeat(64)}` });
-    expect(next.stage).toBe("new_goal");
-    expect(next.txHash).toHaveLength(66);
+  it("ends the demo lifecycle at the unsigned preview", () => {
+    const next = workflowReducer(initialWorkflowState, { type: "preview_ready", preview: previewTradeResponse.data });
+    expect(next.stage).toBe("preview_ready");
+    expect(next.preview?.trade.status).toBe("previewed");
+    expect(next.preview?.trade.txHash).toBeNull();
   });
 });

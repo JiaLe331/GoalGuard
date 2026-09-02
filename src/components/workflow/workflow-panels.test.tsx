@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { fixtureDecision, fixtureGoal, previewTradeResponse } from "@/test/fixtures/goalguard";
-import { CouncilDrawer, GoalConfirmationForm, TradePreviewPanel } from "./workflow-panels";
+import { CouncilDrawer, GoalConfirmationForm, UnsignedPreviewPanel } from "./workflow-panels";
 
 describe("workflow panels", () => {
   it("exposes every council role and Gonka request ID", () => {
@@ -14,12 +14,15 @@ describe("workflow panels", () => {
     expect(screen.getByText(/gonka-request-1/i)).toBeVisible();
   });
 
-  it("never renders a signing CTA when execution is disabled", async () => {
+  it("discloses the terminal unsigned preview and has no signing or broadcast control", async () => {
     const user = userEvent.setup();
-    render(<TradePreviewPanel preview={previewTradeResponse.data} walletAddress="0x1111111111111111111111111111111111111111" executionEnabled={false} maxPremiumUsd="3" busy={false} onBack={vi.fn()} onConfirm={vi.fn()} />);
-    await user.click(screen.getByRole("checkbox"));
-    expect(screen.getByText("Preview only", { exact: true })).toBeVisible();
-    expect(screen.queryByRole("button", { name: /prepare wallet transaction/i })).not.toBeInTheDocument();
+    render(<UnsignedPreviewPanel preview={previewTradeResponse.data} walletAddress="0x1111111111111111111111111111111111111111" onBack={vi.fn()} />);
+    expect(screen.getByText(/no transaction was signed, no funds moved, and no protected position was created/i)).toBeVisible();
+    expect(screen.getByText("Base · 8453", { exact: true })).toBeVisible();
+    await user.click(screen.getByText("Unsigned transaction details", { exact: true }));
+    expect(screen.getByText(/calldata summary/i)).toBeVisible();
+    expect(screen.getByText(/no approval was sent/i)).toBeVisible();
+    expect(screen.queryByRole("button", { name: /sign|approve|execute|broadcast|send/i })).not.toBeInTheDocument();
   });
 
   it("keeps invalid confirmation fields client-side", async () => {
