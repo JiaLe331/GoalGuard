@@ -10,6 +10,7 @@ export const ServerEnvironmentSchema = z.object({
   GONKA_CONSUMER_ADVOCATE_MODEL: optionalNonEmpty,
   GONKA_REQUEST_ID_HEADER: z.string().trim().min(1).default("x-request-id"),
   THETANUTS_RPC_URL: z.string().url().optional(),
+  THETANUTS_RPC_FALLBACK_URL: z.string().url().optional(),
   THETANUTS_REFERRER_ADDRESS: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional(),
   ENABLE_LIVE_THETANUTS_EXECUTION: z.enum(["true", "false"]).default("false"),
   MAX_LIVE_TRADE_PREMIUM_USD: z.string().regex(/^(0|[1-9]\d*)(\.\d+)?$/).default("3"),
@@ -51,7 +52,13 @@ export function getGonkaCouncilConfiguration(environment: NodeJS.ProcessEnv = pr
 
 export function getThetanutsConfiguration(environment: NodeJS.ProcessEnv = process.env) {
   const env = readServerEnvironment(environment);
-  return env.THETANUTS_RPC_URL ? { rpcUrl: env.THETANUTS_RPC_URL, referrerAddress: env.THETANUTS_REFERRER_ADDRESS ?? null, chainId: 8453 as const } : null;
+  if (!env.THETANUTS_RPC_URL || !env.THETANUTS_RPC_FALLBACK_URL) return null;
+  return {
+    rpcUrl: env.THETANUTS_RPC_URL,
+    fallbackRpcUrl: env.THETANUTS_RPC_FALLBACK_URL,
+    referrerAddress: env.THETANUTS_REFERRER_ADDRESS ?? null,
+    chainId: 8453 as const,
+  };
 }
 
 export function getFrontendCapabilities(environment: NodeJS.ProcessEnv = process.env) {

@@ -1,21 +1,20 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import type { OrderWithSignature } from "@thetanuts-finance/thetanuts-client";
 import Decimal from "decimal.js";
 import { getAddress } from "ethers";
 
 import { readServerEnvironment } from "@/lib/config/env";
 import type { CandidateRejection, Goal, ProtectionCandidate, ScenarioResult } from "@/lib/contracts";
 import { ApiRouteError } from "@/lib/server/http";
-import { createConfiguredThetanutsClient } from "./client";
+import { parseThetanutsMarketData, parseThetanutsOrders, type ThetanutsOrder, type ThetanutsReadClient, withConfiguredThetanutsRead } from "./client";
 
 const SIX = new Decimal(1_000_000);
 const EIGHT = new Decimal(100_000_000);
 const decimal = (value: Decimal.Value) => new Decimal(value).toFixed();
 
-export function orderId(order: OrderWithSignature) { return `${order.makerAddress.toLowerCase()}:${order.order.nonce.toString()}`; }
+export function orderId(order: ThetanutsOrder) { return `${order.makerAddress.toLowerCase()}:${order.order.nonce.toString()}`; }
 
-export function serializeOrder(order: OrderWithSignature) {
+export function serializeOrder(order: ThetanutsOrder) {
   return {
     order: {
       maker: order.order.maker, taker: order.order.taker, option: order.order.option, isBuyer: order.order.isBuyer,
@@ -28,7 +27,7 @@ export function serializeOrder(order: OrderWithSignature) {
   };
 }
 
-export function deserializeOrder(raw: unknown): OrderWithSignature {
+export function deserializeOrder(raw: unknown): ThetanutsOrder {
   const value = raw as ReturnType<typeof serializeOrder>;
   if (!value?.order || !value.signature || !value.makerAddress) throw new ApiRouteError("UPSTREAM_INVALID_RESPONSE", "Stored order data is incomplete.", 500);
   return {
@@ -54,20 +53,35 @@ function scenario(key: ScenarioResult["key"], price: Decimal, spot: Decimal, pro
 export interface CandidateSearchResult { candidates: ProtectionCandidate[]; rejected: CandidateRejection[]; marketAsOf: string; }
 
 export interface CandidateGenerationOptions {
-  client?: Pick<ReturnType<typeof createConfiguredThetanutsClient>, "api" | "chainConfig" | "optionBook">;
+  client?: Pick<ThetanutsReadClient, "api" | "chainConfig" | "optionBook">;
   now?: Date;
   maxDeadlineGapHours?: number;
 }
 
 export async function generateProtectionCandidates(goal: Goal, options: CandidateGenerationOptions = {}): Promise<CandidateSearchResult> {
   const env = readServerEnvironment();
-  if (!options.client && !env.THETANUTS_RPC_URL) throw new ApiRouteError("THETANUTS_UNAVAILABLE", "Thetanuts is not configured.", 503, true);
-  const client = options.client ?? createConfiguredThetanutsClient(env.THETANUTS_RPC_URL!, env.THETANUTS_REFERRER_ADDRESS);
+  if (!options.client && (!env.THETANUTS_RPC_URL || !env.THETANUTS_RPC_FALLBACK_URL)) throw new ApiRouteError("THETANUTS_UNAVAILABLE", "Thetanuts requires both Base RPC providers.", 503, true);
   const nowMs = options.now?.getTime() ?? Date.now();
   const maxDeadlineGapHours = options.maxDeadlineGapHours ?? env.MAX_DEADLINE_GAP_HOURS;
-  let orders: OrderWithSignature[]; let market;
-  try { [orders, market] = await Promise.all([client.api.filterOrders({ asset: "ETH", type: "put", minExpiry: Math.floor(nowMs / 1000) }), client.api.getMarketData()]); }
-  catch { throw new ApiRouteError("THETANUTS_UNAVAILABLE", "Thetanuts market data is temporarily unavailable.", 502, true); }
+  let client: Pick<ThetanutsReadClient, "api" | "chainConfig" | "optionBook">; let orders: ThetanutsOrder[]; let market;
+  try {
+    if (options.client) {
+      client = options.client;
+      [orders, market] = await Promise.all([client.api.filterOrders({ asset: "ETH", type: "put", minExpiry: Math.floor(nowMs / 1000) }), client.api.getMarketData()]);
+      orders = parseThetanutsOrders(orders);
+      market = parseThetanutsMarketData(market);
+    } else {
+      ({ client, orders, market } = await withConfiguredThetanutsRead(async (configuredClient) => ({
+        client: configuredClient,
+        orders: parseThetanutsOrders(await configuredClient.api.filterOrders({ asset: "ETH", type: "put", minExpiry: Math.floor(nowMs / 1000) })),
+        market: parseThetanutsMarketData(await configuredClient.api.getMarketData()),
+      })));
+    }
+  }
+  catch (error) {
+    if (error instanceof ApiRouteError || error instanceof Error && error.name === "ZodError") throw new ApiRouteError("UPSTREAM_INVALID_RESPONSE", "Thetanuts returned malformed market data.", 502);
+    throw new ApiRouteError("THETANUTS_UNAVAILABLE", "Thetanuts market data is temporarily unavailable.", 502, true);
+  }
   const spot = new Decimal(market.prices.ETH); if (!spot.isPositive()) throw new ApiRouteError("UPSTREAM_INVALID_RESPONSE", "Thetanuts returned an invalid ETH price.", 502, true);
   const marketAsOf = new Date(market.metadata.lastUpdated).toISOString();
   const usdc = client.chainConfig.tokens.USDC; const putImplementation = client.chainConfig.implementations.PUT;
