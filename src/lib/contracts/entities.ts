@@ -4,6 +4,7 @@ import { z } from "zod";
 import {
   CandidateSourceSchema,
   CandidateStatusSchema,
+  CoverageModeSchema,
   CouncilRoleSchema,
   CouncilStatusSchema,
   CouncilVerdictSchema,
@@ -88,6 +89,7 @@ export const ProtectionCandidateSchema = z.object({
   estimatedFloorUsd: DecimalStringSchema,
   deadlineGapHours: z.number().int().nonnegative(),
   goalCoverageBps: z.number().int().min(0).max(10000),
+  coverageMode: CoverageModeSchema,
   availableQuantityBaseUnits: BaseUnitStringSchema.nullable(),
   status: CandidateStatusSchema,
   rejectionReasons: z.array(nonEmptyShortString),
@@ -103,6 +105,12 @@ export const ProtectionCandidateSchema = z.object({
   const mayExplainRejection = candidate.status === "rejected" || candidate.status === "stale";
   if (!mayExplainRejection && candidate.rejectionReasons.length > 0) {
     context.addIssue({ code: "custom", path: ["rejectionReasons"], message: "Only rejected or stale candidates may have rejection reasons." });
+  }
+  if (candidate.coverageMode === "full" && candidate.goalCoverageBps !== 10000) {
+    context.addIssue({ code: "custom", path: ["goalCoverageBps"], message: "Full coverage requires 10000 basis points." });
+  }
+  if (candidate.coverageMode === "proportional_demo" && (candidate.goalCoverageBps <= 0 || candidate.goalCoverageBps >= 10000)) {
+    context.addIssue({ code: "custom", path: ["goalCoverageBps"], message: "A proportional demo requires partial positive coverage." });
   }
   for (const requiredKey of ["down", "flat", "up"] as const) {
     if (candidate.scenarios.filter(({ key }) => key === requiredKey).length !== 1) {
