@@ -16,11 +16,10 @@ import {
   type CouncilDecision,
   type Goal,
   type PublicProtectionCandidate,
-  type Trade,
   type TradePreview,
   type UpdateGoalRequest,
 } from "@/lib/contracts";
-import { baseTransactionUrl, formatCountdown, formatDate, formatPercentFromBps, formatUsd, secondsUntil, shortenAddress } from "@/lib/frontend/format";
+import { formatCountdown, formatDate, formatPercentFromBps, formatUsd, secondsUntil, shortenAddress } from "@/lib/frontend/format";
 
 const goalLabels = {
   rent: "Rent",
@@ -230,7 +229,7 @@ export function ProtectionPlanPanel({
         <Card className="p-6"><p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">Independent review</p><h2 className="mt-2 text-xl font-semibold text-white">{decision.approvedReviewCount}/3 council checks passed</h2><p className="mt-2 text-sm leading-6 text-[#9daca2]">Review attempt {decision.attempt}. AI explanations cannot change the deterministic financial values.</p><Button className="mt-5 w-full" variant="secondary" onClick={onOpenCouncil}>Open GoalGuard review</Button></Card>
         {!approved ? <Alert tone={decision.status === "disputed" ? "warning" : "error"} title={decision.status === "disputed" ? "Council disputed" : "Plan blocked"}>This candidate cannot proceed to trade preview. Open the review to see which role raised a concern.</Alert> : null}
         <div className="flex flex-col gap-3">
-          <Button onClick={onPreview} disabled={!approved || busy}>{busy ? "Preparing…" : "Preview exact trade"}</Button>
+          <Button onClick={onPreview} disabled={!approved || busy}>{busy ? "Generating…" : "Generate unsigned preview"}</Button>
           <Button variant="ghost" onClick={onRefresh} disabled={busy}>Refresh live options</Button>
         </div>
       </div>
@@ -238,24 +237,7 @@ export function ProtectionPlanPanel({
   );
 }
 
-export function TradePreviewPanel({
-  preview,
-  walletAddress,
-  executionEnabled,
-  maxPremiumUsd,
-  busy,
-  onBack,
-  onConfirm,
-}: {
-  preview: TradePreview;
-  walletAddress: string;
-  executionEnabled: boolean;
-  maxPremiumUsd: string;
-  busy: boolean;
-  onBack: () => void;
-  onConfirm: () => void;
-}) {
-  const [acknowledged, setAcknowledged] = useState(false);
+export function UnsignedPreviewPanel({ preview, walletAddress, onBack }: { preview: TradePreview; walletAddress: string | null; onBack: () => void }) {
   const [seconds, setSeconds] = useState(() => secondsUntil(preview.trade.previewExpiresAt));
   useEffect(() => {
     const timer = window.setInterval(() => setSeconds(secondsUntil(preview.trade.previewExpiresAt)), 1000);
@@ -263,80 +245,49 @@ export function TradePreviewPanel({
   }, [preview.trade.previewExpiresAt]);
   const expired = seconds === 0;
   const partial = preview.candidate.goalCoverageBps < 10000;
+  const uncovered = new Decimal(preview.candidate.quantityUnderlying)
+    .mul(new Decimal(10_000).minus(preview.candidate.goalCoverageBps))
+    .div(10_000)
+    .toString();
+  const calldataSummary = `${preview.executionTransaction.data.slice(0, 18)}…${preview.executionTransaction.data.slice(-10)} (${(preview.executionTransaction.data.length - 2) / 2} bytes)`;
   return (
     <Card className="mx-auto max-w-4xl p-6 sm:p-8">
-      <div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">Exact trade preview</p><h1 className="mt-2 text-3xl font-semibold text-white">Review before your wallet opens.</h1></div><StatusBadge label={executionEnabled ? "Live execution enabled" : "Preview only"} tone={executionEnabled ? "warning" : "neutral"} /></div>
+      <div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">Unsigned transaction preview</p><h1 className="mt-2 text-3xl font-semibold text-white">Protection Plan Ready (Demo)</h1></div><StatusBadge label="Previewed · no execution" tone="neutral" /></div>
+      <Alert className="mt-5" tone="success" title="Demo preview ready — no transaction was signed, no funds moved, and no protected position was created.">Live execution is disabled for this demo. This screen stops at an unsigned Base transaction preview.</Alert>
       <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {[
           ["Protection cost", formatUsd(preview.candidate.premiumUsd)],
-          ["Maximum cost at risk", formatUsd(preview.candidate.maxPremiumLossUsd)],
+          ["Option", `${preview.candidate.underlyingAsset} ${preview.candidate.optionType}`],
+          ["Strike", formatUsd(preview.candidate.strikeUsd)],
           ["Protection ends on", formatDate(preview.candidate.expiry)],
-          ["Estimated protected value", formatUsd(preview.candidate.estimatedFloorUsd)],
-          ["Wallet", shortenAddress(walletAddress)],
+          ["Proposed quantity", `${preview.candidate.quantityUnderlying} ETH`],
+          ["Uncovered amount", `${uncovered} ETH`],
+          ["Coverage mode", preview.proposal.coverageMode === "full" ? "Full proposal" : "Proportional demo"],
+          ["Goal coverage", formatPercentFromBps(preview.proposal.goalCoverageBps)],
+          ["Settlement token", preview.candidate.settlementTokenSymbol],
+          ["Wallet", walletAddress ? shortenAddress(walletAddress) : "Disconnected after preview"],
           ["Network", "Base · 8453"],
+          ["Live market checked", formatDate(preview.candidate.marketAsOf, { hour: "numeric", minute: "2-digit", second: "2-digit" })],
         ].map(([label, value]) => <div key={label} className="rounded-2xl border border-white/[0.07] bg-black/10 p-4"><p className="text-xs text-[var(--muted)]">{label}</p><p className="mt-1 font-semibold text-white">{value}</p></div>)}
       </div>
       <div className="mt-5 flex items-center justify-between rounded-2xl border border-white/[0.08] bg-white/[0.035] p-4"><span className="text-sm text-[#b9c6bc]">Preview valid for</span><span className={expired ? "font-mono text-[var(--danger-soft)]" : "font-mono text-[var(--accent)]"}>{formatCountdown(seconds)}</span></div>
       {partial ? <Alert className="mt-5" tone="warning" title="Proportional micro-hedge demo">This candidate covers {formatPercentFromBps(preview.candidate.goalCoverageBps)} of the goal and does not fully protect the original amount.</Alert> : null}
-      {!executionEnabled ? <Alert className="mt-5" tone="warning" title="Live execution is disabled">You can review the full plan, but signing is unavailable until organizer approval. The live premium cap is {formatUsd(maxPremiumUsd)}.</Alert> : null}
       {preview.warnings.map((warning) => <Alert key={warning} className="mt-3" tone="warning">{warning}</Alert>)}
       <div className="mt-5 grid gap-3 sm:grid-cols-3" aria-label="Wallet readiness">
         {Object.entries(preview.walletReadiness).map(([key, item]) => <div key={key} className="rounded-2xl border border-white/[0.07] bg-black/10 p-4"><p className="text-xs capitalize text-[var(--muted)]">{key.replace(/([A-Z])/g, " $1")}</p><p className={item.sufficient ? "mt-1 font-semibold text-[var(--accent)]" : "mt-1 font-semibold text-[var(--danger-soft)]"}>{item.sufficient ? "Ready" : `${item.symbol} needed`}</p></div>)}
       </div>
       <Alert className="mt-3" tone={preview.referralDisclosure.mayReceiveFee ? "warning" : "info"}>{preview.referralDisclosure.message}</Alert>
-      <label className="mt-6 flex items-start gap-3 rounded-2xl border border-white/[0.08] p-4 text-sm leading-6 text-[#c2cec5]"><input type="checkbox" checked={acknowledged} onChange={(event) => setAcknowledged(event.target.checked)} className="mt-1 size-4 accent-[#cbff6b]" />I understand that protection depends on the executed position and its settlement conditions at expiry.</label>
-      <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end"><Button variant="ghost" onClick={onBack}>Back to plan</Button>{executionEnabled ? <Button disabled={!acknowledged || expired || busy} onClick={onConfirm}>{busy ? "Revalidating…" : expired ? "Preview expired" : "Prepare wallet transaction"}</Button> : null}</div>
-    </Card>
-  );
-}
-
-export function TransactionStatusPanel({
-  stage,
-  trade,
-  txHash,
-  onApproval,
-  onExecution,
-  onRefresh,
-}: {
-  stage: "awaiting_approval_signature" | "awaiting_execution_signature" | "transaction_submitted";
-  trade: Trade;
-  txHash: string | null;
-  onApproval: () => void;
-  onExecution: () => void;
-  onRefresh: () => void;
-}) {
-  const copy = stage === "awaiting_approval_signature"
-    ? ["Exact token approval", "Your wallet will request only the amount shown in the preview."]
-    : stage === "awaiting_execution_signature"
-      ? ["Sign the protection trade", "This is the transaction that submits the option order."]
-      : ["Transaction submitted", "GoalGuard is waiting for verified confirmation on Base."];
-  return (
-    <Card className="mx-auto max-w-2xl p-7 text-center sm:p-10">
-      <span className="mx-auto grid size-16 place-items-center rounded-full border border-[#cbff6b]/25 bg-[#cbff6b]/10 text-2xl text-[var(--accent)]" aria-hidden="true">{stage === "transaction_submitted" ? "…" : "↗"}</span>
-      <h1 className="mt-5 text-3xl font-semibold text-white">{copy[0]}</h1><p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-[#a8b7ad]">{copy[1]} GoalGuard will not call the goal protected until the backend verifies the receipt.</p>
-      {txHash ? <a href={baseTransactionUrl(txHash)} target="_blank" rel="noreferrer" className="mt-5 block break-all font-mono text-xs text-[var(--accent)] underline underline-offset-4">View {txHash}</a> : null}
-      <div className="mt-7">{stage === "awaiting_approval_signature" ? <Button onClick={onApproval}>Approve exact amount</Button> : stage === "awaiting_execution_signature" ? <Button onClick={onExecution}>Sign protection trade</Button> : <Button variant="secondary" onClick={onRefresh}>Refresh confirmation</Button>}</div>
-      <p className="mt-5 text-xs text-[var(--muted)]">Trade reference {trade.id}</p>
-    </Card>
-  );
-}
-
-export function ProtectedGoalPanel({ goal, candidate, decision, trade, explorerUrl }: { goal: Goal; candidate: PublicProtectionCandidate; decision: CouncilDecision; trade: Trade; explorerUrl: string | null }) {
-  const title = goal.customGoalLabel ?? goalLabels[goal.goalType];
-  return (
-    <Card className="mx-auto max-w-4xl overflow-hidden">
-      <div className="border-b border-[#91e95f]/20 bg-[#91e95f]/10 p-7 sm:p-10"><StatusBadge label="Position active" tone="ready" /><h1 className="mt-4 text-4xl font-semibold text-white">Protection position active for {title}.</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-[#c5d5c8]">The backend verified the Base transaction and position. Protection still depends on the executed option and settlement conditions.</p></div>
-      <div className="p-7 sm:p-10"><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{[
-        ["Amount to preserve", formatUsd(goal.protectedValueUsd)],
-        ["Protection cost", formatUsd(trade.premiumUsd)],
-        ["Protection ends on", formatDate(candidate.expiry)],
-        ["Estimated protected value", formatUsd(candidate.estimatedFloorUsd)],
-        ["Trade confirmed", trade.confirmedAt ? formatDate(trade.confirmedAt, { hour: "numeric", minute: "2-digit" }) : "Verified"],
-        ["Council decision", `Attempt ${decision.attempt} · checks passed`],
-      ].map(([label, value]) => <div key={label} className="rounded-2xl border border-white/[0.07] bg-black/10 p-4"><p className="text-xs text-[var(--muted)]">{label}</p><p className="mt-1 font-semibold text-white">{value}</p></div>)}</div>
-      {trade.txHash ? <a href={explorerUrl ?? baseTransactionUrl(trade.txHash)} target="_blank" rel="noreferrer" className="mt-6 inline-flex text-sm font-semibold text-[var(--accent)] underline underline-offset-4">View verified transaction <span aria-hidden="true">↗</span></a> : null}
-      <Accordion title="Audit references"><p className="break-all font-mono text-xs">Decision: {decision.id}</p>{decision.reviews.map((review) => <p key={review.id} className="mt-2 break-all font-mono text-xs">{roleLabels[review.role]}: {review.requestId}</p>)}</Accordion>
-      </div>
+      <div className="mt-5"><Accordion title="Unsigned transaction details">
+        <dl className="grid gap-3 text-sm sm:grid-cols-2">
+          <div><dt className="text-[var(--muted)]">Purpose</dt><dd className="mt-1 text-white">Unsigned Thetanuts option preview</dd></div>
+          <div><dt className="text-[var(--muted)]">Chain ID</dt><dd className="mt-1 font-mono text-white">{preview.executionTransaction.chainId}</dd></div>
+          <div><dt className="text-[var(--muted)]">Target</dt><dd className="mt-1 break-all font-mono text-xs text-white">{preview.executionTransaction.to}</dd></div>
+          <div><dt className="text-[var(--muted)]">Value (base units)</dt><dd className="mt-1 break-all font-mono text-xs text-white">{preview.executionTransaction.valueBaseUnits}</dd></div>
+          <div className="sm:col-span-2"><dt className="text-[var(--muted)]">Calldata summary</dt><dd className="mt-1 break-all font-mono text-xs text-white">{calldataSummary}</dd></div>
+          {preview.approvalTransaction ? <div className="sm:col-span-2"><dt className="text-[var(--muted)]">Exact approval preview</dt><dd className="mt-1 text-white">{preview.allowance?.requiredAmountBaseUnits} base units for {shortenAddress(preview.allowance?.spenderAddress ?? preview.approvalTransaction.to)}. It is unsigned; no approval was sent.</dd></div> : null}
+        </dl>
+      </Accordion></div>
+      <div className="mt-7"><Button variant="secondary" onClick={onBack}>Back to plan</Button></div>
     </Card>
   );
 }

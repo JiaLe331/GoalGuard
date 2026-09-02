@@ -7,7 +7,7 @@ import { WalletControl } from "@/components/wallet/wallet-control";
 const principles = [
   { step: "01", title: "State the goal", body: "Start with rent, tuition, travel, or any deadline that matters." },
   { step: "02", title: "Review the protection", body: "Independent AI roles challenge one live, deterministic plan." },
-  { step: "03", title: "You decide", body: "Nothing reaches your wallet without exact costs and explicit approval." },
+  { step: "03", title: "Inspect the preview", body: "See the exact unsigned Base transaction, then stop before signing." },
 ];
 
 export default function Home() {
@@ -32,7 +32,7 @@ export default function Home() {
 
         <section id="top" className="grid items-center gap-12 pb-14 pt-12 lg:grid-cols-[1.08fr_0.92fr] lg:pb-24 lg:pt-20">
           <div className="max-w-3xl">
-            <StatusBadge label="P0 workflow · Live execution gated" tone="warning" />
+            <StatusBadge label="P0 workflow · Unsigned preview only" tone="warning" />
             <h1 className="mt-7 text-balance text-5xl font-semibold leading-[0.98] tracking-[-0.055em] text-white sm:text-6xl lg:text-[5rem]">
               Protect the purpose <span className="text-[#cbff6b]">behind your money.</span>
             </h1>
@@ -69,7 +69,7 @@ export default function Home() {
               {[
                 "No private keys on the server",
                 "Base mainnet only",
-                "Live execution disabled by default",
+                "No signing or broadcast in this demo",
                 "No fabricated prices or protection",
               ].map((item) => (
                 <div key={item} className="flex items-center gap-3 rounded-2xl border border-white/[0.07] bg-black/10 p-4 text-sm text-[#c3d0c7]">
