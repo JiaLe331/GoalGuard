@@ -17,7 +17,7 @@
 **GoalGuard**
 
 ### 1.3 One-line pitch
-Tell GoalGuard what money matters to you and when you need it; GoalGuard independently reviews a live options-based protection plan before GoalGuard lets you execute it through Thetanuts.
+Tell GoalGuard what money matters to you and when you need it; GoalGuard independently reviews a live Thetanuts options-based protection plan and demonstrates the transaction safely without broadcasting a real trade.
 
 ### 1.4 Product thesis
 Most retail users do not think in strikes, expiries, premiums, or option Greeks. They think in goals:
@@ -32,7 +32,7 @@ GoalGuard converts a natural-language life goal into a transparent downside-prot
 **Protect the purpose of the money, not just the asset.**
 
 ### 1.6 Why options are essential
-GoalGuard is not a generic financial chatbot. Its core function depends on live on-chain options from Thetanuts. Without Thetanuts market data and execution, GoalGuard cannot create or execute the protection plan.
+GoalGuard is not a generic financial chatbot. Its core function depends on live on-chain options from Thetanuts. Without live Thetanuts market data and the official transaction-building flow, GoalGuard cannot create or demonstrate the protection plan. The hackathon demo must stop before wallet signing or transaction broadcast.
 
 ---
 
@@ -61,21 +61,21 @@ Thetanuts is integral because the app must:
 - build a protection plan from actual available options;
 - calculate outcomes from real option parameters;
 - preview the proposed transaction;
-- execute the selected option through Thetanuts.
+- demonstrate the selected option through the real Thetanuts transaction-building path without broadcasting it.
 
 The product should still make sense to a non-options user. The user buys “protect my rent fund,” not “ETH 3200P.”
 
 ### 2.3 Thetanuts Track 02 — AI × Options
-GoalGuard must complete an AI-assisted live options workflow:
+GoalGuard must demonstrate an AI-assisted live options workflow using live protocol data:
 
 1. User expresses a protection goal in natural language.
 2. AI converts the goal into structured constraints.
 3. The system finds viable live Thetanuts options.
 4. GoalGuard independently evaluates the candidate plan.
-5. User explicitly approves the trade.
-6. GoalGuard executes a real on-chain options trade through Thetanuts.
+5. User explicitly approves generating the final demo preview.
+6. GoalGuard displays the real unsigned Thetanuts transaction details and stops before wallet signing or broadcast.
 
-No paper-trading-only submission.
+The demo must use real Thetanuts mainnet market/order data and the official SDK path; it must not replace the sponsor integration with fabricated market data or falsely claim that a trade executed.
 
 ---
 
@@ -88,9 +88,9 @@ No paper-trading-only submission.
 3. Use deterministic code for all financial calculations.
 4. Use GoalGuard through Gonka Router to evaluate whether the candidate matches the user’s goal and risk limits.
 5. Show each council role, verdict, reason summary, model name, and Gonka Request ID.
-6. Require explicit user confirmation before any transaction.
-7. Execute a real Thetanuts trade when the feature is enabled and organizer rules permit it.
-8. Show the resulting transaction/position state in the GoalGuard UI.
+6. Require explicit user confirmation before generating the final transaction preview.
+7. Demonstrate the real Thetanuts transaction-building flow without signing or broadcasting a mainnet transaction.
+8. Show a clearly labelled demo-ready state in the GoalGuard UI without claiming that the goal is protected.
 
 ### 3.2 Product principles
 
@@ -125,7 +125,8 @@ The following are explicitly out of P0 scope:
 - mobile-native application;
 - multilingual UI;
 - custodial wallets;
-- execution without user confirmation.
+- execution without user confirmation;
+- signing or broadcasting a real Thetanuts mainnet trade during the hackathon demo.
 
 ---
 
@@ -242,8 +243,8 @@ Expandable sections:
 - GoalGuard review
 - Protocol details
 
-### Step 8 — User approval
-The user must explicitly click a confirmation action after reviewing:
+### Step 8 — Demo approval
+The user must explicitly click a confirmation action to generate the final transaction preview after reviewing:
 
 - exact trade cost;
 - expiry;
@@ -251,24 +252,26 @@ The user must explicitly click a confirmation action after reviewing:
 - wallet/network;
 - GoalGuard status.
 
-### Step 9 — Trade execution
-When enabled, execute the Thetanuts trade using the connected wallet.
+### Step 9 — Unsigned transaction demo
+Build and display the unsigned Thetanuts transaction using the official SDK/contract flow. Do not request a wallet signature and do not broadcast the transaction.
 
-The app must never sign or submit without an explicit user action.
+The UI must clearly state that live execution is disabled and that no funds moved.
 
-### Step 10 — Protected goal state
-After transaction confirmation, update the goal card:
+### Step 10 — Demo-ready goal state
+After the preview succeeds, update the goal card:
 
-**Rent — Protected**
+**Rent — Protection Plan Ready (Demo)**
 
 Display:
 
-- protected goal;
-- transaction hash/digest;
-- option position details;
-- trade timestamp;
+- goal summary;
+- unsigned transaction target, chain ID, and value summary;
+- proposed option position details;
+- preview timestamp;
 - council decision reference;
 - Gonka Request IDs.
+
+Do not show a transaction hash, confirmed position, or “Protected” status because no on-chain trade was submitted.
 
 ---
 
@@ -283,8 +286,8 @@ Display:
 - Structured goal confirmation/editing.
 - Protection plan card.
 - GoalGuard status display.
-- Trade confirmation flow.
-- Protected-goal success state.
+- Demo-preview confirmation flow.
+- Protection-plan-ready demo state.
 
 #### Gonka
 - Gonka Router client.
@@ -300,16 +303,16 @@ Display:
 - Read live Thetanuts orders/market data.
 - Build valid protection candidates.
 - Deterministically calculate user-facing outcomes.
-- Preview the trade before execution where supported by the current SDK.
-- Execute one real trade through the current official Thetanuts SDK/contract flow when permitted.
-- Display transaction result.
+- Build and display the real unsigned transaction preview through the current official Thetanuts SDK/contract flow.
+- Keep mainnet signing and broadcast disabled for the hackathon demo.
+- Display a clearly labelled preview result, not an executed-trade result.
 
 #### Safety
 - Explicit user confirmation.
 - No private keys stored in source code.
-- Exact token approvals only where supported.
-- Trade-size cap for hackathon demo.
-- Dry-run/preview before real execution where available.
+- Display any required token allowance in the preview without requesting approval.
+- No real-funds transaction in the hackathon demo.
+- Dry-run/preview only.
 
 ### 7.2 P1 — Winning Polish
 
@@ -321,7 +324,7 @@ Display:
 - Better empty/loading/error states.
 - Goal progress visual.
 - Wallet balance and network checks.
-- Transaction explorer link.
+- Base explorer links for the protocol contract and live order source; no transaction link is shown unless a transaction genuinely exists outside the hackathon demo.
 
 ### 7.3 P2 — Stretch
 
@@ -542,28 +545,29 @@ If no viable order exists:
 
 ---
 
-## 11. Trade Preview and Execution
+## 11. Trade Preview and Demo-Only Execution Policy
 
 ### 11.1 Execution philosophy
-The user must see the exact proposed trade before execution.
+The user must see the exact proposed trade, but the hackathon deployment must not request a signature or broadcast a transaction.
+
+Thetanuts has confirmed that the track has no testnet and currently uses mainnet only. The organizer/sponsor guidance provided on 29 Aug 2026 states that teams may use a very small mainnet amount if they choose, but a real trade is not required and teams that demonstrate the idea and build will still be judged fairly. GoalGuard chooses the no-real-trade path for the hackathon demo.
 
 ### 11.2 Required pre-trade checks
 
 - wallet connected;
 - correct Base network;
-- sufficient gas token;
-- sufficient settlement/premium token;
 - council status is `approved`;
 - candidate is not expired;
 - live price/order is still valid;
 - preview succeeds where supported;
-- user explicitly confirms.
+- user explicitly confirms generating the final preview;
+- UI states that the transaction is unsigned and will not be broadcast.
 
 ### 11.3 Approval policy
 Never request unlimited token approval in P0 if the protocol permits exact-amount approval.
 
-### 11.4 Trade size guardrail
-Add a configurable hackathon safety cap.
+### 11.4 Preview value guardrail
+Keep the existing configurable cap as a validation guardrail for the proposed preview amount, even though the demo does not execute it.
 
 ```env
 MAX_LIVE_TRADE_PREMIUM_USD=3
@@ -572,23 +576,25 @@ MAX_LIVE_TRADE_PREMIUM_USD=3
 If the full requested protection exceeds the cap, GoalGuard may:
 
 - show the full protection plan as a preview;
-- offer a clearly labelled **proportional micro-hedge demo trade** using the same execution path;
-- never imply that the micro-trade fully protects the original goal.
+- show a clearly labelled **proportional micro-hedge preview** using the same transaction-building path;
+- never imply that the preview fully protects the original goal.
 
-Production-sized execution is outside the hackathon safety default.
+Any real execution is outside the hackathon P0 scope.
 
-### 11.5 Mainnet feature flag
-The MUBA general rules contain a mainnet/real-funds restriction while the Thetanuts track requires a real live trade. Until organizers explicitly confirm the permitted interpretation, keep execution behind a feature flag:
+### 11.5 Mainnet and feature flag
+There is no supported Thetanuts testnet for this track. Use Base mainnet (`chainId: 8453`) only for live read-only market/order data and unsigned transaction construction. Do not substitute Base Sepolia unless Thetanuts later publishes and confirms a supported deployment and contract addresses.
+
+The hackathon deployment must keep execution disabled:
 
 ```env
 ENABLE_LIVE_THETANUTS_EXECUTION=false
 ```
 
-Codex should implement the execution path, but the UI must not enable it unless the flag is true.
+The flag must remain `false` for the submitted and demonstrated build. The UI must not expose wallet-signing or broadcast controls. Existing execution APIs may remain implemented for future use, but they must fail closed with `EXECUTION_DISABLED` under this policy.
 
 ### 11.6 Trade record
 
-Use the canonical `Trade` contract in Section 17.4.5. Preview, wallet-signature, submission, confirmation, failure, cancellation, and stale-quote states are distinct; a transaction hash is nullable until wallet broadcast and cannot by itself mark a trade confirmed.
+Use the canonical `Trade` contract in Section 17.4.5. The hackathon demo ends in `previewed`. Wallet-signature, submission, confirmation, and transaction-hash fields remain dormant for future compatibility; a preview cannot mark a trade confirmed or a goal protected.
 
 ---
 
@@ -654,7 +660,7 @@ Each card:
 - concerns;
 - Gonka Request ID.
 
-#### F. Confirm Trade
+#### F. Confirm Demo Preview
 Must display:
 
 - exact premium/cost;
@@ -663,15 +669,15 @@ Must display:
 - what the option protects;
 - clear limitation that protection is evaluated at the option settlement/expiry conditions;
 - wallet/network;
-- final CTA.
+- final CTA labelled as generating an unsigned preview, not executing a trade.
 
-#### G. Success / Protected Goal
+#### G. Demo Preview Ready
 Display:
 
-- “Protected” status;
+- “Protection Plan Ready (Demo)” status;
 - goal card;
-- trade details;
-- transaction hash/explorer link;
+- proposed trade and unsigned transaction summary;
+- “No funds moved; no protected position was created” disclosure;
 - council approval reference.
 
 ### 12.3 Language rules
@@ -836,35 +842,35 @@ The exact request/response schemas and status behavior are normative in Section 
 ### 15.2 Gonka unavailable
 - Show clear “AI review unavailable” state.
 - Do not fall back to OpenAI/another centralized model.
-- Do not allow trade execution without GoalGuard approval.
+- Do not generate a final transaction preview without GoalGuard approval.
 
 ### 15.3 Council disagreement
 - Show `Disputed`.
 - Surface exactly which role disagreed and its short reason.
-- Block execution in P0.
+- Block final transaction preview in P0.
 
 ### 15.4 No suitable live options
 - Do not fabricate.
 - Explain why no candidate meets the goal.
 - Allow user to loosen deadline/loss/premium constraints.
 
-### 15.5 Live order changes before execution
-- Re-fetch/revalidate before signing.
+### 15.5 Live order changes before final preview
+- Re-fetch/revalidate before producing the final unsigned transaction.
 - If price/order changed materially, invalidate the old confirmation and show a new preview.
 
 ### 15.6 Wrong network
 - Prompt user to switch to Base.
-- Never submit on an unintended chain.
+- Never build a preview for an unintended chain.
 
 ### 15.7 Insufficient balance
 - Explain whether gas token or premium/settlement token is missing.
 
-### 15.8 User rejects wallet signature
-- Return to confirmation state without marking the goal protected.
+### 15.8 User cancels demo confirmation
+- Return to the plan state without producing the final transaction preview.
 
-### 15.9 Transaction failure
-- Show failed status and transaction hash if available.
-- Do not mark goal protected.
+### 15.9 Preview failure
+- Show a failed preview state and a safe retry action.
+- Do not mark the goal protected.
 
 ### 15.10 Deadline has no matching expiry
 - Prefer the nearest valid expiry on or after the deadline when reasonable.
@@ -875,20 +881,21 @@ The exact request/response schemas and status behavior are normative in Section 
 
 ## 16. Safety and Financial Guardrails
 
-1. **No autonomous P0 execution.** Every trade needs explicit confirmation.
+1. **No hackathon mainnet execution.** Never request a signature or broadcast a real trade in the submitted/demo build.
 2. **No LLM-generated financial numbers.** All numbers come from live protocol data + deterministic code.
-3. **Council disagreement blocks execution.**
-4. **Live trade premium cap enabled by default.**
-5. **Use a fresh/burner wallet for hackathon execution.**
+3. **Council disagreement blocks the final transaction preview.**
+4. **Preview premium cap enabled by default.**
+5. **Use Base mainnet read-only data; do not fund a demo wallet for execution.**
 6. **Never commit secrets/private keys.**
 7. **Never expose server API keys to the client.**
 8. **Use exact approvals where possible.**
-9. **Preview/dry-run before live execution where supported.**
-10. **Revalidate live order state immediately before signing.**
+9. **Preview/dry-run only.**
+10. **Revalidate live order state immediately before final preview.**
 11. **Show maximum known premium loss before confirmation.**
 12. **Do not claim a guaranteed outcome beyond the actual option payoff.**
 13. **Record model/request IDs for auditability.**
 14. **Do not expose private chain-of-thought.** Show concise reasons/evidence only.
+15. **Never fabricate transaction success.** No hash, position, or protected status may be shown without verified on-chain execution.
 
 ---
 
@@ -896,10 +903,13 @@ The exact request/response schemas and status behavior are normative in Section 
 
 This section is normative. Frontend state, backend services, persistence, tests, and API payloads must derive from these contracts. If an abbreviated interface elsewhere in this PRD differs from this section, this section wins.
 
-### 17.0 P0 implementation decisions (2026-09-01)
+### 17.0 P0 implementation decisions (updated 2026-09-02)
 
 These decisions are normative and override older abbreviated examples in this PRD:
 
+- Thetanuts has no supported testnet for this hackathon track; the current integration targets Base mainnet (`8453`) for live reads and unsigned transaction construction only.
+- Organizer/sponsor guidance dated 29 Aug 2026 confirms that a real mainnet trade is optional and teams may demonstrate the idea/build without executing one. GoalGuard's submitted and live-demo configuration must not sign or broadcast a trade.
+- `ENABLE_LIVE_THETANUTS_EXECUTION` remains `false`; execution/submission routes remain fail-closed, and the UI ends at a clearly labelled unsigned preview state.
 - `ProtectionCandidate` remains the internal/persistence entity. Public candidate responses use `PublicProtectionCandidate = Omit<ProtectionCandidate, "protocolRaw">`; unknown fields remain rejected.
 - `TradePreview` additionally returns `walletReadiness` for gas, settlement token, and underlying ETH exposure, plus a `referralDisclosure`. Each readiness item contains a symbol, balance and requirement as base-unit strings, and `sufficient`.
 - Canonical errors additionally include `INSUFFICIENT_EXPOSURE` and `TRADE_MONITOR_UNAVAILABLE`.
@@ -1222,7 +1232,7 @@ Constraints:
 - `idempotencyKey` is 16–128 characters and globally unique. Reusing it with the same payload returns the original trade; reusing it with a different payload returns `409 IDEMPOTENCY_CONFLICT`.
 - `chainId` must equal `8453` in P0.
 - The referenced council decision must be `approved`, belong to the same goal/candidate, and remain current.
-- `premiumUsd` must not exceed `MAX_LIVE_TRADE_PREMIUM_USD` when live execution is enabled.
+- `premiumUsd` must not exceed `MAX_LIVE_TRADE_PREMIUM_USD` for the final hackathon preview.
 - `submitted` and `confirmed` require a unique `txHash`. `confirmed` additionally requires `confirmedAt`.
 - `failed` requires `failureCode` and `failureMessage`; every other status keeps both failure fields `null`.
 - A goal becomes `protected` only after a related trade becomes `confirmed`.
@@ -1247,10 +1257,10 @@ Lifecycle rules:
 1. Parsing may produce an incomplete `GoalDraft`; a `Goal` is persisted only when all required fields validate.
 2. Candidate generation moves the goal to `searching`; council evaluation moves it to `reviewing`.
 3. A selected candidate plus approved decision moves the goal to `ready`.
-4. A preview creates a trade in `previewed`; validated execution preparation changes it to `awaiting_signature`.
-5. Wallet submission changes the trade to `submitted`; confirmed receipt changes it to `confirmed` and the goal to `protected` in one transaction.
+4. A preview creates a trade in `previewed`; this is the terminal state for the submitted and demonstrated hackathon build.
+5. `awaiting_signature`, `submitted`, `confirmed`, and goal `protected` remain reserved for future/post-hackathon execution and must not be reached while the demo-only policy is active.
 6. Candidate staleness, order changes, or quote expiry invalidates the preview and requires a new user confirmation.
-7. Records used for an executed trade are immutable except for status/timestamp fields required to record submission and confirmation.
+7. If future/post-hackathon execution is enabled under a new approved policy, records used for an executed trade are immutable except for status/timestamp fields required to record submission and confirmation.
 
 ### 17.6 Reference relational schema
 
@@ -1626,7 +1636,7 @@ Behavior:
 
 #### 17.9.5 `POST /api/trades/execute`
 
-This endpoint performs final server-side validation and returns an unsigned transaction for the connected browser wallet. It does not sign or broadcast on the user’s behalf.
+This endpoint is retained for contract completeness and possible post-hackathon use. In the submitted and demonstrated P0 build it must return `422 EXECUTION_DISABLED`; the frontend must not call it or expose its signing flow. `/api/trades/preview` is the terminal demo action.
 
 Required header:
 
@@ -1655,13 +1665,13 @@ export interface PrepareExecutionResponse {
 
 Behavior:
 
-- Reject if live execution flag is false, the quote expired, council is not approved, candidate/order changed, wallet/network differs, or safety cap is exceeded.
-- The frontend may first submit `approvalTransaction` through the wallet, wait for confirmation, then submit `executionTransaction`.
-- Returning this response does not mean the trade executed. UI must say “Awaiting wallet signature,” not “Protected.”
+- Always reject with `422 EXECUTION_DISABLED` while the hackathon demo policy is active and the live execution flag is false.
+- Do not request approval or execution signatures from the connected wallet.
+- An unsigned transaction returned by the preview endpoint does not mean the trade executed. UI must say “Demo preview ready — no funds moved,” not “Awaiting wallet signature” or “Protected.”
 
 #### 17.9.6 `POST /api/trades/{tradeId}/submission`
 
-Records the hash only after the connected wallet broadcasts the execution transaction.
+This endpoint is retained for future/post-hackathon compatibility. It must return `422 EXECUTION_DISABLED` in the submitted and demonstrated P0 build because GoalGuard does not broadcast an execution transaction.
 
 ```ts
 export interface RecordSubmissionRequest {
@@ -1791,8 +1801,8 @@ Owns:
 - option filtering;
 - deterministic payoff/scenario calculations;
 - trade preview;
-- wallet execution;
-- transaction/position verification.
+- unsigned transaction construction;
+- execution and submission fail-closed guards.
 
 Definition of done:
 
@@ -1801,7 +1811,7 @@ Goal
     -> live candidates
     -> deterministic candidate values
     -> preview
-    -> real trade when enabled
+    -> demo-ready state (no signature or broadcast)
 ```
 
 ### Person C — Product / Frontend
@@ -1814,7 +1824,7 @@ Owns:
 - GoalGuard visualization;
 - wallet UX integration with Person B;
 - loading/error states;
-- protected-goal success state;
+- demo-preview-ready state;
 - final polish.
 
 Definition of done:
@@ -1861,12 +1871,13 @@ User can complete the full happy path without seeing raw developer/protocol outp
 - Deterministic consensus implemented.
 - Disagreement blocks trade.
 
-### M5 — Trade preview + execution
+### M5 — Trade preview + execution guard
 - Preview works.
 - Revalidation works.
-- Safety cap works.
-- Live execution path implemented behind feature flag.
-- Confirmed trade can be read/displayed.
+- Preview safety cap works.
+- Unsigned Thetanuts transaction details are built through the real SDK/contract path.
+- Live execution remains disabled and execution/submission APIs fail closed.
+- The UI displays “Demo preview ready — no funds moved” and never a confirmed-position state.
 
 ### M6 — Product polish
 - chat-led user experience;
@@ -1911,9 +1922,10 @@ User can complete the full happy path without seeing raw developer/protocol outp
 
 - [ ] AI interprets a natural-language protection goal.
 - [ ] AI reviews live option candidate data.
-- [ ] User approves the final plan.
-- [ ] A real Thetanuts trade can be executed through the implemented flow when enabled.
-- [ ] Trade result is surfaced in GoalGuard.
+- [ ] User approves generating the final demo preview.
+- [ ] The real Thetanuts SDK/contract path produces an unsigned Base-mainnet transaction preview.
+- [ ] No wallet signature is requested and no transaction is broadcast.
+- [ ] The preview result is surfaced in GoalGuard with an explicit “no funds moved” disclosure.
 
 ### 20.4 Product acceptance
 
@@ -1925,18 +1937,19 @@ A user can complete this flow without understanding options jargon:
     -> live protection plan
     -> GoalGuard approval
     -> explicit user confirmation
-    -> protocol trade
-    -> Protected goal state
+    -> unsigned protocol transaction preview
+    -> Protection Plan Ready (Demo) state
 ```
 
 ### 20.5 Safety acceptance
 
 - [ ] No private key/API secret is committed or sent to the client.
-- [ ] No trade executes without explicit user confirmation.
-- [ ] Trade is revalidated before signing.
-- [ ] Live trade cap is enforced.
-- [ ] Council disagreement blocks execution.
+- [ ] No trade is signed or broadcast by the hackathon demo.
+- [ ] Live order data is revalidated before the final preview.
+- [ ] Preview value cap is enforced.
+- [ ] Council disagreement blocks the final preview.
 - [ ] UI never claims guaranteed protection beyond actual option conditions.
+- [ ] UI never claims a transaction or protected position exists when only a preview was generated.
 
 ---
 
@@ -1952,16 +1965,21 @@ The implementation must account for MUBA event rules:
 - one project may compete across multiple tracks;
 - follow sponsor-specific requirements in addition to general rules.
 
-### Mainnet rule ambiguity
-The general MUBA rules state a restriction around mainnet deployment using real funds, while Thetanuts Track 02 explicitly requires a real live Base-mainnet trade.
+### Confirmed Thetanuts mainnet-only demo policy
+Thetanuts has no testnet for this hackathon track and the supported protocol flow uses Base mainnet. Organizer/sponsor guidance supplied on 29 Aug 2026 confirms:
 
-**Action required before enabling live execution:** obtain explicit organizer/sponsor confirmation on the permitted Thetanuts live-trade flow and retain that confirmation.
+- teams may optionally test with a very small mainnet amount;
+- teams that do not want to use real funds may explain and demonstrate their idea/build without running a real trade;
+- both approaches will be judged fairly;
+- where a submission form asks for a testnet contract address, provide the actual Thetanuts contract address used and identify it as Base mainnet.
 
-Until confirmed:
+GoalGuard adopts the demo-only approach. The submitted deployment must use live Base-mainnet data and real unsigned transaction construction but must not sign or broadcast a real trade:
 
 ```env
 ENABLE_LIVE_THETANUTS_EXECUTION=false
 ```
+
+Do not enter an invented testnet contract address or mislabel Base mainnet as a testnet. Preserve the organizer message as submission evidence.
 
 ---
 
@@ -1983,7 +2001,9 @@ THETANUTS_REFERRER_ADDRESS=
 NEXT_PUBLIC_BASE_CHAIN_ID=8453
 
 # Safety
+# Mandatory for the submitted and demonstrated hackathon build; do not set to true.
 ENABLE_LIVE_THETANUTS_EXECUTION=false
+# Applied to the proposed preview value; no real trade is broadcast.
 MAX_LIVE_TRADE_PREMIUM_USD=3
 MAX_DEADLINE_GAP_HOURS=168
 
@@ -2012,7 +2032,7 @@ Never place a server-side Gonka key or private signing key in a `NEXT_PUBLIC_*` 
 4. What is the exact current SDK flow for preview + fill, based on the repository version used during the hackathon?
 5. Which settlement token(s) are required for the chosen live option?
 6. What deadline-to-expiry gap should be considered acceptable? Start with a configurable threshold.
-7. What exact organizer-approved interpretation applies to Thetanuts’ required live mainnet trade?
+7. Which exact official Base-mainnet Thetanuts contract address should be listed in the submission field that is labelled for a testnet address?
 8. If OptionBook has no suitable order, is OptionFactory/RFQ reliable enough to promote from P2 to P0?
 9. Which Section 17.10 persistence adapter should P0 use? Default: lightweight SQLite for local/deployed single-instance use; use PostgreSQL when the deployment platform requires concurrent multi-instance access.
 
@@ -2031,7 +2051,7 @@ When Codex uses this PRD:
 7. **Keep AI, strategy, execution, and UI modules separate.**
 8. **Do not expand into P1/P2 until the P0 happy path works end to end.**
 9. **Do not add another blockchain, custom token, or custom smart contract unless a P0 requirement cannot be met otherwise.**
-10. **Do not enable live execution until the safety flag is explicitly switched on.**
+10. **Keep live execution disabled for the submitted and demonstrated hackathon build.** Do not expose signing/broadcast controls or switch the safety flag on.
 11. **Preserve raw protocol data for debugging but never expose sensitive values.**
 12. **Log Gonka Request IDs and transaction hashes for traceability.**
 13. **Write tests for goal validation, candidate filtering, payoff calculations, consensus logic, and execution guards.**
@@ -2050,9 +2070,9 @@ GoalGuard is P0-complete when all of the following are true:
 5. GoalGuard independently reviews the candidate through Gonka using multiple models.
 6. Request IDs and disagreements are visible.
 7. A user can review the exact cost and limitations.
-8. The trade execution flow is implemented and safely gated.
-9. When live execution is permitted and enabled, a real Thetanuts trade succeeds.
-10. The UI updates the goal to a real protected/position state backed by the transaction.
+8. The real Thetanuts transaction-building flow produces an unsigned preview and is safely gated.
+9. Execution and submission remain disabled; no wallet signature is requested and no transaction is broadcast.
+10. The UI updates the goal to a clearly labelled demo-ready state and states that no funds moved and no protected position was created.
 11. The entire flow works from the deployed web application without developer intervention.
 
 ---
@@ -2065,8 +2085,9 @@ Important sponsor constraints reflected here:
 
 - Gonka requires all AI reasoning/verification to run through Gonka Router and encourages multi-model consensus, disagreement handling, and visible Request IDs.
 - Thetanuts Track 01 requires meaningful dependence on on-chain options rather than a superficial SDK call.
-- Thetanuts Track 02 requires an AI agent workflow that executes a real live options trade through Thetanuts.
-- Thetanuts recommends small trade sizes, burner-wallet safety, and preview/dry-run behavior.
+- Thetanuts has no supported testnet for this hackathon track; the current integration uses Base mainnet for live data and transaction construction.
+- Organizer/sponsor guidance dated 29 Aug 2026 makes a real mainnet trade optional and confirms that a demo of the idea/build without execution will be judged fairly.
+- GoalGuard therefore uses live Thetanuts data and the real unsigned SDK/contract preview path but does not sign or broadcast a transaction in the hackathon demo.
 - MUBA allows one project to compete in multiple tracks.
 
 Where exact SDK/API names are not guaranteed by the supplied challenge materials, the PRD deliberately instructs Codex to inspect the current official implementation rather than hardcode assumptions.
