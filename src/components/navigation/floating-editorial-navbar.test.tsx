@@ -7,7 +7,10 @@ import { FloatingEditorialNavbar } from "./floating-editorial-navbar";
 describe("FloatingEditorialNavbar", () => {
   it("exposes the approved information architecture", () => {
     render(<FloatingEditorialNavbar walletSlot={<button type="button">Test wallet</button>} />);
-    expect(screen.getByRole("navigation", { name: "Primary navigation" })).toBeInTheDocument();
+    const navigation = screen.getByRole("navigation", { name: "Primary navigation" });
+    expect(navigation).toBeInTheDocument();
+    expect(navigation.closest("header")).toHaveClass("sticky", "top-0", "w-full");
+    expect(navigation.closest("header")).not.toHaveClass("rounded-full");
     expect(screen.getAllByRole("link", { name: "How it works" }).at(0)).toHaveAttribute("href", "#how-it-works");
     expect(screen.getAllByRole("link", { name: "Trust & safety" }).at(0)).toHaveAttribute("href", "#trust-safety");
     expect(screen.getAllByRole("link", { name: "Live foundations" }).at(0)).toHaveAttribute("href", "#live-foundations");

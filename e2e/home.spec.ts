@@ -6,11 +6,24 @@ test("renders the honest GoalGuard P0 entry shell", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: /protect the purpose behind your money/i })).toBeVisible();
   await expect(page.getByRole("heading", { name: /what are you protecting/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /from your goal to a plan you can actually inspect/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /clear advantages without hidden custody/i })).toBeVisible();
   await expect(page.getByRole("navigation", { name: /primary navigation/i })).toBeVisible();
   await expect(page.getByText(/no wallet signature or transaction broadcast/i)).toBeVisible();
   await expect(page.getByText(/unsigned preview only/i).first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Refresh" })).toBeVisible();
   await expect(page.getByText("Needs setup")).toHaveCount(2);
+  await expect(page.locator("img")).toHaveCount(0);
+  const visualSystem = await page.evaluate(() => {
+    const hero = document.querySelector<HTMLElement>("#top > div");
+    const header = document.querySelector<HTMLElement>("header[data-scrolled]");
+    return {
+      heroBackground: hero ? getComputedStyle(hero).backgroundColor : "",
+      headerPosition: header ? getComputedStyle(header).position : "",
+    };
+  });
+  expect(visualSystem.heroBackground).toBe("rgb(201, 245, 43)");
+  expect(visualSystem.headerPosition).toBe("sticky");
   await expectNoSeriousAccessibilityViolations(page);
 });
 
