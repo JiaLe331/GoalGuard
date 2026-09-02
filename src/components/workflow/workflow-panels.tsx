@@ -1,7 +1,7 @@
 "use client";
 
-import Decimal from "decimal.js";
-import { useEffect, useState } from "react";
+import { ArrowLeft, ArrowRight, CheckCircle, Copy, HourglassHigh, PencilSimple, Receipt, ShieldCheck, Warning } from "@phosphor-icons/react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Accordion } from "@/components/ui/accordion";
 import { Alert } from "@/components/ui/alert";
@@ -10,25 +10,18 @@ import { Card } from "@/components/ui/card";
 import { Drawer } from "@/components/ui/drawer";
 import { Field } from "@/components/ui/field";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { Tooltip } from "@/components/ui/tooltip";
-import {
-  UpdateGoalRequestSchema,
-  type CouncilDecision,
-  type Goal,
-  type PublicProtectionCandidate,
-  type Trade,
-  type TradePreview,
-  type UpdateGoalRequest,
-} from "@/lib/contracts";
-import { baseTransactionUrl, formatCountdown, formatDate, formatPercentFromBps, formatUsd, secondsUntil, shortenAddress } from "@/lib/frontend/format";
+import { CouncilCard, MetricCard, ScenarioComparison, UnsignedTransactionCard } from "@/components/workflow/workflow-primitives";
+import { UpdateGoalRequestSchema, type ApiMeta, type CouncilDecision, type Goal, type GoalType, type JsonValue, type PublicProtectionCandidate, type Trade, type TradePreview, type UpdateGoalRequest } from "@/lib/contracts";
+import { formatBaseUnits, formatCountdown, formatDate, formatPercentFromBps, formatUsd, secondsUntil, shortenAddress } from "@/lib/frontend/format";
+import type { WorkflowError } from "@/lib/frontend/workflow";
 
-const goalLabels = {
+const goalLabels: Record<GoalType, string> = {
   rent: "Rent",
   tuition: "Tuition",
   travel: "Travel",
   emergency: "Emergency fund",
   custom: "Custom goal",
-} as const;
+};
 
 const roleLabels = {
   strategist: "Strategist",
@@ -36,311 +29,419 @@ const roleLabels = {
   consumer_advocate: "Consumer Advocate",
 } as const;
 
-export function GoalConfirmationForm({
-  goal,
-  busy,
-  fieldErrors,
-  onSave,
-  onFind,
-}: {
+function goalName(goal: Goal) {
+  return goal.customGoalLabel ?? goalLabels[goal.goalType];
+}
+
+function firstError(errors: Record<string, string[]>, key: string) {
+  return errors[key]?.[0];
+}
+
+export function GoalConfirmationForm({ goal, busy, fieldErrors, onSave, onFind }: {
   goal: Goal;
   busy: boolean;
   fieldErrors: Record<string, string[]>;
-  onSave: (value: UpdateGoalRequest) => Promise<void>;
-  onFind: (value: UpdateGoalRequest) => Promise<void>;
+  onSave: (value: UpdateGoalRequest) => void;
+  onFind: (value: UpdateGoalRequest) => void;
 }) {
-  const [goalType, setGoalType] = useState(goal.goalType);
-  const [customGoalLabel, setCustomGoalLabel] = useState(goal.customGoalLabel ?? "");
-  const [protectedValueUsd, setProtectedValueUsd] = useState(goal.protectedValueUsd);
-  const [deadline, setDeadline] = useState(goal.deadline);
-  const [maxLossPercent, setMaxLossPercent] = useState(new Decimal(goal.maxLossBps).div(100).toString());
-  const [maxPremiumUsd, setMaxPremiumUsd] = useState(goal.maxPremiumUsd ?? "");
-  const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
+  const [values, setValues] = useState({
+    goalType: goal.goalType,
+    customGoalLabel: goal.customGoalLabel ?? "",
+    protectedValueUsd: goal.protectedValueUsd,
+    deadline: goal.deadline,
+    maxLossPercent: String(goal.maxLossBps / 100),
+    maxPremiumUsd: goal.maxPremiumUsd ?? "",
+  });
+  const [localErrors, setLocalErrors] = useState<Record<string, string[]>>({});
+  const errors = { ...fieldErrors, ...localErrors };
+  const errorEntries = Object.entries(errors).filter(([, messages]) => messages?.length);
 
-  function value(): UpdateGoalRequest | null {
-    const errors: Record<string, string> = {};
-    let maxLossBps = -1;
-    try {
-      const loss = new Decimal(maxLossPercent);
-      const bps = loss.mul(100);
-      if (!bps.isInteger()) errors.maxLossBps = "Use no more than two decimal places.";
-      else maxLossBps = bps.toNumber();
-    } catch { errors.maxLossBps = "Enter a valid percentage."; }
-    try {
-      if (!new Decimal(protectedValueUsd).greaterThan(0)) errors.protectedValueUsd = "Enter an amount greater than zero.";
-    } catch { errors.protectedValueUsd = "Enter a valid amount."; }
-    if (maxPremiumUsd) {
-      try { if (!new Decimal(maxPremiumUsd).greaterThan(0)) errors.maxPremiumUsd = "Enter an amount greater than zero."; }
-      catch { errors.maxPremiumUsd = "Enter a valid amount."; }
+  function update(key: keyof typeof values, value: string) {
+    setValues((current) => ({ ...current, [key]: value }));
+    setLocalErrors((current) => {
+      const next = { ...current };
+      delete next[key];
+      return next;
+    });
+  }
+
+  function parse(): UpdateGoalRequest | null {
+    const immediate: Record<string, string[]> = {};
+    if (Number(values.protectedValueUsd) <= 0) immediate.protectedValueUsd = ["Enter an amount greater than zero."];
+    if (!Number.isFinite(Number(values.maxLossPercent)) || Number(values.maxLossPercent) < 0 || Number(values.maxLossPercent) >= 100) {
+      immediate.maxLossBps = ["Enter a loss limit from 0 to 99.99%."];
     }
-    if (Date.parse(`${deadline}T23:59:59Z`) <= Date.now()) errors.deadline = "Choose a future date.";
-    const candidate = {
-      goalType,
-      customGoalLabel: goalType === "custom" ? customGoalLabel.trim() || null : null,
+    if (values.maxPremiumUsd.trim() && Number(values.maxPremiumUsd) <= 0) {
+      immediate.maxPremiumUsd = ["Enter a protection cost greater than zero, or leave it blank."];
+    }
+    if (Object.keys(immediate).length) {
+      setLocalErrors(immediate);
+      window.setTimeout(() => document.getElementById("goal-error-summary")?.focus(), 0);
+      return null;
+    }
+
+    const parsed = UpdateGoalRequestSchema.safeParse({
+      goalType: values.goalType,
+      customGoalLabel: values.goalType === "custom" ? values.customGoalLabel.trim() || null : null,
       underlyingAsset: "ETH" as const,
-      protectedValueUsd,
-      deadline,
-      maxLossBps,
-      maxPremiumUsd: maxPremiumUsd || null,
-    };
-    const parsed = UpdateGoalRequestSchema.safeParse(candidate);
-    if (!parsed.success) {
-      for (const issue of parsed.error.issues) {
-        const key = String(issue.path[0] ?? "form");
-        errors[key] ??= issue.message;
-      }
+      protectedValueUsd: values.protectedValueUsd.trim(),
+      deadline: values.deadline,
+      maxLossBps: Math.round(Number(values.maxLossPercent) * 100),
+      maxPremiumUsd: values.maxPremiumUsd.trim() || null,
+    });
+    if (parsed.success) return parsed.data;
+
+    const next: Record<string, string[]> = {};
+    for (const issue of parsed.error.issues) {
+      const key = String(issue.path[0] ?? "form");
+      (next[key] ??= []).push(issue.message);
     }
-    setLocalErrors(errors);
-    return Object.keys(errors).length ? null : parsed.success ? parsed.data : null;
+    setLocalErrors(next);
+    window.setTimeout(() => document.getElementById("goal-error-summary")?.focus(), 0);
+    return null;
   }
 
-  async function submit(action: "save" | "find") {
-    const parsed = value();
+  function submit(kind: "save" | "find") {
+    const parsed = parse();
     if (!parsed) return;
-    await (action === "save" ? onSave(parsed) : onFind(parsed));
+    if (kind === "save") onSave(parsed);
+    else onFind(parsed);
   }
 
-  const error = (key: string) => localErrors[key] ?? fieldErrors[key]?.[0];
-  return (
-    <Card className="p-6 sm:p-8">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Confirm your intent</p>
-      <h1 className="mt-2 text-3xl font-semibold tracking-[-0.035em] text-white">Make sure GoalGuard understood you.</h1>
-      <p className="mt-3 max-w-2xl text-sm leading-6 text-[#9daca2]">These constraints are saved before any live protection option is considered. Your wallet is not required yet.</p>
+  const describedBy = (key: string) => firstError(errors, key) ? key + "-description" : undefined;
 
-      <div className="mt-8 grid gap-5 md:grid-cols-2">
-        <Field label="Goal" htmlFor="goalType" error={error("goalType")}>
-          <select id="goalType" value={goalType} onChange={(event) => setGoalType(event.target.value as Goal["goalType"])} className="field-control" aria-invalid={Boolean(error("goalType"))}>
-            {Object.entries(goalLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-          </select>
-        </Field>
-        {goalType === "custom" ? (
-          <Field label="Custom goal name" htmlFor="customGoalLabel" error={error("customGoalLabel")}>
-            <input id="customGoalLabel" value={customGoalLabel} maxLength={80} onChange={(event) => setCustomGoalLabel(event.target.value)} className="field-control" aria-invalid={Boolean(error("customGoalLabel"))} />
+  return (
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
+      <Card className="p-5 sm:p-7 lg:p-8">
+        <div className="max-w-2xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--foreground-soft)]">Define the guardrail</p>
+          <h1 className="mt-3 font-display text-4xl leading-tight sm:text-5xl">Make the goal <em className="text-[var(--accent)]">exact.</em></h1>
+          <p className="mt-3 text-[var(--foreground-soft)]">Confirm the amount, deadline, and acceptable downside before GoalGuard checks a live option.</p>
+        </div>
+
+        {errorEntries.length ? (
+          <div id="goal-error-summary" tabIndex={-1} role="alert" className="mt-6 rounded-[var(--radius-md)] border border-[color-mix(in_srgb,var(--negative)_38%,var(--border))] bg-[color-mix(in_srgb,var(--negative)_7%,var(--surface))] p-4 outline-none focus:ring-2 focus:ring-[var(--negative)]">
+            <p className="font-semibold">Fix {errorEntries.length} field{errorEntries.length === 1 ? "" : "s"} to continue</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[var(--foreground-soft)]">
+              {errorEntries.map(([key, messages]) => <li key={key}><a href={"#" + key} className="underline underline-offset-4">{messages[0]}</a></li>)}
+            </ul>
+          </div>
+        ) : null}
+
+        <div className="mt-7 grid gap-5 sm:grid-cols-2">
+          <Field label="Goal purpose" htmlFor="goalType" error={firstError(errors, "goalType")}>
+            <select id="goalType" className="field-control" value={values.goalType} onChange={(event) => update("goalType", event.target.value)} aria-describedby={describedBy("goalType")}>
+              {Object.entries(goalLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+            </select>
           </Field>
-        ) : (
-          <Field label="Asset" htmlFor="asset" hint="P0 supports ETH protection only."><input id="asset" value="ETH" readOnly className="field-control opacity-75" /></Field>
-        )}
-        <Field label="Amount you need to preserve (USD)" htmlFor="protectedValueUsd" error={error("protectedValueUsd")}>
-          <input id="protectedValueUsd" inputMode="decimal" value={protectedValueUsd} onChange={(event) => setProtectedValueUsd(event.target.value)} className="field-control" aria-invalid={Boolean(error("protectedValueUsd"))} />
-        </Field>
-        <Field label="Needed by" htmlFor="deadline" error={error("deadline")}>
-          <input id="deadline" type="date" value={deadline} onChange={(event) => setDeadline(event.target.value)} className="field-control" aria-invalid={Boolean(error("deadline"))} />
-        </Field>
-        <Field label="Maximum acceptable loss" htmlFor="maxLossBps" hint="Enter a percentage below 100%." error={error("maxLossBps")}>
-          <div className="relative"><input id="maxLossBps" inputMode="decimal" value={maxLossPercent} onChange={(event) => setMaxLossPercent(event.target.value)} className="field-control pr-10" aria-invalid={Boolean(error("maxLossBps"))} /><span className="absolute right-4 top-3 text-sm text-[var(--muted)]">%</span></div>
-        </Field>
-        <Field label="Maximum protection cost (optional)" htmlFor="maxPremiumUsd" error={error("maxPremiumUsd")}>
-          <input id="maxPremiumUsd" inputMode="decimal" value={maxPremiumUsd} onChange={(event) => setMaxPremiumUsd(event.target.value)} placeholder="No limit supplied" className="field-control" aria-invalid={Boolean(error("maxPremiumUsd"))} />
-        </Field>
-      </div>
+          {values.goalType === "custom" ? (
+            <Field label="Goal name" htmlFor="customGoalLabel" error={firstError(errors, "customGoalLabel")}>
+              <input id="customGoalLabel" className="field-control" value={values.customGoalLabel} onChange={(event) => update("customGoalLabel", event.target.value)} aria-describedby={describedBy("customGoalLabel")} />
+            </Field>
+          ) : (
+            <Field label="Asset" htmlFor="underlyingAsset" hint="P0 supports ETH goals on Base.">
+              <input id="underlyingAsset" className="field-control" value="ETH" disabled aria-describedby="underlyingAsset-description" />
+            </Field>
+          )}
+          <Field label="Amount you need to preserve (USD)" htmlFor="protectedValueUsd" error={firstError(errors, "protectedValueUsd")}>
+            <input id="protectedValueUsd" inputMode="decimal" className="field-control" value={values.protectedValueUsd} onChange={(event) => update("protectedValueUsd", event.target.value)} aria-invalid={Boolean(firstError(errors, "protectedValueUsd"))} aria-describedby={describedBy("protectedValueUsd")} />
+          </Field>
+          <Field label="Purpose deadline" htmlFor="deadline" error={firstError(errors, "deadline")}>
+            <input id="deadline" type="date" className="field-control" value={values.deadline} onChange={(event) => update("deadline", event.target.value)} aria-invalid={Boolean(firstError(errors, "deadline"))} aria-describedby={describedBy("deadline")} />
+          </Field>
+          <Field label="Maximum acceptable loss (%)" htmlFor="maxLossBps" error={firstError(errors, "maxLossBps")}>
+            <input id="maxLossBps" inputMode="decimal" className="field-control" value={values.maxLossPercent} onChange={(event) => update("maxLossPercent", event.target.value)} aria-invalid={Boolean(firstError(errors, "maxLossBps"))} aria-describedby={describedBy("maxLossBps")} />
+          </Field>
+          <Field label="Maximum protection cost (USD, optional)" htmlFor="maxPremiumUsd" error={firstError(errors, "maxPremiumUsd")}>
+            <input id="maxPremiumUsd" inputMode="decimal" className="field-control" value={values.maxPremiumUsd} onChange={(event) => update("maxPremiumUsd", event.target.value)} aria-invalid={Boolean(firstError(errors, "maxPremiumUsd"))} aria-describedby={describedBy("maxPremiumUsd")} />
+          </Field>
+        </div>
 
-      <Accordion title="Original request">
-        <p>“{goal.originalUserMessage}”</p>
-      </Accordion>
-
-      <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-end">
-        <Button variant="secondary" disabled={busy} onClick={() => void submit("save")}>{busy ? "Saving…" : "Save changes"}</Button>
-        <Button disabled={busy} onClick={() => void submit("find")}>{busy ? "Working…" : "Find protection options"} <span aria-hidden="true">→</span></Button>
-      </div>
-    </Card>
+        <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <Button variant="ghost" onClick={() => submit("save")} disabled={busy}><PencilSimple aria-hidden="true" />Save changes</Button>
+          <Button onClick={() => submit("find")} disabled={busy}>{busy ? "Checking live protection…" : "Find live protection"}<ArrowRight aria-hidden="true" /></Button>
+        </div>
+      </Card>
+      <aside className="space-y-3">
+        <MetricCard label="Purpose" value={goalName(goal)} tone="accent" />
+        <MetricCard label="Asset" value="ETH on Base" hint="One supported network keeps the preview easy to verify." />
+        <Alert tone="info" title="Unsigned preview only">No transaction will be signed or broadcast from this experience.</Alert>
+      </aside>
+    </div>
   );
 }
 
-export function CouncilDrawer({ decision, open, onClose }: { decision: CouncilDecision; open: boolean; onClose: () => void }) {
+export function ActiveProtectionPanel({ stage }: { stage: "searching_candidates" | "reviewing_candidate" | "generating_preview" }) {
+  const content = stage === "searching_candidates"
+    ? ["Checking live protection", "GoalGuard is reading active ETH put options from Thetanuts and applying your exact limits."]
+    : stage === "reviewing_candidate"
+      ? ["Three independent checks", "The Gonka council is reviewing fit, downside risk, and clarity. Deterministic values cannot be changed by the reviewers."]
+      : ["Generating unsigned preview", "GoalGuard is revalidating the approved option, wallet readiness, allowance, and exact Base calldata."];
+
   return (
-    <Drawer open={open} onClose={onClose} title="GoalGuard review">
-      <Alert tone={decision.status === "approved" ? "success" : decision.status === "disputed" ? "warning" : "error"} title={`Decision: ${decision.status}`}>
-        {decision.status === "approved" ? "All three independent council checks passed for this candidate." : "This plan cannot progress to a trade in its current state."}
-      </Alert>
-      <div className="mt-6 space-y-4">
-        {decision.reviews.map((review) => (
-          <article key={review.id} className="rounded-2xl border border-white/[0.08] bg-white/[0.035] p-5">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div><h3 className="font-semibold text-white">{roleLabels[review.role]}</h3><p className="mt-1 text-xs text-[var(--muted)]">{review.model}</p></div>
-              <StatusBadge label={review.verdict} tone={review.verdict === "approve" ? "ready" : review.verdict === "uncertain" ? "warning" : "error"} />
-            </div>
-            <p className="mt-4 text-sm leading-6 text-[#c3d0c7]">{review.summary}</p>
-            {review.concerns.length ? <div className="mt-4"><p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">Concerns</p><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[#aebcb2]">{review.concerns.map((item) => <li key={item}>{item}</li>)}</ul></div> : null}
-            {review.requiredDisclosures.length ? <div className="mt-4"><p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">Required disclosures</p><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[#aebcb2]">{review.requiredDisclosures.map((item) => <li key={item}>{item}</li>)}</ul></div> : null}
-            <p className="mt-4 break-all font-mono text-[11px] text-[#7f9185]">Gonka Request ID: {review.requestId}</p>
-          </article>
-        ))}
+    <div className="mx-auto grid min-h-[30rem] max-w-5xl overflow-hidden rounded-[var(--radius-lg)] bg-[var(--surface-dark)] text-[var(--text-on-dark)] lg:grid-cols-[1fr_18rem]">
+      <div className="flex flex-col justify-center p-7 sm:p-12">
+        <div><StatusBadge tone="info" label="Live request active" /></div>
+        <h1 className="mt-7 max-w-2xl font-display text-5xl leading-none sm:text-6xl">{content[0]}</h1>
+        <p className="mt-6 max-w-xl text-base leading-7 text-[var(--text-on-dark-muted)]">{content[1]}</p>
+        <div className="mt-9 flex items-center gap-3 text-sm" role="status"><HourglassHigh className="size-5 animate-pulse motion-reduce:animate-none" aria-hidden="true" />Waiting for a truthful backend result—no simulated percentage.</div>
       </div>
-      {decision.blockedReasons.length ? <Alert tone="error" title="Blocked reasons" className="mt-5"><ul className="list-disc pl-5">{decision.blockedReasons.map((reason) => <li key={reason}>{reason}</li>)}</ul></Alert> : null}
-    </Drawer>
+      <ol className="border-t border-[var(--dark-border)] p-7 text-sm lg:border-l lg:border-t-0 lg:p-8" aria-label="Live request provenance">
+        <li className="border-t border-[var(--dark-border)] py-4">01 · Read authoritative inputs</li>
+        <li className="border-t border-[var(--dark-border)] py-4">02 · Apply deterministic checks</li>
+        <li className="border-y border-[var(--dark-border)] py-4">03 · Return an auditable result</li>
+      </ol>
+    </div>
   );
 }
 
-export function ProtectionPlanPanel({
-  goal,
-  candidate,
-  alternatives,
-  decision,
-  busy,
-  onOpenCouncil,
-  onRefresh,
-  onPreview,
-}: {
+export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, busy, walletStatus, onContinue, onRefresh, onOpenCouncil }: {
   goal: Goal;
   candidate: PublicProtectionCandidate;
   alternatives: PublicProtectionCandidate[];
   decision: CouncilDecision;
   busy: boolean;
-  onOpenCouncil: () => void;
+  walletStatus: "connected" | "wrong-network" | "other";
+  onContinue: () => void;
   onRefresh: () => void;
-  onPreview: () => void;
+  onOpenCouncil: () => void;
 }) {
   const approved = decision.status === "approved";
+  const cta = walletStatus === "wrong-network" ? "Switch to Base" : walletStatus === "connected" ? "Continue to unsigned preview" : "Connect wallet to continue";
   return (
-    <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-      <Card className="p-6 sm:p-8">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Protection plan</p><h1 className="mt-2 text-3xl font-semibold text-white">{goal.customGoalLabel ?? goalLabels[goal.goalType]} protection</h1></div>
-          <StatusBadge label={approved ? "Council checks passed" : decision.status} tone={approved ? "ready" : decision.status === "disputed" ? "warning" : "error"} />
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_23rem]">
+      <Card className="overflow-hidden">
+        <div className="border-b border-[var(--border)] p-6 sm:p-8">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <StatusBadge tone={approved ? "ready" : decision.status === "disputed" ? "warning" : "error"} label={approved ? "Approved by 3 checks" : decision.status === "disputed" ? "Review disputed" : "Plan blocked"} />
+            <span className="text-xs text-[var(--foreground-soft)] tabular-nums">Market {formatDate(candidate.marketAsOf, { hour: "numeric", minute: "2-digit" })}</span>
+          </div>
+          <h1 className="mt-5 max-w-3xl font-display text-4xl leading-tight sm:text-6xl">A protection plan for <em className="text-[var(--accent)]">{goalName(goal)}.</em></h1>
+          <p className="mt-4 max-w-2xl text-[var(--foreground-soft)]">A live ETH put limits the selected downside through its displayed expiry. It does not guarantee the full goal after that time.</p>
         </div>
-        <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {[
-            ["Amount to preserve", formatUsd(goal.protectedValueUsd)],
-            ["Protection cost", formatUsd(candidate.premiumUsd)],
-            ["Maximum cost at risk", formatUsd(candidate.maxPremiumLossUsd)],
-            ["Estimated protected value", formatUsd(candidate.estimatedFloorUsd)],
-            ["Protection ends on", formatDate(candidate.expiry)],
-            ["Goal coverage", formatPercentFromBps(candidate.goalCoverageBps)],
-          ].map(([label, value]) => <div key={label} className="rounded-2xl border border-white/[0.07] bg-black/10 p-4"><p className="text-xs text-[var(--muted)]">{label}</p><p className="mt-1 font-semibold text-white">{value}</p></div>)}
-        </div>
-        <Alert className="mt-5">This option provides downside protection only under the displayed payoff and settlement conditions. The estimated protected value is evaluated at expiry.</Alert>
-        <div className="mt-5 space-y-3">
-          <Accordion title="What happens if ETH moves?" open>
-            <div className="grid gap-3 sm:grid-cols-3">
-              {candidate.scenarios.map((scenario) => <div key={scenario.key} className="rounded-xl bg-white/[0.04] p-3"><p className="text-xs uppercase tracking-wider text-[var(--muted)]">ETH {scenario.key}</p><p className="mt-1 text-white">{formatUsd(scenario.netProtectedValueUsd)}</p><p className="mt-1 text-xs">at {formatUsd(scenario.settlementPriceUsd)}</p></div>)}
+        <div className="p-6 sm:p-8">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <MetricCard label="Goal amount" value={formatUsd(goal.protectedValueUsd)} />
+            <MetricCard label="Protection cost" value={formatUsd(candidate.premiumUsd)} tone="accent" />
+            <MetricCard label="Estimated floor" value={formatUsd(candidate.estimatedFloorUsd)} tone="accent" />
+            <MetricCard label="Ends" value={formatDate(candidate.expiry)} />
+          </div>
+          <Alert className="mt-5" tone={candidate.deadlineGapHours > 24 ? "warning" : "info"} title="Deadline alignment">Protection expires {candidate.deadlineGapHours} hour{candidate.deadlineGapHours === 1 ? "" : "s"} from the goal deadline. Settlement conditions apply at expiry.</Alert>
+          <section className="mt-9" aria-labelledby="scenario-title">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--foreground-soft)]">Scenario comparison</p><h2 id="scenario-title" className="mt-2 font-display text-3xl">What the protection changes</h2></div>
+              <p className="text-xs text-[var(--foreground-soft)]">Estimated net value after cost</p>
             </div>
-          </Accordion>
-          <Accordion title="Protocol details">
-            <dl className="grid gap-3 sm:grid-cols-2">
-              <div><dt className="text-xs text-[var(--muted)]">Strike</dt><dd className="text-white">{formatUsd(candidate.strikeUsd)}</dd></div>
-              <div><dt className="text-xs text-[var(--muted)]">Quantity</dt><dd className="text-white">{candidate.quantityUnderlying} ETH</dd></div>
-              <div><dt className="text-xs text-[var(--muted)]">Settlement</dt><dd className="text-white">{candidate.settlementTokenSymbol}</dd></div>
-              <div><dt className="text-xs text-[var(--muted)]">Market checked</dt><dd className="text-white">{formatDate(candidate.marketAsOf, { hour: "numeric", minute: "2-digit" })}</dd></div>
-            </dl>
-          </Accordion>
-          {alternatives.length ? <Accordion title={`${alternatives.length} other viable option${alternatives.length === 1 ? "" : "s"}`}><div className="space-y-3">{alternatives.map((item, index) => <div key={item.id} className="flex justify-between gap-4 rounded-xl bg-white/[0.04] p-3"><span>#{index + 2} · ends {formatDate(item.expiry)}</span><span className="text-white">{formatUsd(item.premiumUsd)}</span></div>)}</div></Accordion> : null}
+            <div className="mt-6"><ScenarioComparison scenarios={candidate.scenarios} /></div>
+          </section>
+          <div className="mt-8">
+            <Accordion title="Protocol facts">
+              <dl className="grid gap-4 sm:grid-cols-2">
+                <div><dt className="text-xs text-[var(--foreground-soft)]">Strike</dt><dd className="mt-1 tabular-nums">{formatUsd(candidate.strikeUsd)}</dd></div>
+                <div><dt className="text-xs text-[var(--foreground-soft)]">Quantity</dt><dd className="mt-1 tabular-nums">{candidate.quantityUnderlying} ETH</dd></div>
+                <div><dt className="text-xs text-[var(--foreground-soft)]">Settlement asset</dt><dd className="mt-1">{candidate.settlementTokenSymbol}</dd></div>
+                <div><dt className="text-xs text-[var(--foreground-soft)]">Goal coverage</dt><dd className="mt-1 tabular-nums">{formatPercentFromBps(candidate.goalCoverageBps)}</dd></div>
+              </dl>
+            </Accordion>
+            {alternatives.length ? <Accordion title={alternatives.length + " other viable option" + (alternatives.length === 1 ? "" : "s")}><div>{alternatives.map((item) => <div key={item.id} className="flex min-h-12 items-center justify-between gap-4 border-t border-[var(--border)] py-3"><span>Ends {formatDate(item.expiry)}</span><span className="font-semibold tabular-nums">{formatUsd(item.premiumUsd)}</span></div>)}</div></Accordion> : null}
+          </div>
         </div>
       </Card>
-      <div className="space-y-5">
-        <Card className="p-6"><p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">Independent review</p><h2 className="mt-2 text-xl font-semibold text-white">{decision.approvedReviewCount}/3 council checks passed</h2><p className="mt-2 text-sm leading-6 text-[#9daca2]">Review attempt {decision.attempt}. AI explanations cannot change the deterministic financial values.</p><Button className="mt-5 w-full" variant="secondary" onClick={onOpenCouncil}>Open GoalGuard review</Button></Card>
-        {!approved ? <Alert tone={decision.status === "disputed" ? "warning" : "error"} title={decision.status === "disputed" ? "Council disputed" : "Plan blocked"}>This candidate cannot proceed to trade preview. Open the review to see which role raised a concern.</Alert> : null}
-        <div className="flex flex-col gap-3">
-          <Button onClick={onPreview} disabled={!approved || busy}>{busy ? "Preparing…" : "Preview exact trade"}</Button>
-          <Button variant="ghost" onClick={onRefresh} disabled={busy}>Refresh live options</Button>
-        </div>
-      </div>
+      <aside className="space-y-4">
+        <Card className="p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--foreground-soft)]">Independent review</p>
+          <h2 className="mt-2 font-display text-3xl">{decision.approvedReviewCount} of 3 checks passed</h2>
+          <p className="mt-2 text-sm leading-6 text-[var(--foreground-soft)]">Council attempt {decision.attempt}. Reviewers explain and challenge; deterministic financial values stay fixed.</p>
+          <Button className="mt-5 w-full" variant="secondary" onClick={onOpenCouncil}>Open council review</Button>
+        </Card>
+        {!approved ? <Alert tone={decision.status === "disputed" ? "warning" : "error"} title={decision.status === "disputed" ? "Council needs another look" : "This plan cannot proceed"}>{decision.blockedReasons[0] ?? "Open the council review to see the concern before refreshing live options."}</Alert> : null}
+        <div className="grid gap-3"><Button onClick={onContinue} disabled={!approved || busy}>{cta}<ArrowRight aria-hidden="true" /></Button><Button variant="ghost" onClick={onRefresh} disabled={busy}>Refresh live options</Button></div>
+      </aside>
     </div>
   );
 }
 
-export function TradePreviewPanel({
-  preview,
-  walletAddress,
-  executionEnabled,
-  maxPremiumUsd,
-  busy,
-  onBack,
-  onConfirm,
-}: {
-  preview: TradePreview;
+export function CouncilDrawer({ decision, open, onClose }: { decision: CouncilDecision; open: boolean; onClose: () => void }) {
+  return (
+    <Drawer open={open} title="GoalGuard council review" onClose={onClose}>
+      <p className="mb-5 text-sm leading-6 text-[var(--foreground-soft)]">Three Gonka roles independently check plan fit, risk, and clarity. Their request IDs make the review traceable.</p>
+      <div className="grid gap-4">{decision.reviews.map((review) => <CouncilCard key={review.id} review={review} label={roleLabels[review.role]} />)}</div>
+      <div className="mt-5"><Alert tone={decision.status === "approved" ? "success" : decision.status === "disputed" ? "warning" : "error"} title={"Council result: " + decision.status}>{decision.blockedReasons.length ? decision.blockedReasons.join(" ") : "All " + decision.approvedReviewCount + " checks approved this plan."}</Alert></div>
+    </Drawer>
+  );
+}
+
+export function PreviewConfirmationPanel({ goal, candidate, walletAddress, acknowledged, busy, onAcknowledged, onBack, onGenerate }: {
+  goal: Goal;
+  candidate: PublicProtectionCandidate;
   walletAddress: string;
-  executionEnabled: boolean;
-  maxPremiumUsd: string;
+  acknowledged: boolean;
   busy: boolean;
+  onAcknowledged: (value: boolean) => void;
   onBack: () => void;
-  onConfirm: () => void;
+  onGenerate: () => void;
 }) {
-  const [acknowledged, setAcknowledged] = useState(false);
+  return (
+    <Card className="mx-auto max-w-5xl overflow-hidden">
+      <div className="border-b border-[var(--border)] p-6 sm:p-8">
+        <StatusBadge label="Final review · no wallet signature" tone="info" />
+        <h1 className="mt-4 font-display text-4xl leading-tight sm:text-5xl">Confirm the facts before generating an <em className="text-[var(--accent)]">unsigned preview.</em></h1>
+        <p className="mt-3 max-w-3xl text-[var(--foreground-soft)]">Back makes no API change. Generate calls the preview endpoint once and returns transaction data for inspection only.</p>
+      </div>
+      <div className="p-6 sm:p-8">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <MetricCard label="Purpose" value={goalName(goal)} />
+          <MetricCard label="Exact cost" value={formatUsd(candidate.premiumUsd)} tone="accent" />
+          <MetricCard label="Maximum cost at risk" value={formatUsd(candidate.maxPremiumLossUsd)} />
+          <MetricCard label="Coverage" value={formatPercentFromBps(candidate.goalCoverageBps)} />
+          <MetricCard label="Expiry conditions" value={formatDate(candidate.expiry)} hint={"Expiry is " + candidate.deadlineGapHours + " hours from the goal deadline."} />
+          <MetricCard label="Connected wallet" value={<span className="text-base tabular-nums">{shortenAddress(walletAddress)}</span>} hint="Base · chain ID 8453" />
+        </div>
+        <Alert className="mt-5" tone="warning" title="Preview, not protection">Generating the preview does not move funds, create an allowance, sign a transaction, or create a protected position.</Alert>
+        <label className="mt-5 flex min-h-14 cursor-pointer items-start gap-3 rounded-[var(--radius-md)] border border-[var(--foreground)] bg-[var(--surface-soft)] p-4 text-sm leading-6 text-[var(--foreground-soft)]">
+          <input type="checkbox" checked={acknowledged} onChange={(event) => onAcknowledged(event.target.checked)} className="mt-1 size-5 shrink-0 accent-[var(--foreground)]" />
+          I understand the exact cost, expiry, coverage, connected wallet, and that this produces unsigned transaction data only.
+        </label>
+        <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end"><Button variant="ghost" onClick={onBack} disabled={busy}><ArrowLeft aria-hidden="true" />Back to plan</Button><Button onClick={onGenerate} disabled={!acknowledged || busy}>{busy ? "Generating unsigned preview…" : "Generate unsigned preview"}<ShieldCheck aria-hidden="true" /></Button></div>
+      </div>
+    </Card>
+  );
+}
+
+function readinessDecimals(symbol: string) {
+  return symbol === "USDC" ? 6 : 18;
+}
+
+export function DemoPreviewReadyPanel({ goal, preview, meta, decision, onStartAnother, onFreshPreview }: {
+  goal: Goal;
+  preview: TradePreview;
+  meta: ApiMeta;
+  decision: CouncilDecision;
+  onStartAnother: () => void;
+  onFreshPreview: () => void;
+}) {
   const [seconds, setSeconds] = useState(() => secondsUntil(preview.trade.previewExpiresAt));
   useEffect(() => {
     const timer = window.setInterval(() => setSeconds(secondsUntil(preview.trade.previewExpiresAt)), 1000);
     return () => window.clearInterval(timer);
   }, [preview.trade.previewExpiresAt]);
   const expired = seconds === 0;
-  const partial = preview.candidate.goalCoverageBps < 10000;
+  const readiness = Object.entries(preview.walletReadiness);
+
   return (
-    <Card className="mx-auto max-w-4xl p-6 sm:p-8">
-      <div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">Exact trade preview</p><h1 className="mt-2 text-3xl font-semibold text-white">Review before your wallet opens.</h1></div><StatusBadge label={executionEnabled ? "Live execution enabled" : "Preview only"} tone={executionEnabled ? "warning" : "neutral"} /></div>
-      <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {[
-          ["Protection cost", formatUsd(preview.candidate.premiumUsd)],
-          ["Maximum cost at risk", formatUsd(preview.candidate.maxPremiumLossUsd)],
-          ["Protection ends on", formatDate(preview.candidate.expiry)],
-          ["Estimated protected value", formatUsd(preview.candidate.estimatedFloorUsd)],
-          ["Wallet", shortenAddress(walletAddress)],
-          ["Network", "Base · 8453"],
-        ].map(([label, value]) => <div key={label} className="rounded-2xl border border-white/[0.07] bg-black/10 p-4"><p className="text-xs text-[var(--muted)]">{label}</p><p className="mt-1 font-semibold text-white">{value}</p></div>)}
-      </div>
-      <div className="mt-5 flex items-center justify-between rounded-2xl border border-white/[0.08] bg-white/[0.035] p-4"><span className="text-sm text-[#b9c6bc]">Preview valid for</span><span className={expired ? "font-mono text-[var(--danger-soft)]" : "font-mono text-[var(--accent)]"}>{formatCountdown(seconds)}</span></div>
-      {partial ? <Alert className="mt-5" tone="warning" title="Proportional micro-hedge demo">This candidate covers {formatPercentFromBps(preview.candidate.goalCoverageBps)} of the goal and does not fully protect the original amount.</Alert> : null}
-      {!executionEnabled ? <Alert className="mt-5" tone="warning" title="Live execution is disabled">You can review the full plan, but signing is unavailable until organizer approval. The live premium cap is {formatUsd(maxPremiumUsd)}.</Alert> : null}
-      {preview.warnings.map((warning) => <Alert key={warning} className="mt-3" tone="warning">{warning}</Alert>)}
-      <div className="mt-5 grid gap-3 sm:grid-cols-3" aria-label="Wallet readiness">
-        {Object.entries(preview.walletReadiness).map(([key, item]) => <div key={key} className="rounded-2xl border border-white/[0.07] bg-black/10 p-4"><p className="text-xs capitalize text-[var(--muted)]">{key.replace(/([A-Z])/g, " $1")}</p><p className={item.sufficient ? "mt-1 font-semibold text-[var(--accent)]" : "mt-1 font-semibold text-[var(--danger-soft)]"}>{item.sufficient ? "Ready" : `${item.symbol} needed`}</p></div>)}
-      </div>
-      <Alert className="mt-3" tone={preview.referralDisclosure.mayReceiveFee ? "warning" : "info"}>{preview.referralDisclosure.message}</Alert>
-      <label className="mt-6 flex items-start gap-3 rounded-2xl border border-white/[0.08] p-4 text-sm leading-6 text-[#c2cec5]"><input type="checkbox" checked={acknowledged} onChange={(event) => setAcknowledged(event.target.checked)} className="mt-1 size-4 accent-[#cbff6b]" />I understand that protection depends on the executed position and its settlement conditions at expiry.</label>
-      <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end"><Button variant="ghost" onClick={onBack}>Back to plan</Button>{executionEnabled ? <Button disabled={!acknowledged || expired || busy} onClick={onConfirm}>{busy ? "Revalidating…" : expired ? "Preview expired" : "Prepare wallet transaction"}</Button> : null}</div>
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
+      <Card className="overflow-hidden">
+        <div className="border-b border-[var(--border)] p-6 sm:p-9">
+          <StatusBadge label={expired ? "Preview expired" : "Demo preview ready"} tone={expired ? "warning" : "ready"} />
+          <h1 className="mt-4 font-display text-4xl leading-tight sm:text-6xl">Protection Plan Ready <em className="text-[var(--accent)]">(Demo)</em></h1>
+          <p className="mt-4 text-lg font-semibold">No funds moved; no protected position was created</p>
+          <p className="mt-2 max-w-3xl text-[var(--foreground-soft)]">This is a time-limited, unsigned snapshot of the approved plan and wallet requirements.</p>
+        </div>
+        <div className="p-6 sm:p-8">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <MetricCard label="Purpose" value={goalName(goal)} />
+            <MetricCard label="Proposed cost" value={formatUsd(preview.candidate.premiumUsd)} tone="accent" />
+            <MetricCard label="Estimated floor" value={formatUsd(preview.candidate.estimatedFloorUsd)} tone="accent" />
+            <MetricCard label="Expires in" value={<span className={(expired ? "text-[var(--accent)] " : "") + "tabular-nums"}>{formatCountdown(seconds)}</span>} />
+          </div>
+
+          <section className="mt-8" aria-labelledby="readiness-title">
+            <h2 id="readiness-title" className="font-display text-3xl">Wallet readiness</h2>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              {readiness.map(([key, item]) => {
+                const decimals = readinessDecimals(item.symbol);
+                return (
+                  <div key={key} className="border-t border-[var(--border)] bg-[var(--surface)] p-4">
+                    <div className="flex items-center gap-2"><CheckCircle weight={item.sufficient ? "fill" : "regular"} className={item.sufficient ? "text-[var(--positive)]" : "text-[var(--negative)]"} aria-hidden="true" /><p className="text-sm font-semibold capitalize">{key.replace(/([A-Z])/g, " $1")}</p></div>
+                    <p className="mt-3 text-xs text-[var(--foreground-soft)] tabular-nums">Balance {formatBaseUnits(item.balanceBaseUnits, decimals)} {item.symbol}</p>
+                    <p className="mt-1 text-xs text-[var(--foreground-soft)] tabular-nums">Required {formatBaseUnits(item.requiredBaseUnits, decimals)} {item.symbol}</p>
+                    <p className="mt-2 text-xs font-semibold">{item.sufficient ? "Requirement met" : "Requirement not met"}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          {preview.allowance ? (
+            <section className="mt-8 border-y border-[var(--border)] py-6">
+              <div className="flex items-center gap-3"><Receipt className="size-5" aria-hidden="true" /><h2 className="font-semibold">Allowance requirement</h2></div>
+              <p className="mt-3 text-sm text-[var(--foreground-soft)]">
+                {preview.allowance.approvalRequired
+                  ? "An unsigned approval is included for exactly " + formatBaseUnits(preview.allowance.requiredAmountBaseUnits, preview.candidate.settlementTokenDecimals) + " " + preview.candidate.settlementTokenSymbol + ". Current allowance: " + formatBaseUnits(preview.allowance.currentAmountBaseUnits, preview.candidate.settlementTokenDecimals) + "."
+                  : "The current allowance already meets the exact preview requirement; no approval transaction is needed."}
+              </p>
+              {preview.approvalTransaction ? <div className="mt-4"><UnsignedTransactionCard title="Exact token approval" to={preview.approvalTransaction.to} data={preview.approvalTransaction.data} value={preview.approvalTransaction.valueBaseUnits} chainId={preview.approvalTransaction.chainId} /></div> : null}
+            </section>
+          ) : null}
+
+          <div className="mt-6"><UnsignedTransactionCard title="Protection execution" to={preview.executionTransaction.to} data={preview.executionTransaction.data} value={preview.executionTransaction.valueBaseUnits} chainId={preview.executionTransaction.chainId} /></div>
+          {preview.warnings.map((warning) => <Alert key={warning} className="mt-3" tone="warning">{warning}</Alert>)}
+          <Alert className="mt-5" tone={preview.referralDisclosure.mayReceiveFee ? "warning" : "info"}>{preview.referralDisclosure.message}</Alert>
+        </div>
+      </Card>
+
+      <aside className="space-y-4">
+        <Card className="p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--foreground-soft)]">Preview audit</p>
+          <dl className="mt-4 space-y-4 text-sm">
+            <div><dt className="text-xs text-[var(--foreground-soft)]">Generated</dt><dd className="mt-1">{formatDate(meta.timestamp, { hour: "numeric", minute: "2-digit", second: "2-digit" })}</dd></div>
+            <div><dt className="text-xs text-[var(--foreground-soft)]">Preview request</dt><dd className="overflow-anywhere mt-1 text-xs tabular-nums">{meta.requestId}</dd></div>
+            <div><dt className="text-xs text-[var(--foreground-soft)]">Council decision</dt><dd className="overflow-anywhere mt-1 text-xs tabular-nums">{decision.id}</dd></div>
+          </dl>
+          <Accordion title="All Gonka Request IDs">{decision.reviews.map((review) => <p key={review.id} className="overflow-anywhere mt-2 text-xs text-[var(--foreground-soft)] tabular-nums">{roleLabels[review.role]} · {review.requestId}</p>)}</Accordion>
+        </Card>
+        <Alert tone={expired ? "warning" : "success"} title={expired ? "Fresh facts required" : "Safe demo boundary"}>{expired ? "This snapshot expired. Return to the approved plan and generate a new one after reconfirming." : "There is no signing action on this screen and no transaction was sent."}</Alert>
+        <Button className="w-full" onClick={expired ? onFreshPreview : onStartAnother}>{expired ? "Review and generate a fresh preview" : "Start another goal"}<ArrowRight aria-hidden="true" /></Button>
+      </aside>
+    </div>
+  );
+}
+
+function detailLines(details: JsonValue | null): string[] {
+  if (!details) return [];
+  if (typeof details === "string" || typeof details === "number" || typeof details === "boolean") return [String(details)];
+  if (Array.isArray(details)) return details.flatMap(detailLines).slice(0, 8);
+  return Object.entries(details).flatMap(([key, value]) => detailLines(value).map((line) => key.replace(/([A-Z])/g, " $1") + ": " + line)).slice(0, 8);
+}
+
+export function WorkflowErrorPanel({ error, onRetry, onEdit }: { error: WorkflowError; onRetry: () => void; onEdit: () => void }) {
+  const details = useMemo(() => detailLines(error.details), [error.details]);
+  const editFirst = ["NO_SUITABLE_CANDIDATE", "GOAL_INCOMPLETE"].includes(error.code);
+  return (
+    <Card className="mx-auto max-w-3xl p-6 sm:p-9">
+      <Warning className="size-9 text-[var(--accent)]" aria-hidden="true" />
+      <p className="mt-5 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--foreground-soft)]">{error.code.replaceAll("_", " ")}</p>
+      <h1 className="mt-2 font-display text-4xl">The protection flow stopped safely.</h1>
+      <p className="mt-4 text-[var(--foreground-soft)]">{error.message}</p>
+      {details.length ? <div className="mt-5 border-y border-[var(--border)] py-4"><p className="text-sm font-semibold">What the live check found</p><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[var(--foreground-soft)]">{details.map((line) => <li key={line}>{line}</li>)}</ul></div> : null}
+      {error.requestId ? <p className="overflow-anywhere mt-5 text-xs tabular-nums">Request {error.requestId}</p> : null}
+      <div className="mt-7 flex flex-col gap-3 sm:flex-row">{error.retryable && !editFirst ? <Button onClick={onRetry}>Try this step again</Button> : null}<Button variant={editFirst ? "primary" : "secondary"} onClick={onEdit}><PencilSimple aria-hidden="true" />Edit goal constraints</Button></div>
     </Card>
   );
 }
 
-export function TransactionStatusPanel({
-  stage,
-  trade,
-  txHash,
-  onApproval,
-  onExecution,
-  onRefresh,
-}: {
-  stage: "awaiting_approval_signature" | "awaiting_execution_signature" | "transaction_submitted";
-  trade: Trade;
-  txHash: string | null;
-  onApproval: () => void;
-  onExecution: () => void;
-  onRefresh: () => void;
-}) {
-  const copy = stage === "awaiting_approval_signature"
-    ? ["Exact token approval", "Your wallet will request only the amount shown in the preview."]
-    : stage === "awaiting_execution_signature"
-      ? ["Sign the protection trade", "This is the transaction that submits the option order."]
-      : ["Transaction submitted", "GoalGuard is waiting for verified confirmation on Base."];
+export function ReadOnlyTradePanel({ goal, trade, onStartAnother }: { goal: Goal; trade: Trade; onStartAnother: () => void }) {
   return (
-    <Card className="mx-auto max-w-2xl p-7 text-center sm:p-10">
-      <span className="mx-auto grid size-16 place-items-center rounded-full border border-[#cbff6b]/25 bg-[#cbff6b]/10 text-2xl text-[var(--accent)]" aria-hidden="true">{stage === "transaction_submitted" ? "…" : "↗"}</span>
-      <h1 className="mt-5 text-3xl font-semibold text-white">{copy[0]}</h1><p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-[#a8b7ad]">{copy[1]} GoalGuard will not call the goal protected until the backend verifies the receipt.</p>
-      {txHash ? <a href={baseTransactionUrl(txHash)} target="_blank" rel="noreferrer" className="mt-5 block break-all font-mono text-xs text-[var(--accent)] underline underline-offset-4">View {txHash}</a> : null}
-      <div className="mt-7">{stage === "awaiting_approval_signature" ? <Button onClick={onApproval}>Approve exact amount</Button> : stage === "awaiting_execution_signature" ? <Button onClick={onExecution}>Sign protection trade</Button> : <Button variant="secondary" onClick={onRefresh}>Refresh confirmation</Button>}</div>
-      <p className="mt-5 text-xs text-[var(--muted)]">Trade reference {trade.id}</p>
+    <Card className="mx-auto max-w-3xl p-6 sm:p-9">
+      <StatusBadge tone="warning" label="Historical live-execution record" />
+      <h1 className="mt-4 font-display text-4xl">This goal has an existing transaction record.</h1>
+      <p className="mt-3 text-[var(--foreground-soft)]">The current P0 interface is preview-only, so it does not expose signing, submission, or transaction mutation actions. This read-only record is preserved for audit safety.</p>
+      <dl className="mt-6 grid gap-3 sm:grid-cols-2"><MetricCard label="Purpose" value={goalName(goal)} /><MetricCard label="Trade status" value={trade.status} /><MetricCard label="Wallet" value={<span className="text-sm tabular-nums">{shortenAddress(trade.walletAddress)}</span>} /><MetricCard label="Trade reference" value={<span className="overflow-anywhere text-xs tabular-nums">{trade.id}</span>} /></dl>
+      <Button className="mt-7" onClick={onStartAnother}>Start another goal</Button>
     </Card>
   );
 }
 
-export function ProtectedGoalPanel({ goal, candidate, decision, trade, explorerUrl }: { goal: Goal; candidate: PublicProtectionCandidate; decision: CouncilDecision; trade: Trade; explorerUrl: string | null }) {
-  const title = goal.customGoalLabel ?? goalLabels[goal.goalType];
+export function CopyableValue({ label, value }: { label: string; value: string }) {
+  const [copied, setCopied] = useState(false);
   return (
-    <Card className="mx-auto max-w-4xl overflow-hidden">
-      <div className="border-b border-[#91e95f]/20 bg-[#91e95f]/10 p-7 sm:p-10"><StatusBadge label="Position active" tone="ready" /><h1 className="mt-4 text-4xl font-semibold text-white">Protection position active for {title}.</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-[#c5d5c8]">The backend verified the Base transaction and position. Protection still depends on the executed option and settlement conditions.</p></div>
-      <div className="p-7 sm:p-10"><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{[
-        ["Amount to preserve", formatUsd(goal.protectedValueUsd)],
-        ["Protection cost", formatUsd(trade.premiumUsd)],
-        ["Protection ends on", formatDate(candidate.expiry)],
-        ["Estimated protected value", formatUsd(candidate.estimatedFloorUsd)],
-        ["Trade confirmed", trade.confirmedAt ? formatDate(trade.confirmedAt, { hour: "numeric", minute: "2-digit" }) : "Verified"],
-        ["Council decision", `Attempt ${decision.attempt} · checks passed`],
-      ].map(([label, value]) => <div key={label} className="rounded-2xl border border-white/[0.07] bg-black/10 p-4"><p className="text-xs text-[var(--muted)]">{label}</p><p className="mt-1 font-semibold text-white">{value}</p></div>)}</div>
-      {trade.txHash ? <a href={explorerUrl ?? baseTransactionUrl(trade.txHash)} target="_blank" rel="noreferrer" className="mt-6 inline-flex text-sm font-semibold text-[var(--accent)] underline underline-offset-4">View verified transaction <span aria-hidden="true">↗</span></a> : null}
-      <Accordion title="Audit references"><p className="break-all font-mono text-xs">Decision: {decision.id}</p>{decision.reviews.map((review) => <p key={review.id} className="mt-2 break-all font-mono text-xs">{roleLabels[review.role]}: {review.requestId}</p>)}</Accordion>
+    <div>
+      <p className="text-xs text-[var(--foreground-soft)]">{label}</p>
+      <div className="mt-1 flex items-center gap-2">
+        <code className="overflow-anywhere min-w-0 flex-1 text-xs tabular-nums">{value}</code>
+        <button className="grid size-11 shrink-0 place-items-center rounded-full hover:bg-[var(--surface-soft)]" aria-label={"Copy " + label} onClick={async () => { await navigator.clipboard.writeText(value); setCopied(true); window.setTimeout(() => setCopied(false), 1500); }}><Copy aria-hidden="true" /></button>
+        <span className="sr-only" aria-live="polite">{copied ? label + " copied" : ""}</span>
       </div>
-    </Card>
+    </div>
   );
-}
-
-export function PlanLanguageHint() {
-  return <p className="text-xs text-[var(--muted)]"><Tooltip label="The option price paid for protection">Protection cost</Tooltip> is shown instead of protocol premium in the primary interface.</p>;
 }
