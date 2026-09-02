@@ -1,75 +1,81 @@
 # GoalGuard Design System
 
-**Version:** 2.1  
-**Revised:** 2026-09-03  
+**Version:** 3.0
+
+**Revised:** 2026-09-03
+
+**Direction:** Electric-lime neo-minimal finance
+
 **Status:** Authoritative frontend visual and interaction specification
 
-## 0. Authority and intent
+## 0. Authority and reference interpretation
 
-This document adapts the supplied `DESIGN_SYSTEM (1).md` to GoalGuard. Product truth, safety boundaries, and canonical data contracts remain governed by `goalguard_prd.md`, especially Section 17. When a visual example conflicts with product truth or accessibility, product truth and WCAG AA take precedence.
+This document translates the supplied visual references into GoalGuard's design language. The references define visual grammar only; their ProFinance brand, Apple marks, app-download patterns, stock-trading copy, partner logos, and sample balances must not be copied.
 
-GoalGuard uses a **purpose-tech editorial finance** direction:
+Product truth, safety boundaries, and canonical data contracts remain governed by `goalguard_prd.md`, especially Section 17. When a visual treatment conflicts with product truth or WCAG 2.2 AA, product truth and accessibility take precedence.
 
-> A private-wealth publication transformed into a calm, transparent downside-protection experience.
+The intended result is:
 
-The interface combines a warm, human editorial layer with compact near-black financial modules. It must not retain visual residue from the previous cyber-fintech direction.
+> A spacious, approachable financial product with a white canvas, decisive black utility surfaces, electric-lime moments, oversized geometric typography, and product-led abstract compositions.
 
-Remove or avoid:
+This version deliberately replaces the previous warm editorial direction.
 
-- forest or charcoal as the page-wide canvas;
-- acid-lime and cyan as primary interface colors;
-- neon gradients, technical grids, glow effects, and glass panels;
-- 3D icons or a large interactive shield as the hero visual;
-- terminal-like labels, excessive monospace, or crypto-native visual shorthand;
-- invented portfolio values, prices, protocol facts, or transaction outcomes.
+| Retired direction | Required direction |
+|---|---|
+| Instrument Serif and italic emphasis | One confident geometric sans-serif family |
+| Warm off-white and terracotta | Pure white, near-black, electric lime, cool neutrals |
+| Architectural photography | Abstract geometry and truthful GoalGuard UI compositions |
+| Floating glass/pill navbar | Flat, full-width sticky header with restrained elevation |
+| Small editorial cards and thin rules | Large soft-gray modules and open whitespace |
+| Luxury-publication tone | Clear, optimistic, product-first financial utility |
+| Dark surfaces used sparingly as small cards | Dark surfaces used intentionally for data, safety, and major CTA bands |
 
-## 1. Non-negotiable principles
+Do not blend version 2.1 styling back into this system. In particular, do not reintroduce serif display text, terracotta, warm canvas tones, glassmorphism, architectural imagery, or a detached pill-shaped header.
 
-1. Use oversized `Instrument Serif` typography for major statements.
-2. Use `Inter` for UI, navigation, labels, body text, identifiers, and financial metadata.
-3. Use a warm off-white canvas and near-black financial modules.
-4. Use muted terracotta only for meaningful emphasis and selected actions.
-5. Keep marketing/editorial content visually distinct from financial and transaction data.
-6. Prefer asymmetric 12-column compositions and generous negative space.
-7. Prefer thin borders; use shadows only when overlap requires depth.
-8. Use one dominant action per view and familiar Web2 financial interaction patterns.
-9. Explain what is happening, what happened, what happens next, and whether any action moves value.
-10. Use only validated live or server-authoritative product data in production UI.
-11. Meet WCAG 2.2 AA, including contrast, keyboard navigation, focus visibility, and 200% zoom.
-12. Respect reduced motion and never make animation necessary to understand state.
-13. Use `FloatingEditorialNavbar` as the marketing-page navigation pattern.
-14. Do not introduce new colors, radii, shadows, or type roles without updating this file.
+## 1. Design principles
 
-## 2. Design tokens
+1. **Clarity before novelty.** Every screen makes the current state, source of data, next action, and value-movement boundary obvious.
+2. **Whitespace is structural.** Use generous vertical rhythm and a small number of large elements instead of dense card collections.
+3. **Lime is a surface, not decoration.** Use it for the hero, selected emphasis, icon discs, and high-attention regions with near-black content.
+4. **Black creates confidence.** Use near-black for primary actions, exact transaction facts, safety modules, and major conversion bands.
+5. **Product visuals explain the product.** Prefer abstract shapes and factual interface fragments over photography or generic finance imagery.
+6. **Familiar Web2 patterns support Web3 trust.** Forms, navigation, confirmations, errors, and disclosures must work like established consumer-finance interfaces.
+7. **One dominant action per view.** Secondary actions remain visually subordinate and Back actions are predictable.
+8. **No invented finance.** Production UI displays only validated server-authoritative, wallet-read, or blockchain-derived values.
+9. **Status is explicit.** Never rely on color alone; pair status color with an icon and plain-language label.
+10. **Accessibility is part of the visual system.** Meet WCAG 2.2 AA, visible focus, keyboard operation, 44px targets, reduced motion, and 200% zoom.
 
-Use a three-layer structure: primitive values, semantic aliases, then component tokens. Components consume semantic or component tokens—never raw hex values.
+## 2. Token architecture
+
+Use three layers: primitive values, semantic aliases, and component tokens. Components consume semantic or component tokens only—never raw hex values.
 
 ### 2.1 Primitive tokens
 
 ```css
 :root {
-  /* Color primitives */
-  --neutral-canvas: #f5f5f2;
-  --neutral-white: #ffffff;
-  --neutral-ink: #11110f;
-  --neutral-ink-soft: #34332f;
-  --neutral-muted: #77756f;
-  --neutral-muted-light: #aaa7a0;
-  --neutral-border: #dcdad4;
-  --neutral-border-soft: #e9e7e2;
+  /* Neutral primitives */
+  --white: #ffffff;
+  --black: #0b0c0a;
+  --ink: #171816;
+  --ink-soft: #4f514c;
+  --gray-50: #f8f8f6;
+  --gray-100: #f2f3f0;
+  --gray-200: #e5e7e2;
+  --gray-300: #cfd2cb;
+  --gray-500: #666963;
 
-  --neutral-dark: #151512;
-  --neutral-dark-raised: #1c1c18;
-  --neutral-black: #0e0e0c;
-  --neutral-dark-border: #30302b;
-  --neutral-on-dark: #f7f6f1;
-  --neutral-on-dark-muted: #96958e;
+  /* Brand primitives */
+  --lime-400: #c9f52b;
+  --lime-300: #d8f95b;
+  --lime-100: #efffb9;
 
-  --terracotta: #b34f3a;
-  --terracotta-bright: #d16045;
-  --terracotta-muted: #8f4536;
-  --status-positive: #5e8e62;
-  --status-negative: #b85c4a;
+  /* Semantic status primitives */
+  --green-700: #17663f;
+  --green-100: #dff5e8;
+  --amber-700: #805600;
+  --amber-100: #fff0c2;
+  --red-700: #a83936;
+  --red-100: #fde5e3;
 
   /* Spacing: 4px micro-step, 8px layout rhythm */
   --space-1: 4px;
@@ -83,24 +89,27 @@ Use a three-layer structure: primitive values, semantic aliases, then component 
   --space-9: 96px;
   --space-10: 128px;
   --space-11: 160px;
-  --space-12: 200px;
+  --space-12: 192px;
 
   /* Shape */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 20px;
-  --radius-xl: 28px;
+  --radius-control: 12px;
+  --radius-card: 28px;
+  --radius-feature: 40px;
+  --radius-section: 52px;
   --radius-pill: 999px;
 
   /* Motion */
-  --duration-fast: 160ms;
-  --duration-normal: 280ms;
-  --duration-slow: 600ms;
-  --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-press: 80ms;
+  --duration-exit: 150ms;
+  --duration-enter: 220ms;
+  --duration-emphasis: 420ms;
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* Elevation */
-  --shadow-floating: 0 1px 2px rgb(0 0 0 / 0.04), 0 16px 40px rgb(0 0 0 / 0.06);
-  --shadow-hero-module: 0 24px 80px rgb(0 0 0 / 0.14);
+  --shadow-header: 0 1px 0 rgb(11 12 10 / 0.07);
+  --shadow-float: 0 18px 50px rgb(11 12 10 / 0.12);
+  --shadow-float-strong: 0 28px 80px rgb(11 12 10 / 0.18);
 }
 ```
 
@@ -108,133 +117,148 @@ Use a three-layer structure: primitive values, semantic aliases, then component 
 
 ```css
 :root {
-  --background: var(--neutral-canvas);
-  --surface: var(--neutral-white);
-  --foreground: var(--neutral-ink);
-  --foreground-soft: var(--neutral-ink-soft);
-  --muted: var(--neutral-muted);
-  --muted-light: var(--neutral-muted-light);
-  --border: var(--neutral-border);
-  --border-soft: var(--neutral-border-soft);
+  --background: var(--white);
+  --surface: var(--white);
+  --surface-subtle: var(--gray-50);
+  --surface-muted: var(--gray-100);
+  --surface-strong: var(--black);
 
-  --surface-dark: var(--neutral-dark);
-  --surface-dark-raised: var(--neutral-dark-raised);
-  --surface-black: var(--neutral-black);
-  --dark-border: var(--neutral-dark-border);
-  --text-on-dark: var(--neutral-on-dark);
-  --text-on-dark-muted: var(--neutral-on-dark-muted);
+  --foreground: var(--ink);
+  --foreground-soft: var(--ink-soft);
+  --foreground-muted: var(--gray-500);
+  --foreground-on-strong: var(--white);
 
-  --accent: var(--terracotta);
-  --accent-hover: var(--terracotta-muted);
-  --accent-bright: var(--terracotta-bright);
-  --positive: var(--status-positive);
-  --negative: var(--status-negative);
+  --border: var(--gray-200);
+  --border-strong: var(--gray-300);
+  --border-on-strong: rgb(255 255 255 / 0.16);
 
-  --focus-ring: var(--foreground);
-  --error-text: var(--foreground-soft);
-  --success-text: var(--foreground-soft);
+  --accent: var(--lime-400);
+  --accent-hover: var(--lime-300);
+  --accent-soft: var(--lime-100);
+  --accent-foreground: var(--black);
+
+  --positive: var(--green-700);
+  --positive-surface: var(--green-100);
+  --warning: var(--amber-700);
+  --warning-surface: var(--amber-100);
+  --negative: var(--red-700);
+  --negative-surface: var(--red-100);
+
+  --focus-ring: var(--black);
+  --focus-offset: var(--accent);
 }
 ```
 
-### 2.3 Accessibility usage rules
-
-The supplied palette is preserved. Accessibility is achieved by assigning its colors to safe roles:
-
-- `--foreground` and `--foreground-soft` are the only default colors for normal text on light surfaces.
-- `--muted` is not used for normal text below 18px because it is 4.22:1 on the canvas. Reserve it for large text, disabled text, or non-text decoration.
-- `--muted-light` is decorative only on light surfaces; never use it for instructions, labels, placeholders, or metadata.
-- `--text-on-dark-muted` may be used for normal text on `--surface-dark`.
-- Terracotta meets AA for normal text on the canvas, but use it sparingly.
-- Positive and negative hues supplement an icon and explicit status label. On light surfaces the readable label remains `--foreground-soft`.
-- Text contrast is at least 4.5:1; large text and meaningful non-text boundaries are at least 3:1.
-- Focus indicators are at least 2px with a 2–3px offset and at least 3:1 contrast.
-
-### 2.4 Component tokens
+### 2.3 Component tokens
 
 ```css
 :root {
-  --button-primary-bg: var(--foreground);
-  --button-primary-fg: var(--surface);
-  --button-primary-border: var(--foreground);
-  --button-secondary-bg: transparent;
-  --button-secondary-fg: var(--foreground);
-  --button-secondary-border: var(--border);
-
-  --input-bg: var(--surface);
-  --input-fg: var(--foreground);
-  --input-border: var(--border);
-  --input-placeholder: var(--foreground-soft);
-  --input-focus: var(--foreground);
-
-  --editorial-card-bg: var(--surface);
-  --editorial-card-fg: var(--foreground);
-  --editorial-card-border: var(--border-soft);
-  --finance-card-bg: var(--surface-dark);
-  --finance-card-fg: var(--text-on-dark);
-  --finance-card-muted: var(--text-on-dark-muted);
-
-  --navbar-bg: rgb(245 245 242 / 0.92);
-  --navbar-bg-scrolled: rgb(245 245 242 / 0.97);
+  --navbar-bg: var(--white);
   --navbar-fg: var(--foreground);
-  --navbar-border: rgb(17 17 15 / 0.08);
-  --navbar-shadow: 0 1px 2px rgb(0 0 0 / 0.03), 0 8px 28px rgb(0 0 0 / 0.055);
+  --navbar-border: var(--border);
+
+  --hero-bg: var(--accent);
+  --hero-fg: var(--accent-foreground);
+
+  --button-primary-bg: var(--black);
+  --button-primary-fg: var(--white);
+  --button-primary-hover: #252622;
+  --button-accent-bg: var(--accent);
+  --button-accent-fg: var(--accent-foreground);
+  --button-secondary-bg: var(--surface-muted);
+  --button-secondary-fg: var(--foreground);
+
+  --input-bg: var(--white);
+  --input-fg: var(--foreground);
+  --input-border: var(--gray-300);
+  --input-placeholder: var(--foreground-muted);
+
+  --feature-card-bg: var(--surface-subtle);
+  --feature-card-fg: var(--foreground);
+  --data-card-bg: var(--surface-strong);
+  --data-card-fg: var(--foreground-on-strong);
+  --footer-bg: var(--surface-strong);
+  --footer-fg: var(--foreground-on-strong);
 }
 ```
+
+The only permitted component-level literal above is the primary-button hover color. Move it into primitives if more than one component uses it.
+
+### 2.4 Color usage and accessibility
+
+- White is the dominant page canvas.
+- Near-black is the dominant text color and the default primary-action surface.
+- Electric lime may fill large areas, but content on lime is always near-black.
+- Never use lime text on white or light-gray surfaces.
+- `--foreground-soft` is the default supporting-text color. `--foreground-muted` is reserved for large text, disabled states, or nonessential metadata only after contrast verification.
+- Status colors are semantic only. They never decorate unrelated content and always accompany text or an icon.
+- Normal text contrast is at least 4.5:1; large text and meaningful non-text boundaries are at least 3:1.
+- Focus indicators use a 2px near-black ring plus a 2px lime offset on light surfaces. On dark surfaces, reverse the two colors.
 
 ## 3. Typography
 
-Load fonts through `next/font`.
+Load `Manrope` through `next/font`. Use it for display, body, controls, labels, addresses, IDs, and financial values. Do not load or use a serif family.
 
 ```css
 :root {
-  --font-display: "Instrument Serif", Georgia, "Times New Roman", serif;
-  --font-sans: "Inter", "Helvetica Neue", Arial, sans-serif;
+  --font-sans: "Manrope", "Helvetica Neue", Arial, sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
 }
 ```
 
-| Role | Family | Size | Line height | Notes |
-|---|---|---:|---:|---|
-| Display XL | Display | `clamp(64px, 8.5vw, 132px)` | 0.87 | Homepage only; mobile override below |
-| Display L | Display | `clamp(56px, 7vw, 104px)` | 0.92 | Major editorial section |
-| H1 | Display | `clamp(52px, 6vw, 88px)` | 0.95 | Workflow title may use smaller clamp |
-| H2 | Display | `clamp(42px, 5vw, 72px)` | 1 | Section title |
-| H3 | Display | `clamp(30px, 3vw, 42px)` | 1.05 | Card-group title |
-| Body large | Sans | 18px | 1.6 | Hero support and lead copy |
-| Body | Sans | 16px | 1.6 | Default, including mobile |
-| Body small | Sans | 13px | 1.55 | Supporting copy only |
-| Navigation | Sans | 13px | 1.4 | 500 weight |
-| Eyebrow/metadata | Sans | 12px | 1.4 | Uppercase, 0.12em tracking |
-| Financial label | Sans | 12px | 1.4 | Uppercase, 0.1em tracking |
-| Financial value | Display or Sans | 28px+ | 1 | Use tabular figures where alignment matters |
-| Identifier | Sans | 12–13px | 1.5 | Tabular figures; allow safe wrapping |
+| Role | Size | Weight | Line height | Tracking |
+|---|---:|---:|---:|---:|
+| Display XL | `clamp(60px, 7vw, 108px)` | 500 | 0.92 | `-0.055em` |
+| Display L | `clamp(52px, 5.8vw, 88px)` | 500 | 0.95 | `-0.05em` |
+| H1 | `clamp(44px, 5vw, 76px)` | 500 | 0.98 | `-0.045em` |
+| H2 | `clamp(40px, 4.3vw, 64px)` | 500 | 1 | `-0.04em` |
+| H3 | `clamp(26px, 2.6vw, 36px)` | 550 | 1.1 | `-0.025em` |
+| Lead | `clamp(18px, 1.6vw, 24px)` | 400 | 1.48 | `-0.015em` |
+| Body | 16px | 400 | 1.6 | `-0.01em` |
+| Body small | 14px | 400 | 1.55 | 0 |
+| Label/navigation | 14px | 550 | 1.4 | `-0.01em` |
+| Metadata | 12px | 550 | 1.45 | `0.02em` |
+| Financial value | `clamp(28px, 3vw, 48px)` | 500 | 1 | `-0.035em` |
 
-Display headings use weight 400, tight negative tracking, and sparing italic terracotta emphasis on conceptual words such as *purpose*, *clarity*, and *control*. Do not color entire sentences.
+Typography rules:
 
-Do not use monospace as a decorative style. Addresses and request IDs remain readable in Inter with `font-variant-numeric: tabular-nums` and `overflow-wrap: anywhere`.
+- Headlines use sentence case, tight tracking, and intentional two- or three-line wrapping.
+- Do not italicize conceptual words or mix typefaces for emphasis.
+- Bold only the phrase that carries decision value; avoid full paragraphs in heavy weight.
+- Financial values, countdowns, balances, addresses, chain IDs, and request IDs use `font-variant-numeric: tabular-nums`.
+- Long identifiers use `overflow-wrap: anywhere` and retain copy affordances.
+- Supporting text never drops below 12px; mobile body and form controls remain at least 16px.
 
 ## 4. Layout and rhythm
 
-- Page maximum width: 1440px.
-- Desktop: 12 columns; tablet: 8 columns; mobile: 4 columns or a single reading column.
-- Desktop gutter: 32px; tablet gutter: 32px; mobile gutter: 20–24px.
-- Desktop grid gap: 24px.
-- Major sections: `padding-block: clamp(96px, 11vw, 180px)`.
-- Compact workflow sections may use 64–80px where task completion benefits from proximity.
-- Long prose measure: 60–75 characters desktop and 35–60 characters mobile.
-- Do not vertically center every section or collapse whitespace to place more content above the fold.
-- Use `scroll-margin-top` of at least 112px for anchored sections so the fixed navbar never obscures headings or keyboard focus.
+- Outer page maximum width: 1540px.
+- Reading and workflow maximum width: 1280–1400px depending on density.
+- Desktop grid: 12 columns; tablet: 8 columns; mobile: 4 columns or one reading column.
+- Desktop gutters: 32px; tablet: 28–32px; mobile: 20px.
+- Grid gap: 24–32px desktop and 16–20px mobile.
+- Major sections use `padding-block: clamp(96px, 10vw, 176px)`.
+- Related workflow regions may use 56–80px vertical separation.
+- Long prose stays within 55–70 characters per line.
+- Open whitespace is preferred over decorative separators.
+- Do not force all content above the fold. The first viewport should establish the purpose, primary action, and preview-only boundary.
 
-Preferred desktop compositions are 7/5, 8/4, or 5/5 with two columns of deliberate whitespace—not repetitive 6/6 splits.
+Preferred compositions:
+
+- hero: 7/5 content-to-product-visual split;
+- feature modules: two wide horizontal cards;
+- advantages: two-column list with generous row gaps;
+- purpose/data section: 6/6 split with text and abstract UI composition;
+- conversion band: large black rounded section with asymmetrical content;
+- final CTA: centered, sparse, followed by a rounded-top black footer.
 
 ## 5. `FloatingEditorialNavbar`
 
-### 5.1 Purpose
+The component name remains for compatibility, but its previous floating-pill appearance is retired. “Floating” now means it stays available while the page scrolls; visually it follows the supplied flat full-width header.
 
-`FloatingEditorialNavbar` is the required landing-page navigation. The floating pill is a contemporary framing device; its warm, nearly opaque material and restrained motion keep it editorial rather than glassmorphic.
-
-It must feel detached, compact, calm, architectural, and lightly elevated. It must not feel glossy, neon, heavily blurred, or composed of nested pills.
-
-### 5.2 GoalGuard information architecture
+### 5.1 Information architecture
 
 Desktop order:
 
@@ -243,77 +267,46 @@ GoalGuard | How it works | Trust & safety | Live foundations | Preview only | Co
 ```
 
 - Brand links to `#top`.
-- `How it works` links to `#how-it-works`.
-- `Trust & safety` links to `#trust-safety`.
-- `Live foundations` links to `#live-foundations`.
-- `Preview only` is a non-interactive status, not a navigation link.
-- Wallet control is secondary and must never visually compete with the primary CTA.
-- `Start a goal` is the single dark primary CTA and links to `#goal-composer`.
-- Do not add fictional login, signup, platform, journal, or performance routes.
+- Section links point only to real anchors.
+- `Preview only` is a non-interactive status label.
+- Wallet control is secondary.
+- `Start a goal` is the one black pill CTA and links to `#goal-composer`.
+- Do not add fictional login, signup, app-download, catalog, pricing, or account routes to match the reference.
 
-### 5.3 Component API
-
-```tsx
-type EditorialNavLink = {
-  label: string;
-  href: `#${string}` | `/${string}`;
-};
-
-type FloatingEditorialNavbarProps = {
-  brand: React.ReactNode;
-  links: readonly EditorialNavLink[];
-  activeHref?: EditorialNavLink["href"];
-  statusLabel?: string;
-  walletSlot?: React.ReactNode;
-  primaryAction: EditorialNavLink;
-};
-```
-
-The component renders a semantic `<header>` and labelled `<nav>`. Decorative icons are hidden from assistive technology; icon-only controls require accessible names.
-
-### 5.4 Desktop geometry and material
+### 5.2 Desktop specification
 
 ```css
 .floating-editorial-navbar {
-  position: fixed;
-  inset-block-start: 20px;
-  inset-inline-start: 50%;
+  position: sticky;
+  inset-block-start: 0;
   z-index: 50;
-  width: min(calc(100% - 40px), 1140px);
-  min-height: 60px;
-  transform: translateX(-50%);
-
-  display: flex;
-  align-items: center;
-  padding: 8px 10px 8px 20px;
-
+  width: 100%;
+  min-height: 84px;
   color: var(--navbar-fg);
   background: var(--navbar-bg);
-  border: 1px solid var(--navbar-border);
-  border-radius: var(--radius-pill);
-  box-shadow: var(--navbar-shadow);
-  backdrop-filter: blur(12px);
+  border-block-end: 1px solid var(--navbar-border);
+}
+
+.floating-editorial-navbar__inner {
+  width: min(calc(100% - 64px), 1540px);
+  min-height: inherit;
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 32px;
 }
 ```
 
-- Top offset: 16–24px.
-- Height: 56–64px; do not animate height.
-- Maximum width: 1080–1180px.
-- Link gap: 24–32px.
-- Logo visual height: 20–28px; use a monochrome mark and restrained wordmark.
-- Navbar links are plain text, not individual pills.
-- Active state uses darker text plus a 1px underline or bottom rule; never color alone.
-- Primary CTA minimum height: 44px; all controls have at least a 44×44px target.
+- No rounded outer container, backdrop blur, glass treatment, or detached top gap.
+- Brand is left-aligned, primary links are centered, and utilities are right-aligned.
+- The logo may use one 10–12px lime dot beside the wordmark.
+- Links are plain text with generous spacing, not individual pills.
+- Active state combines darker text and a 2px underline or bottom marker.
+- Only the primary CTA is pill-shaped.
+- After scrolling, a subtle `--shadow-header` may replace the bottom rule; do not animate height or hide the header.
 
-Blur is a supporting effect. The navbar remains close to opaque and falls back to an opaque canvas background when `backdrop-filter` is unavailable.
-
-### 5.5 Scroll behavior
-
-After the page crosses a stable 24px threshold, set `data-scrolled="true"` and change only background opacity, border, and shadow. Do not animate height, hide the navbar, bounce it, or use scroll-linked parallax.
-
-Use a passive scroll listener or an intersection sentinel and avoid continuous per-frame state updates. Transitions use `--duration-normal` and `--ease-premium`.
-
-### 5.6 Mobile behavior
+### 5.3 Mobile specification
 
 Below 768px:
 
@@ -321,157 +314,119 @@ Below 768px:
 GoalGuard | Preview only | Menu
 ```
 
-- Top offset: `max(12px, env(safe-area-inset-top))`.
-- Width: `calc(100% - 24px)`.
-- Minimum height: 54px.
-- Padding: 7px 8px 7px 16px.
-- Desktop links, wallet control, and primary CTA move into one menu sheet.
-- The menu button exposes `aria-expanded` and `aria-controls`.
-- The sheet traps focus, closes on Escape and outside press, restores focus to the menu trigger, prevents background scroll, and has a visible close control.
-- Links remain at least 44px high and are not icon-only.
-- Selecting an anchor closes the sheet and moves focus to the destination section heading.
+- Header height: 64px; horizontal padding: 20px.
+- Move navigation, wallet control, and CTA into one accessible menu sheet.
+- Menu trigger exposes `aria-expanded` and `aria-controls`.
+- The sheet traps focus, closes on Escape and outside press, locks background scroll, and restores focus to the trigger.
+- Links and controls have at least 44px targets.
+- At 200% zoom, switch to this layout before items clip or wrap unpredictably.
 
-### 5.7 Focus and stacking
+## 6. Hero system
 
-- The skip link must render above the navbar and land on the main content.
-- Focused content must not be hidden behind the fixed navbar.
-- Navbar z-index is 50; sheets and dialogs are 100; skip link is 110.
-- At 200% zoom, switch to the mobile menu when links no longer fit rather than clipping or horizontally scrolling.
-- Reduced motion disables nonessential transitions while preserving state changes.
+The hero is the clearest visual translation of the references.
 
-## 6. Buttons, forms, and feedback
-
-### Buttons
-
-- Primary: near-black background, white text, pill radius, minimum 44px height.
-- Secondary: transparent, foreground text, 1px neutral border, pill radius.
-- Ghost: text-first with a stable hover surface and no border unless focused.
-- Press feedback arrives within 100ms without changing layout bounds.
-- Loading buttons preserve their width, set `aria-busy`, disable repeat submission, and announce the active action.
-
-### Forms
-
-- Every field has a visible label and persistent helper text where financial interpretation is needed.
-- Validate after blur or submit, not on every keystroke.
-- Inline errors state the cause and recovery; multi-error forms also show a focusable linked summary.
-- Inputs are at least 44px high and remain 16px on mobile to prevent browser zoom.
-- Previously supplied values stay populated when moving backward in the workflow.
-
-### Feedback
-
-Every asynchronous state answers:
-
-1. What is GoalGuard doing?
-2. Which live or server-authoritative source is involved?
-3. What will happen next?
-4. Can the user safely leave, retry, or go back?
-
-Never show fabricated percentages or timed progress. Use a concise status message and subtle, reduced-motion-safe feedback only while the request is active.
-
-## 7. Card families and financial UI
-
-Do not style every panel as the same rounded card.
-
-1. **Editorial card:** canvas/white, thin border, serif heading, generous padding.
-2. **Financial card:** near-black, compact, data-led, 16–20px radius, no decorative glow.
-3. **Floating financial module:** near-black, overlaps hero media, uses approved floating shadow.
-4. **Insight block:** text-led, separated by rules rather than a boxed container.
-
-Financial UI rules:
-
-- Financial values use tabular figures and locale-aware formatting.
-- Directly label small scenario comparisons; provide a semantic table or text equivalent.
-- Use muted terracotta for a primary data line, never rainbow or neon series.
-- Gridlines are sparse and low contrast; labels are at least 12px.
-- Positive/negative status always includes an icon and explicit wording.
-- Production components display only validated candidate, council, wallet, and preview values. Example data is limited to tests, Storybook-like fixtures, or clearly labelled design mockups.
-
-## 8. Hero and local architectural media
-
-The homepage hero is asymmetric and begins 120–150px below the viewport top to clear the floating navbar.
-
-Preferred composition:
+### 6.1 Structure
 
 ```text
-Oversized purpose-led headline (7–8 columns) | concise support copy / CTA (3–4 columns)
-Local architectural image spanning the lower composition
-Factual dark GoalGuard modules overlapping the media edge
+White page canvas
+└─ Large electric-lime rounded hero panel
+   ├─ Purpose-led GoalGuard headline
+   ├─ One concise explanation
+   ├─ Primary black action + optional text link
+   └─ Layered GoalGuard product composition
 ```
 
-Media requirements:
+- Panel radius: 48–56px desktop, 28–32px mobile.
+- Panel minimum height: 680–780px desktop; content determines height on smaller screens.
+- Internal padding: `clamp(32px, 5vw, 80px)`.
+- Headline width: roughly 7 columns and no more than three lines.
+- Primary CTA uses black/white. A secondary text link may sit beside it when it points to a real section.
+- Preserve the goal composer as the product's primary action; do not replace it with an app-download motif.
 
-- Use one locally bundled, optimized architectural or refined workspace image—no runtime hotlink.
-- Mood: warm neutral materials, restrained saturation, natural light, editorial framing, minimal visual noise.
-- Avoid crypto coins, holographic overlays, handshakes, generic laptop stock, and obvious AI-finance clichés.
-- Store the final asset under `public/media/` and render it with `next/image`, explicit dimensions or aspect ratio, and responsive `sizes`.
-- Use meaningful alt text only when the image communicates content; otherwise use empty alt text.
-- Mobile removes fragile overlap and places financial modules below the image.
-- Optional hover zoom is capped at 1.02 and disabled for coarse pointers and reduced motion.
+### 6.2 Product composition
 
-The hero keeps GoalGuard’s human-purpose language. It does not use the previous interactive 3D shield. A small flat shield may remain in the brand mark or safety status where semantically useful.
+Use layered HTML/CSS and simple inline SVG:
 
-## 9. Web3 trust and transparency
+- one large off-white or white “protection plan” panel tilted no more than 5 degrees;
+- one near-black exact-facts panel overlapping it;
+- optional floating chips for floor, expiry, coverage, or council result only when backed by canonical data;
+- large lime-black-white abstract arcs or rounded shapes behind the panels;
+- one or two thin hand-drawn-style SVG strokes as quiet directional accents.
 
-Apply Web3 UX principles through behavior and information hierarchy, not crypto-native styling.
+No stock photo, architectural photo, phone screenshot, coin imagery, candlestick dashboard, Apple mark, or invented portfolio chart. Production mockups must render real current state or content-safe generic labels such as “Protection floor” without invented numeric values.
 
-### Active guidance
+On mobile, remove rotation and fragile overlap. Stack the composer before the preview modules in reading order.
 
-- Use familiar financial forms and a persistent five-step workflow indicator.
-- Define unfamiliar terms in concise helper text or disclosures.
-- Preserve predictable Back actions and user-entered values.
+## 7. Surfaces, cards, and illustrations
 
-### Consistency
+### 7.1 Surface families
 
-- Use this design system across landing, goal definition, candidate review, council drawer, preview confirmation, demo-ready, error, and read-only states.
-- Do not mix the warm editorial system with cyber colors, terminal motifs, or unrelated card styles.
+1. **Open content:** white canvas, no box, large whitespace.
+2. **Feature module:** very light neutral fill, 32–40px radius, no border or shadow by default.
+3. **Data module:** near-black fill, white text, 24–32px radius, compact factual hierarchy.
+4. **Lime module:** lime fill, near-black text, used for selection, protection, or a major narrative moment.
+5. **Floating UI chip:** white or black, 12–16px radius, restrained `--shadow-float`, used only inside an illustration composition.
+6. **Major CTA band:** near-black, 48–56px radius, generous padding, white headline, one high-contrast action.
 
-### Community and review values
+Do not turn every section into a card. A page should usually contain only one or two visually dominant filled sections.
 
-- Explain the three Gonka council roles in plain language.
-- Show verdict text, concerns, disclosures, model, and copyable request IDs.
-- Never imply community consensus beyond the actual recorded council result.
+### 7.2 Abstract illustration language
 
-### Data provenance
+Use code-native shapes rather than generated imagery:
 
-- Label live market facts as Thetanuts/Base data and show `marketAsOf` when available.
-- Distinguish blockchain-derived values, wallet-read values, AI review, and deterministic GoalGuard calculations.
-- Show contract target, chain ID, and referrer disclosure only from canonical preview data.
+- cropped circles and semicircles;
+- vertical capsules and irregular rounded blocks;
+- thin single-weight line graphs or squiggles;
+- concentric arcs for protection/coverage;
+- floating factual UI rows;
+- controlled overlap and clipping at module edges.
 
-### Transaction transparency
+Illustrations use no more than white, black, lime, pale lime, and one semantic status color when the status is real. Decorative shapes are `aria-hidden="true"`; any meaningful visualization gets a nearby text equivalent.
 
-- Before preview generation, show exact cost, maximum cost at risk, coverage, expiry conditions, connected wallet, network, and the unsigned-only boundary.
-- Identify allowance and execution transaction data separately.
-- State clearly that P0 creates no signature, broadcast, protected position, or on-chain event.
-- Explain quote expiry, stale data, insufficient balance, and wallet/network invalidation with a recovery path.
+## 8. Buttons, links, and controls
 
-### Events and history
+### 8.1 Button hierarchy
 
-- Because P0 is preview-only, do not invent smart-contract events or a transaction history.
-- Show the current goal’s real audit references, timestamps, council IDs, and preview expiry when available.
-- Historical live-execution records remain read-only and visibly distinct.
+- **Primary on light/lime:** black background, white text, pill radius, 48–56px height.
+- **Primary on dark:** lime or white background with near-black text. Choose one per section.
+- **Secondary:** light-gray background, near-black text, 44–48px height, 10–12px radius or pill when paired with a primary pill.
+- **Text link:** text plus Phosphor arrow icon; underline on hover/focus. Do not use typed arrow glyphs.
+- **Icon button:** minimum 44×44px with an accessible name and visible focus.
 
-### Code transparency
+All actions define default, hover, pressed, focus-visible, disabled, and loading states. Press feedback arrives within 100ms and never shifts layout. Loading preserves width, prevents duplicate submission, and announces activity.
 
-- Keep “How it works” and “Trust & safety” reachable from the navbar.
-- Explain which work is AI-generated and which calculations and validations are deterministic.
-- Link to the public repository only when the canonical URL is configured and intentional.
+### 8.2 Forms
 
-## 10. Iconography and motion
+- Use a visible label for every field; placeholders never replace labels.
+- Default input height: 52–56px; textarea minimum height: 128px.
+- Inputs use white fill, 1px neutral border, 12px radius, and 16px text.
+- Group related financial fields under a clear heading and concise helper text.
+- Validate after blur or submit, not on every keystroke.
+- Inline errors name the problem and recovery. Multi-error forms include a focusable linked error summary.
+- Preserve user-entered values on Back, retry, and safe workflow recovery.
+- Confirmation checkboxes use a large combined label target and explicitly restate the unsigned-preview boundary.
+
+## 9. Icons and status
 
 - Use Phosphor outline icons at one consistent weight.
-- Default UI icons: 16px; actions: 16–20px; feature icons: 20–24px.
-- Decorative icons beside visible text use `aria-hidden="true"`.
-- Do not use emoji, 3D icons, mixed icon families, or decorative colored icon tiles.
+- UI icons: 16–20px; feature icons: 20–24px.
+- Feature icons may sit in 56–64px lime or pale-lime circles, matching the references.
+- Do not use emoji, mixed icon families, 3D icons, or generic crypto glyphs.
+- Decorative icons beside visible text are hidden from assistive technology.
+- Success, warning, rejection, and expiry always combine icon, label, and explanation.
 
-Motion uses opacity and transform only. Recommended behaviors:
+## 10. Motion
 
-- color/state response: `--duration-fast`;
-- panel/content entry: `--duration-normal`;
-- image treatment: up to `--duration-slow`;
-- exit is shorter than entry;
-- at most one or two key animated elements per view;
-- no looping animation except a request-bound loading indicator;
-- no animation blocks interaction or controls functional state.
+Motion is supportive, brief, and limited to transform and opacity.
+
+- Press response: `--duration-press`.
+- Exit: `--duration-exit`.
+- Panel entry: `--duration-enter`.
+- Hero composition entry: up to `--duration-emphasis`.
+- Card stagger: at most 35ms.
+- Product modules may shift 2–4px on hover for fine pointers; never use constant bobbing.
+- No scroll hijacking, marquee, continuous parallax, layout animation, or decorative loading loop.
+- Progress animation runs only while the corresponding request is active.
 
 ```css
 @media (prefers-reduced-motion: reduce) {
@@ -484,113 +439,156 @@ Motion uses opacity and transform only. Recommended behaviors:
 }
 ```
 
-## 11. Responsive rules
+## 11. GoalGuard workflow translation
 
-Breakpoints: 640px, 768px, 1024px, 1280px, and 1536px.
+The product workflow uses the same visual system without becoming a marketing page.
 
-- **Desktop ≥1024px:** 12-column asymmetric grid, large serif type, controlled overlap, generous section rhythm.
-- **Tablet 768–1023px:** 8-column grid, reduced display scale, limited overlap, supporting copy adjacent or below.
-- **Mobile <768px:** single reading flow, 20–24px gutters, no fragile overlap, full-width financial modules, 48–64px hero type, 16px body.
-- No horizontal page scrolling at 320px or wider.
-- Preserve reading and interaction at 200% zoom.
-- Touch targets are at least 44×44px with at least 8px separation where accidental activation is plausible.
+### 11.1 Shared shell
 
-## 12. Required component inventory
+- White canvas and flat sticky product header.
+- Desktop five-step rail with black text and a lime active marker.
+- Mobile summary reads “Step n of 5 · Current stage”; do not horizontally scroll all five steps.
+- Primary task content is an open composition or one large light-gray module.
+- Near-black panels hold exact cost, allowance, calldata, chain, request IDs, and other high-attention facts.
+- One primary button per stage; Back and recovery actions are visually quieter.
 
-Build or adapt reusable components only when the existing primitives cannot satisfy the role:
+### 11.2 Stage styling
+
+- **Define goal:** large friendly form with visible labels and lime selection states.
+- **Live options/searching:** abstract protection arcs and truthful activity messaging; no fake percentage.
+- **Council review:** three spacious role rows/cards with verdict icon and text, not three visually identical glowing tiles.
+- **Approved plan:** open goal summary plus light-gray scenario module; directly label down/flat/up outcomes and provide semantic text.
+- **Confirming preview:** large exact-facts layout, with the maximum cost at risk and unsigned-only statement adjacent to the acknowledgment.
+- **Generating preview:** retain the confirmation context and show what source is active and what happens next.
+- **Demo ready:** a major near-black “Protection Plan Ready (Demo)” section paired with light factual cards. State “No funds moved; no protected position was created” prominently.
+- **Errors and recovery:** white or soft-gray surface with explicit cause, affected data, and one safe recovery action. Semantic red is reserved for the status label/icon.
+
+The P0 frontend must never expose a signing, transaction-send, or broadcast action.
+
+## 12. Web3 trust and transparency
+
+Apply Web3 UX principles through familiar behavior and explicit information.
+
+- Explain what GoalGuard is doing, which source is involved, what happens next, and whether the action can move value.
+- Label live market facts as Thetanuts/Base-derived and show `marketAsOf` where available.
+- Distinguish wallet-read data, blockchain-derived values, deterministic GoalGuard calculations, and Gonka AI review.
+- Explain each council role, verdict, concerns, disclosures, model, and copyable request ID.
+- Before preview generation, show exact cost, maximum cost at risk, coverage, expiry conditions, wallet, network, and the unsigned-only boundary.
+- Separate allowance requirements from proposed execution transaction data.
+- State clearly that P0 creates no signature, broadcast, protected position, or on-chain event.
+- Explain stale candidate, quote expiry, insufficient balance, changed wallet/network, council rejection, and preview failure with a safe recovery path.
+- Do not imply partners, endorsements, guarantees, community consensus, or performance beyond canonical facts.
+- Historical audit IDs, timestamps, and decisions remain preserved and readable.
+
+## 13. Responsive behavior
+
+Test at 375px, 768px, 1024px, and 1440px; also verify 320px minimum width and 200% zoom.
+
+- **Desktop ≥1024px:** 12-column layouts, oversized headings, intentional overlap inside bounded illustration regions.
+- **Tablet 768–1023px:** 8-column layouts, reduced headline scale, two-column cards only when readable, simplified product overlap.
+- **Mobile <768px:** one reading column, 20px gutters, 48–60px hero heading, stacked modules, no rotation or off-screen composition.
+- Large rounded sections reduce radius and padding proportionally on small screens.
+- Controls remain at least 44×44px with at least 8px separation where accidental activation is plausible.
+- No horizontal document overflow. Wide identifiers wrap; structured transaction data may use an explicitly labelled internal scroll region only when unavoidable.
+- Content and focused controls must not be hidden beneath the sticky header.
+
+## 14. Page architecture
+
+Landing-page rhythm:
 
 ```text
-Layout:      PageContainer, Section, EditorialGrid, SplitLayout, Stack, Cluster
+Flat sticky FloatingEditorialNavbar
+Electric-lime hero + goal composer + factual GoalGuard UI composition
+Large “How protection works” heading
+Two wide soft-gray explanation modules
+Open two-column trust/safety advantages list with lime icon discs
+Centered “Live foundations” strip for Gonka, Thetanuts, and Base
+Split purpose/data story with abstract lime geometry and factual UI rows
+Large near-black preview-only safety band
+Centered start-goal CTA
+Rounded-top near-black footer
+```
+
+This sequence is a visual rhythm, not permission to create unsupported routes, claims, statistics, logos, or partner language. Use “Live foundations” or another factually accurate label rather than “Our partners.”
+
+## 15. Component inventory
+
+```text
+Layout:      PageContainer, Section, Grid, SplitLayout, Stack, Cluster
 Navigation:  FloatingEditorialNavbar, NavLink, NavCTA, MobileNavigation
-Typography:  DisplayHeading, SectionHeading, Eyebrow, BodyText, Caption, FinancialValue
-Actions:     PrimaryButton, SecondaryButton, TextLink, IconButton
-Finance:     FinancialCard, FinancialMetric, ScenarioComparison, AssetRow, PercentageBadge
-Editorial:   EditorialCard, MediaCard, InsightBlock, QuoteBlock
-Workflow:    StageShell, CouncilCard, UnsignedTransactionCard, TrustRail
-Utility:     Divider, StatusBadge, Alert, Drawer, Accordion
+Typography:  DisplayHeading, SectionHeading, LeadText, BodyText, Metadata, FinancialValue
+Actions:     PrimaryButton, SecondaryButton, TextLink, IconButton, CopyButton
+Marketing:   LimeHero, FeatureModule, AdvantageItem, FoundationRail, DarkCTABand
+Illustration: AbstractArc, DataChip, ProtectionPlanMockup, DirectionalStroke
+Workflow:    StageShell, MetricCard, TrustRail, ScenarioComparison, CouncilCard
+Preview:     UnsignedTransactionCard, PreviewSafetySummary, ExpiryStatus
+Utility:     Divider, StatusBadge, Alert, Drawer, Accordion, ErrorSummary
 ```
 
-New components inherit this token system. Do not build unused generic investment-dashboard components that are unsupported by GoalGuard’s P0 data.
+Create a reusable component only when it serves a real production state. Do not build generic stock-trading, portfolio, login, catalog, app-download, or partner-logo components merely to resemble the references.
 
-## 13. Page architecture
+## 16. Implementation rules
 
-Landing page:
+1. Treat this file as the frontend visual source of truth after the PRD.
+2. Implement tokens in `src/styles/tokens.css` using primitive → semantic → component layers.
+3. Import tokens from `src/app/globals.css`; keep resets, base elements, accessibility utilities, and reduced-motion rules there.
+4. Use Tailwind CSS v4 utilities against CSS variables; do not scatter arbitrary values through components.
+5. Load Manrope through `next/font`; remove active Instrument Serif usage.
+6. Reuse existing accessible primitives and Phosphor icons before creating new controls.
+7. Keep landing content server-rendered. Client boundaries are limited to actual interactions such as the menu, wallet, composer, copy controls, and workflow state.
+8. Use inline SVG/CSS for abstract art; do not add a heavy illustration, WebGL, or charting dependency.
+9. Do not use raw hex values, arbitrary radii, arbitrary shadows, gradients, or backdrop blur in component files.
+10. Do not ship links to sections or routes that do not exist.
+11. Preserve canonical contract parsing, workflow error details, server-authoritative state, and the unsigned-preview safety boundary.
+12. The prior architectural hero asset must not appear in the active landing design. Its removal from the repository is a separate cleanup decision.
 
-```text
-FloatingEditorialNavbar
-Hero + goal composer + local architectural media + factual preview modules
-How it works
-Trust & safety / data provenance
-Live foundations
-Final start-goal CTA
-Restrained footer
-```
+## 17. Anti-patterns
 
-Workflow:
+Reject a screen if it contains any of the following:
 
-```text
-Compact brand/wallet header
-Five-step progress rail
-Current-stage editorial heading
-Primary task surface
-Dark financial facts where appropriate
-One primary action and subordinate recovery/back actions
-```
+- serif or italic display typography;
+- warm beige/terracotta styling;
+- a floating glass or rounded outer navbar container;
+- architectural, laptop, coin, or generic finance stock imagery;
+- neon-on-dark cyber styling, grids, glows, or holographic effects;
+- excessive small cards, badges, borders, shadows, or nested pills;
+- lime used as small text on white;
+- app-store/download language, fake login routes, or copied ProFinance content;
+- invented balances, returns, market charts, partner logos, or endorsements;
+- color-only status, hidden labels, sub-44px targets, or motion required for comprehension;
+- signing, broadcasting, or live-execution actions in P0.
 
-The workflow remains preview-only. This design system does not authorize signing, broadcasting, contract changes, backend API changes, or fabricated demo data.
+## 18. Acceptance checklist
 
-## 14. Implementation rules
+### Visual match
 
-1. Import this file into the repository as the visual source of truth and keep it versioned.
-2. Implement tokens in `src/styles/tokens.css` using the primitive → semantic → component layers above.
-3. Import tokens from `src/app/globals.css`; keep reset, base elements, accessibility utilities, and reduced-motion rules there.
-4. Use Tailwind CSS v4 utilities against CSS variables; do not add a legacy config solely to mirror examples from the source document.
-5. Load Instrument Serif and Inter through `next/font`.
-6. Reuse existing accessible primitives before creating variants.
-7. Keep landing content server-rendered; client boundaries are limited to interactions such as navigation menu, wallet, composer, and live status.
-8. Do not use raw hex, arbitrary radii, arbitrary shadows, gradients, or backdrop blur in component files.
-9. Do not ship links to routes or sections that do not exist.
-10. Preserve the P0 reducer, canonical contracts, error details, and unsigned-preview safety boundary.
+- [ ] White is the dominant canvas; near-black and electric lime create the main contrast.
+- [ ] Manrope drives all hierarchy; no serif or italic editorial styling remains.
+- [ ] The header is flat, full-width, and sticky—not a detached pill.
+- [ ] The hero is a large rounded lime panel with an oversized sans headline and one dominant black action.
+- [ ] Product-led abstract compositions replace architectural photography.
+- [ ] Feature cards are large, soft-gray, sparse, and mostly shadowless.
+- [ ] Lime/pale-lime icon discs and black CTA/data bands create the reference rhythm.
+- [ ] The final CTA and footer use generous white space and a large rounded black surface.
 
-## 15. Acceptance checklist
+### Product integrity
 
-### Visual consistency
-
-- [ ] Warm off-white is the dominant page canvas.
-- [ ] Instrument Serif drives major hierarchy; Inter drives all UI/body roles.
-- [ ] Near-black is reserved for factual financial and transaction modules.
-- [ ] Terracotta remains sparse and meaningful.
-- [ ] No lime/cyan cyber residue, technical grids, neon gradients, glow, or decorative 3D shield remains.
-- [ ] Card families are visibly distinct and shadows are limited to overlap.
-- [ ] Local architectural media is optimized and does not display invented financial information.
-
-### `FloatingEditorialNavbar`
-
-- [ ] Floats 12–24px from the viewport top and never spans the full desktop viewport.
-- [ ] Uses the exact GoalGuard information architecture and existing anchors.
-- [ ] Keeps only the main CTA as a nested dark pill.
-- [ ] Scroll state changes opacity/border/shadow without resizing or hiding.
-- [ ] Mobile uses an accessible menu sheet with focus trap and focus restoration.
-- [ ] Skip link, anchor targets, 200% zoom, and keyboard focus are never obscured.
-- [ ] No navigation link points to an unimplemented route.
+- [ ] All navigation labels, actions, foundations, and claims are true for GoalGuard.
+- [ ] No ProFinance, Apple, app-download, stock-catalog, or fictional partner content remains.
+- [ ] No production visual displays invented financial values or market performance.
+- [ ] Live values identify their source and timestamp where available.
+- [ ] AI review is visually and verbally distinct from deterministic calculations.
+- [ ] Preview-only screens state that no signature, broadcast, position, or on-chain event exists.
 
 ### Accessibility and UX
 
-- [ ] Normal text contrast is at least 4.5:1 and meaningful UI boundaries at least 3:1.
-- [ ] Body text is 16px on mobile; supporting/metadata text is never below 12px.
-- [ ] All controls are keyboard operable with visible focus and at least 44×44px targets.
-- [ ] Status never relies on color alone.
-- [ ] Forms retain linked inline errors and an error summary when needed.
+- [ ] Normal text contrast is at least 4.5:1 and meaningful boundaries at least 3:1.
+- [ ] Body and form text is at least 16px on mobile; supporting text is never below 12px.
+- [ ] All controls are keyboard operable, visibly focused, and at least 44×44px.
+- [ ] Forms have visible labels, persistent values, linked inline errors, and an error summary where needed.
+- [ ] Status uses icon plus text, never color alone.
 - [ ] Reduced motion, 200% zoom, 320px width, and no-horizontal-overflow checks pass.
-- [ ] Charts have direct labels and semantic text/table equivalents.
-
-### Web3 transparency
-
-- [ ] Each live fact identifies its source and timestamp where available.
-- [ ] AI review is distinguished from deterministic calculations.
-- [ ] Every value-sensitive step explains cost, risk, wallet, network, and next action.
-- [ ] Preview-only screens explicitly state that no signature, broadcast, position, or on-chain event exists.
-- [ ] Failures state the cause and a safe recovery path.
+- [ ] Meaningful charts or comparisons have direct labels and semantic text/table equivalents.
 
 ### Validation
 
@@ -600,4 +598,3 @@ The workflow remains preview-only. This design system does not authorize signing
 - [ ] `pnpm build`
 - [ ] `pnpm test:e2e`
 - [ ] Axe scans and deterministic screenshots at 375px, 768px, 1024px, and 1440px
-
