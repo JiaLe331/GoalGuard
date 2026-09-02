@@ -1,17 +1,55 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import Decimal from "decimal.js";
-import { getAddress } from "ethers";
+import { getAddress, isAddress, isHexString, ZeroAddress } from "ethers";
 
 import { readServerEnvironment } from "@/lib/config/env";
 import type { CandidateRejection, CoverageMode, Goal, ProtectionCandidate, ScenarioResult } from "@/lib/contracts";
 import { ApiRouteError } from "@/lib/server/http";
 import { parseThetanutsMarketData, parseThetanutsOrders, type ThetanutsOrder, type ThetanutsReadClient, withConfiguredThetanutsRead } from "./client";
 import { calculateGoalCoverageBps } from "@/lib/protection/coverage";
+import {
+  USDC_DECIMALS,
+  decimalToBaseUnits,
+  premiumForContracts,
+  putCollateralForContracts,
+  underlyingFromContractBaseUnits,
+  usdFromPriceBaseUnits,
+} from "./units";
 
-const SIX = new Decimal(1_000_000);
-const EIGHT = new Decimal(100_000_000);
 const decimal = (value: Decimal.Value) => new Decimal(value).toFixed();
+const ONE_USDC_BASE_UNITS = 1_000_000n;
+const GLOBAL_PREVIEW_CAP_USD = new Decimal(3);
+
+function validAddress(value: unknown): value is string {
+  return typeof value === "string" && isAddress(value);
+}
+
+function timestampMilliseconds(value: bigint): number | null {
+  if (value <= 0n || value > BigInt(Math.floor(Number.MAX_SAFE_INTEGER / 1000))) return null;
+  return Number(value * 1000n);
+}
+
+function nonNegativeBigInt(value: unknown): bigint | null {
+  try {
+    const parsed = typeof value === "bigint" || typeof value === "string" || typeof value === "number" ? BigInt(value) : null;
+    return parsed === null || parsed < 0n ? null : parsed;
+  } catch {
+    return null;
+  }
+}
+
+function previewIsConsistent(
+  preview: ReturnType<ThetanutsReadClient["optionBook"]["previewFillOrder"]>,
+  order: ThetanutsOrder,
+  usdcAddress: string,
+  strike: bigint,
+): boolean {
+  return preview.numContracts > 0n && preview.maxContracts > 0n && preview.numContracts <= preview.maxContracts
+    && preview.totalCollateral > 0n && preview.pricePerContract === order.order.price
+    && preview.collateralToken.toLowerCase() === usdcAddress.toLowerCase() && !preview.isCall
+    && preview.strikes.length === 1 && preview.strikes[0] === strike && preview.expiry === order.order.expiry;
+}
 
 export function orderId(order: ThetanutsOrder) { return `${order.makerAddress.toLowerCase()}:${order.order.nonce.toString()}`; }
 
@@ -88,41 +126,64 @@ export async function generateProtectionCandidates(goal: Goal, options: Candidat
   const marketAsOf = new Date(market.metadata.lastUpdated).toISOString();
   const usdc = client.chainConfig.tokens.USDC; const putImplementation = client.chainConfig.implementations.PUT;
   if (!usdc || !putImplementation) throw new ApiRouteError("UPSTREAM_INVALID_RESPONSE", "Thetanuts Base configuration is missing the P0 market.", 502);
-  const deadline = Date.parse(`${goal.deadline}T00:00:00.000Z`); const protectedValue = new Decimal(goal.protectedValueUsd);
-  const desiredQuantity = protectedValue.div(spot); const desiredContracts = BigInt(desiredQuantity.mul(SIX).ceil().toFixed(0));
+  const deadline = Date.parse(`${goal.deadline}T00:00:00.000Z`);
+  if (!Number.isFinite(deadline)) throw new ApiRouteError("UPSTREAM_INVALID_RESPONSE", "The goal deadline is invalid.", 500);
+  const protectedValue = new Decimal(goal.protectedValueUsd);
+  const desiredQuantity = protectedValue.div(spot);
+  const desiredContracts = decimalToBaseUnits(desiredQuantity, USDC_DECIMALS, Decimal.ROUND_CEIL);
   const allowedLossUsd = protectedValue.mul(goal.maxLossBps).div(10_000);
-  const budgetUsd = goal.maxPremiumUsd ? Decimal.min(goal.maxPremiumUsd, allowedLossUsd) : allowedLossUsd;
+  const budgetUsd = Decimal.min(goal.maxPremiumUsd ? Decimal.min(goal.maxPremiumUsd, allowedLossUsd) : allowedLossUsd, GLOBAL_PREVIEW_CAP_USD);
+  const budgetBaseUnits = decimalToBaseUnits(budgetUsd, USDC_DECIMALS);
+  const proportionalTargetBaseUnits = [ONE_USDC_BASE_UNITS, budgetBaseUnits].reduce((smallest, value) => value < smallest ? value : smallest);
   const rejected: CandidateRejection[] = []; const viable: ProtectionCandidate[] = [];
 
   for (const order of orders) {
     const reasons: string[] = []; const id = orderId(order); const raw = order.rawApiData;
     const strikes = order.order.strikes ?? (order.order.strikePrice ? [order.order.strikePrice] : []);
-    const expiryMs = Number(order.order.expiry) * 1000; const gapHours = Math.floor((expiryMs - deadline) / 3_600_000);
-    if (!raw || raw.implementation.toLowerCase() !== putImplementation.toLowerCase() || strikes.length !== 1) reasons.push("Only a vanilla ETH put is supported.");
-    if (order.order.isBuyer || raw?.isLong === false) reasons.push("The order does not let the user buy protection.");
-    if (expiryMs < deadline) reasons.push("The option expires before the goal deadline.");
-    if (gapHours > maxDeadlineGapHours) reasons.push(`The expiry is more than ${maxDeadlineGapHours} hours after the deadline.`);
-    const orderDeadline = Number(order.order.deadline ?? BigInt(raw?.orderExpiryTimestamp ?? 0)) * 1000;
-    if (!orderDeadline || orderDeadline <= nowMs + 60_000) reasons.push("The order is expired or too close to expiry.");
-    if (!order.order.collateralToken || order.order.collateralToken.toLowerCase() !== usdc.address.toLowerCase()) reasons.push("P0 supports USDC-settled OptionBook orders only.");
-    if (order.availableAmount <= 0n) reasons.push("The order has no available liquidity.");
-    const requiredPremiumBaseUnits = (desiredContracts * order.order.price + 99_999_999n) / 100_000_000n;
-    const budgetBaseUnits = BigInt(budgetUsd.mul(SIX).floor().toFixed(0));
-    if (requiredPremiumBaseUnits <= 0n || requiredPremiumBaseUnits > budgetBaseUnits) reasons.push("Full goal coverage exceeds the protection-cost limit.");
+    const expiryMs = timestampMilliseconds(order.order.expiry);
+    const gapHours = expiryMs === null ? null : Math.floor((expiryMs - deadline) / 3_600_000);
+    if (!raw || !validAddress(raw.implementation) || raw.implementation.toLowerCase() !== putImplementation.toLowerCase() || raw.isCall !== false || order.order.optionType !== 1 || strikes.length !== 1) reasons.push("Only a vanilla ETH put is supported.");
+    if (!validAddress(order.order.underlyingToken) || order.order.underlyingToken.toLowerCase() === ZeroAddress) reasons.push("The order does not identify a valid ETH underlying.");
+    if (!validAddress(order.order.maker) || order.order.maker.toLowerCase() !== order.makerAddress.toLowerCase() || !validAddress(order.order.taker) || order.order.taker.toLowerCase() !== ZeroAddress) reasons.push("The order has invalid maker or taker fields.");
+    if (!isHexString(order.signature) || order.signature.length !== 132) reasons.push("The order signature is malformed.");
+    if (order.order.isBuyer || raw?.isLong !== true) reasons.push("The order does not let the user buy protection.");
+    if (strikes.length === 1 && strikes[0]! <= 0n) reasons.push("The order strike is invalid.");
+    if (expiryMs === null || gapHours === null) reasons.push("The option expiry is invalid.");
+    if (expiryMs !== null && expiryMs < deadline) reasons.push("The option expires before the goal deadline.");
+    if (gapHours !== null && gapHours > maxDeadlineGapHours) reasons.push(`The expiry is more than ${maxDeadlineGapHours} hours after the deadline.`);
+    const rawDeadline = raw?.orderExpiryTimestamp === undefined ? null : nonNegativeBigInt(raw.orderExpiryTimestamp);
+    const orderDeadline = timestampMilliseconds(order.order.deadline ?? rawDeadline ?? 0n);
+    if (orderDeadline === null || orderDeadline <= nowMs + 60_000) reasons.push("The order is expired or too close to expiry.");
+    if (!validAddress(order.order.collateralToken) || !validAddress(raw?.collateral) || order.order.collateralToken.toLowerCase() !== usdc.address.toLowerCase() || raw.collateral.toLowerCase() !== usdc.address.toLowerCase()) reasons.push("P0 supports USDC-settled OptionBook orders only.");
+    const maximumCollateral = raw?.maxCollateralUsable === undefined ? null : nonNegativeBigInt(raw.maxCollateralUsable);
+    if (order.order.price <= 0n || order.availableAmount <= 0n || maximumCollateral === null || maximumCollateral <= 0n) reasons.push("The order has no available liquidity.");
+    const requiredPremiumBaseUnits = premiumForContracts(desiredContracts, order.order.price);
+    const requestedPremiumBaseUnits = options.coverageMode === "proportional_demo" ? proportionalTargetBaseUnits : requiredPremiumBaseUnits;
+    if (requestedPremiumBaseUnits <= 0n || (options.coverageMode !== "proportional_demo" && requestedPremiumBaseUnits > budgetBaseUnits)) reasons.push("Full goal coverage exceeds the protection-cost limit.");
     let preview: ReturnType<typeof client.optionBook.previewFillOrder> | null = null;
     if (reasons.length === 0) {
-      try { preview = client.optionBook.previewFillOrder(order, requiredPremiumBaseUnits, env.THETANUTS_REFERRER_ADDRESS); if (preview.numContracts < desiredContracts || preview.numContracts > preview.maxContracts) reasons.push("The live order cannot fill the required protection quantity."); }
+      try {
+        preview = client.optionBook.previewFillOrder(order, requestedPremiumBaseUnits, env.THETANUTS_REFERRER_ADDRESS);
+        if (!previewIsConsistent(preview, order, usdc.address, strikes[0]!)) reasons.push("The order preview is inconsistent with the signed order.");
+        if (preview.numContracts > preview.maxContracts) reasons.push("The live order cannot fill the required protection quantity.");
+      }
       catch { reasons.push("The order could not be previewed as fillable."); }
     }
     if (reasons.length || !preview) { rejected.push({ protocolOrderId: id, reasons }); continue; }
-    const strike = new Decimal(strikes[0]!.toString()).div(EIGHT); const quantity = new Decimal(preview.numContracts.toString()).div(SIX);
-    const premium = new Decimal(requiredPremiumBaseUnits.toString()).div(SIX); const worstFloor = strike.mul(quantity).minus(premium); const requiredFloor = protectedValue.minus(allowedLossUsd);
-    if (worstFloor.lessThan(requiredFloor)) { rejected.push({ protocolOrderId: id, reasons: ["The deterministic worst-case floor does not satisfy the requested maximum loss."] }); continue; }
+    const strike = usdFromPriceBaseUnits(strikes[0]!);
+    const quantity = underlyingFromContractBaseUnits(preview.numContracts);
+    const premium = underlyingFromContractBaseUnits(preview.totalCollateral);
+    const putCollateral = putCollateralForContracts(strikes[0]!, preview.numContracts);
+    if (putCollateral <= 0n || preview.maxContracts <= 0n || preview.totalCollateral > budgetBaseUnits) { rejected.push({ protocolOrderId: id, reasons: ["The preview exceeds the available liquidity or preview cap."] }); continue; }
+    const worstFloor = strike.mul(quantity).minus(premium); const requiredFloor = protectedValue.minus(allowedLossUsd);
     const coverageBps = calculateGoalCoverageBps(preview.numContracts.toString(), desiredContracts.toString());
-    if (coverageBps < 10_000) { rejected.push({ protocolOrderId: id, reasons: ["The available order does not fully cover the stated goal."] }); continue; }
-    if (options.coverageMode === "proportional_demo") { rejected.push({ protocolOrderId: id, reasons: ["The proposed quantity does not match the explicit proportional demo request."] }); continue; }
+    const coverageMode = options.coverageMode ?? "full";
+    if (coverageMode === "full" && (coverageBps !== 10_000 || worstFloor.lessThan(requiredFloor))) { rejected.push({ protocolOrderId: id, reasons: [coverageBps !== 10_000 ? "The available order does not fully cover the stated goal." : "The deterministic worst-case floor does not satisfy the requested maximum loss."] }); continue; }
+    if (coverageMode === "proportional_demo" && (coverageBps <= 0 || coverageBps >= 10_000 || preview.totalCollateral > ONE_USDC_BASE_UNITS || preview.totalCollateral > budgetBaseUnits)) { rejected.push({ protocolOrderId: id, reasons: ["The order cannot produce the requested partial, capped proportional preview."] }); continue; }
+    if (expiryMs === null || gapHours === null) { rejected.push({ protocolOrderId: id, reasons: ["The option expiry is invalid."] }); continue; }
     const now = new Date().toISOString();
-    viable.push({ schemaVersion: 1, id: randomUUID(), goalId: goal.id, source: "optionbook", protocolOrderId: id, underlyingAsset: "ETH", optionType: "put", strikeUsd: decimal(strike), expiry: new Date(expiryMs).toISOString(), settlementTokenAddress: getAddress(usdc.address), settlementTokenSymbol: usdc.symbol, settlementTokenDecimals: usdc.decimals, premiumAmountBaseUnits: requiredPremiumBaseUnits.toString(), premiumUsd: decimal(premium), quantityBaseUnits: preview.numContracts.toString(), quantityUnderlying: decimal(quantity), maxPremiumLossUsd: decimal(premium), estimatedFloorUsd: decimal(worstFloor), deadlineGapHours: Math.max(0, gapHours), goalCoverageBps: coverageBps, coverageMode: "full", availableQuantityBaseUnits: preview.maxContracts.toString(), status: "viable", rejectionReasons: [], protocolRaw: serializeOrder(order), scenarios: [scenario("down", spot.mul("0.7"), spot, protectedValue, strike, quantity, premium), scenario("flat", spot, spot, protectedValue, strike, quantity, premium), scenario("up", spot.mul("1.2"), spot, protectedValue, strike, quantity, premium)], marketAsOf, createdAt: now, updatedAt: now });
+    const scenarios = [scenario("down", spot.mul("0.7"), spot, protectedValue, strike, quantity, premium), scenario("flat", spot, spot, protectedValue, strike, quantity, premium), scenario("up", spot.mul("1.2"), spot, protectedValue, strike, quantity, premium)];
+    viable.push({ schemaVersion: 1, id: randomUUID(), goalId: goal.id, source: "optionbook", protocolOrderId: id, underlyingAsset: "ETH", optionType: "put", strikeUsd: decimal(strike), expiry: new Date(expiryMs).toISOString(), settlementTokenAddress: getAddress(usdc.address), settlementTokenSymbol: usdc.symbol, settlementTokenDecimals: usdc.decimals, premiumAmountBaseUnits: preview.totalCollateral.toString(), premiumUsd: decimal(premium), quantityBaseUnits: preview.numContracts.toString(), quantityUnderlying: decimal(quantity), maxPremiumLossUsd: decimal(premium), estimatedFloorUsd: decimal(coverageMode === "proportional_demo" ? new Decimal(scenarios[0]!.netProtectedValueUsd) : worstFloor), deadlineGapHours: Math.max(0, gapHours), goalCoverageBps: coverageBps, coverageMode, availableQuantityBaseUnits: preview.maxContracts.toString(), status: "viable", rejectionReasons: [], protocolRaw: serializeOrder(order), scenarios, marketAsOf, createdAt: now, updatedAt: now });
   }
   viable.sort((a, b) => a.deadlineGapHours - b.deadlineGapHours || new Decimal(b.estimatedFloorUsd).comparedTo(a.estimatedFloorUsd) || new Decimal(a.premiumUsd).comparedTo(b.premiumUsd) || (a.protocolOrderId ?? "").localeCompare(b.protocolOrderId ?? ""));
   const candidates = viable.slice(0, 3).map((candidate, index) => ({ ...candidate, status: index === 0 ? "selected" as const : "viable" as const }));
