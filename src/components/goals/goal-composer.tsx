@@ -97,19 +97,19 @@ export function GoalComposer() {
   return (
     <form onSubmit={submit} className="space-y-6" aria-labelledby="goal-heading" aria-busy={loading}>
       <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--foreground-soft)]">Start with what matters</p>
-        <h2 id="goal-heading" className="font-display text-3xl text-[var(--foreground)] sm:text-4xl">What are you protecting?</h2>
-        <p className="mt-2 max-w-xl text-sm leading-6 text-[var(--foreground-soft)]">Speak naturally. You can edit every constraint before GoalGuard checks a live option.</p>
+        <p className="section-eyebrow text-[color:var(--foreground-muted)]">Your protection goal</p>
+        <h2 id="goal-heading" className="mt-3 text-[clamp(1.75rem,3vw,2.5rem)] font-semibold leading-[1.05] tracking-[-0.045em] text-[color:var(--foreground)]">What are you protecting?</h2>
+        <p className="mt-3 max-w-xl text-sm leading-6 text-[color:var(--foreground-soft)]">Use plain language. You can review every limit before GoalGuard reads live options.</p>
       </div>
 
-      <fieldset><legend className="mb-2 text-sm font-semibold text-[var(--foreground)]">Choose a purpose</legend><div className="flex flex-wrap gap-2">
+      <fieldset><legend className="mb-3 text-sm font-semibold text-[color:var(--foreground)]">Choose a purpose</legend><div className="flex flex-wrap gap-2">
         {categories.map((item) => { const CategoryIcon = item.icon; return (
           <button
             type="button"
             key={item.value}
             aria-pressed={category === item.value}
             onClick={() => { setCategory(item.value); setError(null); }}
-            className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-semibold transition-[background-color,border-color,color,transform] duration-[var(--duration-fast)] active:translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)] ${category === item.value ? "border-[var(--foreground)] bg-[var(--foreground)] text-[var(--surface)]" : "border-[var(--border)] bg-transparent text-[var(--foreground-soft)] hover:border-[var(--foreground)] hover:text-[var(--foreground)]"}`}
+            className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-semibold transition-[background-color,border-color,color,opacity] duration-[var(--duration-press)] active:opacity-75 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)] ${category === item.value ? "border-[var(--accent)] bg-[var(--accent)] text-[color:var(--accent-foreground)]" : "border-[var(--surface-muted)] bg-[var(--surface-muted)] text-[color:var(--foreground-soft)] hover:border-[var(--border-strong)] hover:text-[color:var(--foreground)]"}`}
           >
             <CategoryIcon className="size-4" weight={category === item.value ? "fill" : "regular"} aria-hidden="true" />{item.label}
           </button>
@@ -119,7 +119,7 @@ export function GoalComposer() {
       {clarification ? <Alert title="One detail needed" tone="warning">{clarification}</Alert> : null}
 
       <label className="block" htmlFor="goal-message">
-        <span className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{clarification ?? "Describe your protection goal"}</span>
+        <span className="mb-2 block text-sm font-semibold text-[color:var(--foreground)]">{clarification ?? "Describe your protection goal"}</span>
         <textarea
           id="goal-message"
           value={message}
@@ -128,16 +128,16 @@ export function GoalComposer() {
           rows={5}
           aria-invalid={Boolean(error?.fieldErrors.message)}
           aria-describedby={error ? "goal-input-error" : undefined}
-          placeholder={clarification ? "Add the missing detail…" : "I have $1,200 in ETH for rent next month, and I can’t afford to lose more than 5%."}
-          className="field-control min-h-36 resize-none px-5 py-4 leading-7"
+          placeholder={clarification ? "Add the missing detail…" : "I need this ETH for rent next month and want to limit the downside."}
+          className="field-control min-h-36 resize-none bg-[var(--surface-subtle)] px-5 py-4 leading-7"
         />
       </label>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-xs leading-5 text-[var(--foreground-soft)]">Creating a goal does not connect your wallet or prepare a transaction.</p>
-        <Button type="submit" disabled={loading}>
+      <div className="grid gap-3">
+        <Button type="submit" className="min-h-13 w-full" disabled={loading}>
           {loading ? "Reading your goal…" : clarification ? "Continue" : "Create protection goal"}<ArrowRight aria-hidden="true" />
         </Button>
+        <p className="text-center text-xs leading-5 text-[color:var(--foreground-soft)]">No wallet connection, signature, or transaction is needed to define a goal.</p>
       </div>
       {error ? (
         <Alert id="goal-input-error" title={error.code === "GONKA_UNAVAILABLE" ? "AI review unavailable" : "Goal not created"} tone="error">
