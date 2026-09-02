@@ -14,6 +14,7 @@ export function Drawer({ open, title, onClose, children, labelledId = "drawer-pa
   useEffect(() => {
     if (!open) return;
     const previous = document.activeElement as HTMLElement | null;
+    const restoreFocusTarget = restoreFocusRef?.current ?? previous;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     closeButton.current?.focus();
@@ -28,7 +29,7 @@ export function Drawer({ open, title, onClose, children, labelledId = "drawer-pa
       if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
     };
     document.addEventListener("keydown", handleKey);
-    return () => { document.removeEventListener("keydown", handleKey); document.body.style.overflow = previousOverflow; (restoreFocusRef?.current ?? previous)?.focus(); };
+    return () => { document.removeEventListener("keydown", handleKey); document.body.style.overflow = previousOverflow; restoreFocusTarget?.focus(); };
   }, [onClose, open, restoreFocusRef]);
 
   return (
@@ -46,14 +47,14 @@ export function Drawer({ open, title, onClose, children, labelledId = "drawer-pa
             aria-modal="true"
             id={labelledId}
             aria-labelledby={`${labelledId}-title`}
-            className="h-full w-full max-w-2xl overflow-y-auto border-l border-[var(--border)] bg-[var(--background)] p-6 shadow-[var(--shadow-hero-module)] sm:p-8"
+            className="h-full w-full max-w-2xl overflow-y-auto border-l border-[var(--border)] bg-[var(--background)] p-6 shadow-[var(--shadow-float-strong)] sm:p-8"
             initial={reduceMotion ? false : { x: 28 }}
             animate={{ x: 0 }}
             exit={{ x: 20 }}
             transition={{ duration: reduceMotion ? 0 : 0.22, ease: [0.22, 1, 0.36, 1] }}
           >
             <div className="mb-8 flex items-center justify-between gap-4">
-              <h2 id={`${labelledId}-title`} className="font-display text-3xl text-[var(--foreground)]">{title}</h2>
+              <h2 id={`${labelledId}-title`} className="text-3xl font-semibold tracking-[-0.045em] text-[color:var(--foreground)]">{title}</h2>
               <Button ref={closeButton} variant="ghost" className="size-11 px-0" onClick={onClose} aria-label="Close panel"><X className="size-5" aria-hidden="true" /></Button>
             </div>
             {children}

@@ -9,7 +9,7 @@ export function WalletControl({ compact = false }: { compact?: boolean }) {
   const wallet = useWallet();
 
   if (wallet.status === "connected" && wallet.address) {
-    return <Button variant="secondary" aria-label={`Wallet connected: ${wallet.address}`}><CheckCircle className="text-[var(--positive)]" weight="fill" aria-hidden="true" /><span className="font-sans tabular-nums">{shortenAddress(wallet.address)}</span></Button>;
+    return <Button variant="secondary" aria-label={`Wallet connected: ${wallet.address}`}><CheckCircle className="text-[color:var(--positive)]" weight="fill" aria-hidden="true" /><span className="font-sans tabular-nums">{shortenAddress(wallet.address)}</span></Button>;
   }
 
   return (
@@ -21,7 +21,7 @@ export function WalletControl({ compact = false }: { compact?: boolean }) {
       >
         {wallet.status === "wrong-network" ? <Plug aria-hidden="true" /> : <Wallet aria-hidden="true" />}{wallet.status === "connecting" ? "Connecting…" : wallet.status === "wrong-network" ? "Switch to Base" : "Connect wallet"}
       </Button>
-      {wallet.message ? <p className={compact ? "sr-only" : "max-w-64 text-right text-xs text-[var(--negative)]"} role="status">{wallet.message}</p> : null}
+      {wallet.message ? <p className={compact ? "sr-only" : "max-w-64 text-right text-xs text-[color:var(--negative)]"} role="status">{wallet.message}</p> : null}
     </div>
   );
 }
