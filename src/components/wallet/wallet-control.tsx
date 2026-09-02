@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useWallet } from "@/components/wallet/wallet-provider";
 import { shortenAddress } from "@/lib/frontend/format";
 
-export function WalletControl() {
+export function WalletControl({ compact = false }: { compact?: boolean }) {
   const wallet = useWallet();
 
   if (wallet.status === "connected" && wallet.address) {
@@ -21,7 +21,7 @@ export function WalletControl() {
       >
         {wallet.status === "wrong-network" ? <Plug aria-hidden="true" /> : <Wallet aria-hidden="true" />}{wallet.status === "connecting" ? "Connecting…" : wallet.status === "wrong-network" ? "Switch to Base" : "Connect wallet"}
       </Button>
-      {wallet.message ? <p className="max-w-64 text-right text-xs text-[var(--negative)]" role="status">{wallet.message}</p> : null}
+      {wallet.message ? <p className={compact ? "sr-only" : "max-w-64 text-right text-xs text-[var(--negative)]"} role="status">{wallet.message}</p> : null}
     </div>
   );
 }
