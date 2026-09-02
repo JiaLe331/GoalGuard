@@ -29,7 +29,7 @@
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build"
   },
   "dependencies": {
-    "@thetanuts-finance/thetanuts-client": "0.2.3",
+    "@thetanuts-finance/thetanuts-client": "0.3.0",
     "decimal.js": "10.6.0",
     "drizzle-orm": "1.0.0-rc.4",
     "ethers": "6.17.0",
