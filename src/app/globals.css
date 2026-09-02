@@ -21,7 +21,7 @@ a { color: inherit; }
 ::selection { background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--foreground); }
 :focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 3px; }
 .font-display { font-family: var(--font-display), Georgia, "Times New Roman", serif; }
-.font-sans, .font-mono, code, pre { font-family: var(--font-sans), "Helvetica Neue", Arial, sans-serif; font-variant-numeric: tabular-nums; }
+.font-sans, code, pre { font-family: var(--font-sans), "Helvetica Neue", Arial, sans-serif; font-variant-numeric: tabular-nums; }
 .overflow-anywhere { overflow-wrap: anywhere; }
 .page-shell { width: min(100%, 1440px); margin-inline: auto; padding-inline: clamp(1.25rem, 3.5vw, 3.5rem); }
 .section-anchor { scroll-margin-top: 7rem; }
