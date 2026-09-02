@@ -14,11 +14,11 @@ export function WalletControl() {
   return (
     <div className="flex flex-col items-end gap-1.5">
       <Button
-        variant={wallet.status === "wrong-network" ? "primary" : "secondary"}
-        onClick={wallet.status === "wrong-network" ? wallet.switchToBase : wallet.connect}
-        disabled={wallet.status === "connecting"}
+        variant="secondary"
+        onClick={wallet.connect}
+        disabled={wallet.status === "connecting" || wallet.status === "wrong-network"}
       >
-        {wallet.status === "connecting" ? "Connecting…" : wallet.status === "wrong-network" ? "Switch to Base" : "Connect wallet"}
+        {wallet.status === "connecting" ? "Connecting…" : wallet.status === "wrong-network" ? "Switch your wallet to Base" : "Connect wallet"}
       </Button>
       {wallet.message ? <p className="max-w-64 text-right text-xs text-[var(--danger-soft)]" role="status">{wallet.message}</p> : null}
     </div>

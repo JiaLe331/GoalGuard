@@ -128,7 +128,7 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
   }, [fail, goalId, state.selectedCandidate]);
 
   const previewTrade = useCallback(async () => {
-    if (wallet.status === "wrong-network") { await wallet.switchToBase(); return; }
+    if (wallet.status === "wrong-network") return;
     if (wallet.status !== "connected" || !wallet.address) { await wallet.connect(); return; }
     if (!state.goal || !state.selectedCandidate || state.decision?.status !== "approved") return;
     setBusy(true);
