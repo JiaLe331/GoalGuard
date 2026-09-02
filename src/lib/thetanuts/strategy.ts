@@ -4,9 +4,10 @@ import Decimal from "decimal.js";
 import { getAddress } from "ethers";
 
 import { readServerEnvironment } from "@/lib/config/env";
-import type { CandidateRejection, Goal, ProtectionCandidate, ScenarioResult } from "@/lib/contracts";
+import type { CandidateRejection, CoverageMode, Goal, ProtectionCandidate, ScenarioResult } from "@/lib/contracts";
 import { ApiRouteError } from "@/lib/server/http";
 import { parseThetanutsMarketData, parseThetanutsOrders, type ThetanutsOrder, type ThetanutsReadClient, withConfiguredThetanutsRead } from "./client";
+import { calculateGoalCoverageBps } from "@/lib/protection/coverage";
 
 const SIX = new Decimal(1_000_000);
 const EIGHT = new Decimal(100_000_000);
@@ -56,6 +57,7 @@ export interface CandidateGenerationOptions {
   client?: Pick<ThetanutsReadClient, "api" | "chainConfig" | "optionBook">;
   now?: Date;
   maxDeadlineGapHours?: number;
+  coverageMode?: CoverageMode;
 }
 
 export async function generateProtectionCandidates(goal: Goal, options: CandidateGenerationOptions = {}): Promise<CandidateSearchResult> {
@@ -116,10 +118,11 @@ export async function generateProtectionCandidates(goal: Goal, options: Candidat
     const strike = new Decimal(strikes[0]!.toString()).div(EIGHT); const quantity = new Decimal(preview.numContracts.toString()).div(SIX);
     const premium = new Decimal(requiredPremiumBaseUnits.toString()).div(SIX); const worstFloor = strike.mul(quantity).minus(premium); const requiredFloor = protectedValue.minus(allowedLossUsd);
     if (worstFloor.lessThan(requiredFloor)) { rejected.push({ protocolOrderId: id, reasons: ["The deterministic worst-case floor does not satisfy the requested maximum loss."] }); continue; }
-    const coverageBps = Decimal.min(quantity.div(desiredQuantity).mul(10_000).floor(), 10_000).toNumber();
+    const coverageBps = calculateGoalCoverageBps(preview.numContracts.toString(), desiredContracts.toString());
     if (coverageBps < 10_000) { rejected.push({ protocolOrderId: id, reasons: ["The available order does not fully cover the stated goal."] }); continue; }
+    if (options.coverageMode === "proportional_demo") { rejected.push({ protocolOrderId: id, reasons: ["The proposed quantity does not match the explicit proportional demo request."] }); continue; }
     const now = new Date().toISOString();
-    viable.push({ schemaVersion: 1, id: randomUUID(), goalId: goal.id, source: "optionbook", protocolOrderId: id, underlyingAsset: "ETH", optionType: "put", strikeUsd: decimal(strike), expiry: new Date(expiryMs).toISOString(), settlementTokenAddress: getAddress(usdc.address), settlementTokenSymbol: usdc.symbol, settlementTokenDecimals: usdc.decimals, premiumAmountBaseUnits: requiredPremiumBaseUnits.toString(), premiumUsd: decimal(premium), quantityBaseUnits: preview.numContracts.toString(), quantityUnderlying: decimal(quantity), maxPremiumLossUsd: decimal(premium), estimatedFloorUsd: decimal(worstFloor), deadlineGapHours: Math.max(0, gapHours), goalCoverageBps: coverageBps, availableQuantityBaseUnits: preview.maxContracts.toString(), status: "viable", rejectionReasons: [], protocolRaw: serializeOrder(order), scenarios: [scenario("down", spot.mul("0.7"), spot, protectedValue, strike, quantity, premium), scenario("flat", spot, spot, protectedValue, strike, quantity, premium), scenario("up", spot.mul("1.2"), spot, protectedValue, strike, quantity, premium)], marketAsOf, createdAt: now, updatedAt: now });
+    viable.push({ schemaVersion: 1, id: randomUUID(), goalId: goal.id, source: "optionbook", protocolOrderId: id, underlyingAsset: "ETH", optionType: "put", strikeUsd: decimal(strike), expiry: new Date(expiryMs).toISOString(), settlementTokenAddress: getAddress(usdc.address), settlementTokenSymbol: usdc.symbol, settlementTokenDecimals: usdc.decimals, premiumAmountBaseUnits: requiredPremiumBaseUnits.toString(), premiumUsd: decimal(premium), quantityBaseUnits: preview.numContracts.toString(), quantityUnderlying: decimal(quantity), maxPremiumLossUsd: decimal(premium), estimatedFloorUsd: decimal(worstFloor), deadlineGapHours: Math.max(0, gapHours), goalCoverageBps: coverageBps, coverageMode: "full", availableQuantityBaseUnits: preview.maxContracts.toString(), status: "viable", rejectionReasons: [], protocolRaw: serializeOrder(order), scenarios: [scenario("down", spot.mul("0.7"), spot, protectedValue, strike, quantity, premium), scenario("flat", spot, spot, protectedValue, strike, quantity, premium), scenario("up", spot.mul("1.2"), spot, protectedValue, strike, quantity, premium)], marketAsOf, createdAt: now, updatedAt: now });
   }
   viable.sort((a, b) => a.deadlineGapHours - b.deadlineGapHours || new Decimal(b.estimatedFloorUsd).comparedTo(a.estimatedFloorUsd) || new Decimal(a.premiumUsd).comparedTo(b.premiumUsd) || (a.protocolOrderId ?? "").localeCompare(b.protocolOrderId ?? ""));
   const candidates = viable.slice(0, 3).map((candidate, index) => ({ ...candidate, status: index === 0 ? "selected" as const : "viable" as const }));

@@ -1,0 +1,2 @@
+ALTER TABLE "protection_candidates" ADD COLUMN "coverage_mode" text DEFAULT 'full' NOT NULL;--> statement-breakpoint
+ALTER TABLE "protection_candidates" ADD CONSTRAINT "candidates_coverage_mode_check" CHECK (("coverage_mode" = 'full' AND "goal_coverage_bps" = 10000) OR ("coverage_mode" = 'proportional_demo' AND "goal_coverage_bps" > 0 AND "goal_coverage_bps" < 10000));

@@ -26,7 +26,7 @@ describe("deterministic Thetanuts strategy", () => {
   it("creates a fully covered vanilla ETH put with exact decimal calculations", async () => {
     const result = await generateProtectionCandidates(goal, { client: client([order(1n)]), now, maxDeadlineGapHours: 168 });
     expect(result.candidates).toHaveLength(1);
-    expect(result.candidates[0]).toMatchObject({ status: "selected", premiumUsd: "3", quantityUnderlying: "0.4", goalCoverageBps: 10000, estimatedFloorUsd: "1197" });
+    expect(result.candidates[0]).toMatchObject({ status: "selected", premiumUsd: "3", quantityUnderlying: "0.4", goalCoverageBps: 10000, coverageMode: "full", estimatedFloorUsd: "1197" });
     expect(result.candidates[0]!.scenarios.map(({ key }) => key)).toEqual(["down", "flat", "up"]);
   });
 
@@ -34,5 +34,11 @@ describe("deterministic Thetanuts strategy", () => {
     const result = await generateProtectionCandidates(goal, { client: client([order(2n, { isBuyer: true })]), now, maxDeadlineGapHours: 168 });
     expect(result.candidates).toEqual([]);
     expect(result.rejected[0]?.reasons).toContain("The order does not let the user buy protection.");
+  });
+
+  it("does not silently turn an explicit proportional-demo request into full coverage", async () => {
+    const result = await generateProtectionCandidates(goal, { client: client([order(3n)]), now, maxDeadlineGapHours: 168, coverageMode: "proportional_demo" });
+    expect(result.candidates).toEqual([]);
+    expect(result.rejected[0]?.reasons).toContain("The proposed quantity does not match the explicit proportional demo request.");
   });
 });

@@ -24,6 +24,12 @@ afterEach(async () => { await client.close(); });
 describe("PostgresGoalGuardRepository", () => {
   it("round-trips canonical goals and isolates anonymous owners", async () => { await repository.createGoal(goal, owner); expect(await repository.getGoal(goal.id, owner)).toEqual(goal); expect(await repository.getGoal(goal.id, stranger)).toBeNull(); });
   it("allows forward goal transitions and rejects backward transitions", async () => { await repository.createGoal(goal, owner); const searching = await repository.updateGoalStatus(goal.id, owner, "searching"); expect(searching.status).toBe("searching"); await expect(repository.updateGoalStatus(goal.id, owner, "draft")).rejects.toBeInstanceOf(RepositoryConflictError); });
+  it("round-trips candidate coverage mode with its coverage basis points", async () => {
+    await repository.createGoal(fixtureGoal, owner);
+    await repository.updateGoalStatus(fixtureGoal.id, owner, "searching");
+    await repository.replaceCandidates(fixtureGoal.id, owner, [fixtureCandidate]);
+    await expect(repository.getCandidate(fixtureCandidate.id, owner)).resolves.toMatchObject({ goalCoverageBps: 10000, coverageMode: "full" });
+  });
   it("tracks a fresh worker heartbeat without exposing it through public entities", async () => { expect(await repository.isWorkerHealthy()).toBe(false); await repository.heartbeat("trade-monitor", "10000000-0000-4000-8000-000000000001"); expect(await repository.isWorkerHealthy()).toBe(true); });
   it("replays a completed idempotent trade request and rejects changed input", async () => {
     const key = "10000000-0000-4000-8000-000000000001"; const requestHash = "c".repeat(64); const response = { status: 201, body: { data: { tradeId: "trade-1" } } };

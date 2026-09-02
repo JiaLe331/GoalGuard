@@ -63,6 +63,7 @@ export const fixtureCandidate: ProtectionCandidate = {
   estimatedFloorUsd: "1140",
   deadlineGapHours: 8,
   goalCoverageBps: 10000,
+  coverageMode: "full",
   availableQuantityBaseUnits: "100000000000000000",
   status: "selected",
   rejectionReasons: [],

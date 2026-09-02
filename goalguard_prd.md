@@ -502,6 +502,30 @@ Do not invent contract addresses or protocol schemas.
 6. Rank remaining candidates.
 7. Send top candidate plus 1–2 alternatives to GoalGuard.
 
+#### Proposed coverage
+
+`goalCoverageBps` describes the proposed option quantity relative to the ETH
+quantity required by the goal. It is not a probability, guaranteed payout,
+recovered-loss percentage, or evidence that an option was executed.
+
+Both quantities use the same ETH-underlying unit. Deterministic code calculates
+the value with decimal/base-unit arithmetic and rounds down:
+
+```text
+raw = floor(candidateQuantityUnderlying * 10000 / requiredGoalQuantityUnderlying)
+goalCoverageBps = min(10000, raw)
+```
+
+The required goal quantity must be positive and the candidate quantity cannot
+be negative. `10000` means the proposed quantity is at least the required
+quantity; `5000` means one half of it.
+
+`coverageMode` is either `full` or `proportional_demo`. `full` requires exactly
+`10000` coverage bps. `proportional_demo` requires more than `0` and less than
+`10000` coverage bps and may be generated only from an explicit proportional
+demo request. The council reviews the exact proposed and uncovered quantities.
+Neither mode marks a goal protected in P0.
+
 ### 10.4 Candidate schema
 
 Use the canonical `ProtectionCandidate` and `ScenarioResult` contracts in Section 17.4.2. All live protocol quantities must preserve both normalized decimal display values and base-unit integer strings where required for execution.
@@ -1098,6 +1122,7 @@ export interface ProtectionCandidate {
   estimatedFloorUsd: DecimalString;
   deadlineGapHours: number;
   goalCoverageBps: number;
+  coverageMode: "full" | "proportional_demo";
   availableQuantityBaseUnits: BaseUnitString | null;
   status: CandidateStatus;
   rejectionReasons: string[];
@@ -1114,7 +1139,12 @@ Constraints:
 - Positive decimal values are required for strike, premium, quantity, and estimated floor.
 - `settlementTokenDecimals` is an integer from `0` through `255`.
 - `deadlineGapHours` is a non-negative integer; candidate expiry must be on or after the goal deadline in P0.
-- `goalCoverageBps` is an integer from `0` through `10000`.
+- `goalCoverageBps` is an integer from `0` through `10000`, calculated from the
+  proposed and required ETH-underlying quantities using the formula in Section
+  10.3 and rounded down.
+- `coverageMode: "full"` requires `goalCoverageBps === 10000`.
+  `coverageMode: "proportional_demo"` requires `0 < goalCoverageBps < 10000`
+  and an explicit proportional demo request.
 - `rejectionReasons` is empty unless status is `rejected` or `stale`.
 - `selected` is unique per goal. Selecting one candidate atomically demotes any previous selection to `viable` or `stale`.
 - At least the `down`, `flat`, and `up` scenario keys must be present exactly once.
@@ -1532,6 +1562,7 @@ Behavior:
 export interface GenerateCandidatesRequest {
   goalId: UUID;
   refresh?: boolean; // default false; true forces new live market read
+  coverageMode?: "full" | "proportional_demo"; // default "full"; proportional is explicit
 }
 
 export interface CandidateRejection {

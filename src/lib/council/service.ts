@@ -16,9 +16,9 @@ const CouncilOutputSchema = z.object({
 }).strict();
 
 const prompts: Record<CouncilRole, string> = {
-  strategist: "Assess whether this already-calculated ETH put meaningfully serves the normalized goal, including direction, expiry fit, floor, cost, and supplied alternatives. Do not recalculate or invent values.",
-  risk_auditor: "Act adversarially. Reject or mark uncertain if any supplied fact violates the goal, is incomplete, misleading, unfillable, over budget, or fails to provide the claimed floor. Do not originate financial values.",
-  consumer_advocate: "Assess whether the plan is understandable and serves a non-professional ETH holder's near-term expense without implying a guarantee or encouraging speculation. Require clear maximum-cost and settlement disclosures.",
+  strategist: "Assess whether this already-calculated ETH put meaningfully serves the normalized goal, including direction, expiry fit, floor, cost, the exact proposed quantity, coverage mode/basis points, and supplied alternatives. Do not recalculate or invent values.",
+  risk_auditor: "Act adversarially. Reject or mark uncertain if any supplied fact violates the goal, is incomplete, misleading, unfillable, over budget, misstates proposed or uncovered coverage, or fails to provide the claimed floor. Do not originate financial values.",
+  consumer_advocate: "Assess whether the plan is understandable and serves a non-professional ETH holder's near-term expense without implying a guarantee or encouraging speculation. Require clear maximum-cost, settlement, and any partial-coverage disclosures.",
 };
 const purpose: Record<CouncilRole, "strategist_review" | "risk_auditor_review" | "consumer_advocate_review"> = { strategist: "strategist_review", risk_auditor: "risk_auditor_review", consumer_advocate: "consumer_advocate_review" };
 

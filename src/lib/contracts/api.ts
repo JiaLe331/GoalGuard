@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { GoalTypeSchema, InferencePurposeSchema, InferenceStatusSchema, SupportedAssetSchema } from "./enums";
+import { CoverageModeSchema, GoalTypeSchema, InferencePurposeSchema, InferenceStatusSchema, SupportedAssetSchema } from "./enums";
 import {
   CouncilDecisionSchema,
   GoalSchema,
@@ -90,6 +90,7 @@ export const UpdateGoalResponseSchema = z.object({
 export const GenerateCandidatesRequestSchema = z.object({
   goalId: UUIDSchema,
   refresh: z.boolean().optional(),
+  coverageMode: CoverageModeSchema.optional(),
 }).strict();
 
 export const CandidateRejectionSchema = z.object({

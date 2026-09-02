@@ -6,7 +6,9 @@ import {
   CouncilDecisionSchema,
   DecimalStringSchema,
   GoalSchema,
+  GenerateCandidatesRequestSchema,
   IntegrationStatusResponseSchema,
+  ProtectionCandidateSchema,
   PublicProtectionCandidateSchema,
   PreviewTradeResponseSchema,
   SignedDecimalStringSchema,
@@ -95,6 +97,14 @@ describe("canonical entity contracts", () => {
     expect(CouncilDecisionSchema.parse(valid).status).toBe("approved");
     expect(CouncilDecisionSchema.safeParse({ ...valid, reviews: [review("strategist", 1), review("strategist", 2), review("consumer_advocate", 3)] }).success).toBe(false);
   });
+
+  it("enforces full and explicit proportional-demo coverage modes", () => {
+    expect(ProtectionCandidateSchema.parse(fixtureCandidate).coverageMode).toBe("full");
+    expect(ProtectionCandidateSchema.safeParse({ ...fixtureCandidate, goalCoverageBps: 9999 }).success).toBe(false);
+    expect(ProtectionCandidateSchema.parse({ ...fixtureCandidate, coverageMode: "proportional_demo", goalCoverageBps: 5000 }).coverageMode).toBe("proportional_demo");
+    expect(ProtectionCandidateSchema.safeParse({ ...fixtureCandidate, coverageMode: "proportional_demo", goalCoverageBps: 0 }).success).toBe(false);
+    expect(ProtectionCandidateSchema.safeParse({ ...fixtureCandidate, coverageMode: "proportional_demo", goalCoverageBps: 10000 }).success).toBe(false);
+  });
 });
 
 describe("API envelopes", () => {
@@ -115,6 +125,12 @@ describe("API envelopes", () => {
     const request = { goalType: "rent", customGoalLabel: null, underlyingAsset: "ETH", protectedValueUsd: "1200", deadline: "2026-09-30", maxLossBps: 500, maxPremiumUsd: "3" };
     expect(UpdateGoalRequestSchema.parse(request)).toEqual(request);
     expect(UpdateGoalRequestSchema.safeParse({ ...request, databaseGoalId: ids.goal }).success).toBe(false);
+  });
+
+  it("accepts an omitted full-mode request and requires a closed mode value", () => {
+    expect(GenerateCandidatesRequestSchema.parse({ goalId: ids.goal }).coverageMode).toBeUndefined();
+    expect(GenerateCandidatesRequestSchema.parse({ goalId: ids.goal, coverageMode: "proportional_demo" }).coverageMode).toBe("proportional_demo");
+    expect(GenerateCandidatesRequestSchema.safeParse({ goalId: ids.goal, coverageMode: "partial" }).success).toBe(false);
   });
 
   it("rejects extra fields from public status responses", () => {

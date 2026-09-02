@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     if (!goal) throw new ApiRouteError("NOT_FOUND", "Goal was not found.", 404);
     await repository.updateGoalStatus(goal.id, ownerSessionHash, "searching");
     try {
-      const result = await generateProtectionCandidates(goal);
+      const result = await generateProtectionCandidates(goal, { coverageMode: body.coverageMode ?? "full" });
       if (!result.candidates.length) throw new ApiRouteError("NO_SUITABLE_CANDIDATE", "No live ETH put satisfies the goal's expiry, cost, coverage, liquidity, and fillability constraints.", 422, true, result.rejected.slice(0, 10));
       await repository.replaceCandidates(goal.id, ownerSessionHash, result.candidates);
       const updated = await repository.getGoal(goal.id, ownerSessionHash);
