@@ -8,9 +8,14 @@ import type { CandidateRejection, CoverageMode, Goal, ProtectionCandidate, Scena
 import { ApiRouteError } from "@/lib/server/http";
 import { parseThetanutsMarketData, parseThetanutsOrders, type ThetanutsOrder, type ThetanutsReadClient, withConfiguredThetanutsRead } from "./client";
 import { calculateGoalCoverageBps } from "@/lib/protection/coverage";
+import {
+  USDC_DECIMALS,
+  decimalToBaseUnits,
+  premiumForContracts,
+  underlyingFromContractBaseUnits,
+  usdFromPriceBaseUnits,
+} from "./units";
 
-const SIX = new Decimal(1_000_000);
-const EIGHT = new Decimal(100_000_000);
 const decimal = (value: Decimal.Value) => new Decimal(value).toFixed();
 
 export function orderId(order: ThetanutsOrder) { return `${order.makerAddress.toLowerCase()}:${order.order.nonce.toString()}`; }
@@ -89,7 +94,8 @@ export async function generateProtectionCandidates(goal: Goal, options: Candidat
   const usdc = client.chainConfig.tokens.USDC; const putImplementation = client.chainConfig.implementations.PUT;
   if (!usdc || !putImplementation) throw new ApiRouteError("UPSTREAM_INVALID_RESPONSE", "Thetanuts Base configuration is missing the P0 market.", 502);
   const deadline = Date.parse(`${goal.deadline}T00:00:00.000Z`); const protectedValue = new Decimal(goal.protectedValueUsd);
-  const desiredQuantity = protectedValue.div(spot); const desiredContracts = BigInt(desiredQuantity.mul(SIX).ceil().toFixed(0));
+  const desiredQuantity = protectedValue.div(spot);
+  const desiredContracts = decimalToBaseUnits(desiredQuantity, USDC_DECIMALS, Decimal.ROUND_CEIL);
   const allowedLossUsd = protectedValue.mul(goal.maxLossBps).div(10_000);
   const budgetUsd = goal.maxPremiumUsd ? Decimal.min(goal.maxPremiumUsd, allowedLossUsd) : allowedLossUsd;
   const rejected: CandidateRejection[] = []; const viable: ProtectionCandidate[] = [];
@@ -106,8 +112,8 @@ export async function generateProtectionCandidates(goal: Goal, options: Candidat
     if (!orderDeadline || orderDeadline <= nowMs + 60_000) reasons.push("The order is expired or too close to expiry.");
     if (!order.order.collateralToken || order.order.collateralToken.toLowerCase() !== usdc.address.toLowerCase()) reasons.push("P0 supports USDC-settled OptionBook orders only.");
     if (order.availableAmount <= 0n) reasons.push("The order has no available liquidity.");
-    const requiredPremiumBaseUnits = (desiredContracts * order.order.price + 99_999_999n) / 100_000_000n;
-    const budgetBaseUnits = BigInt(budgetUsd.mul(SIX).floor().toFixed(0));
+    const requiredPremiumBaseUnits = premiumForContracts(desiredContracts, order.order.price);
+    const budgetBaseUnits = decimalToBaseUnits(budgetUsd, USDC_DECIMALS);
     if (requiredPremiumBaseUnits <= 0n || requiredPremiumBaseUnits > budgetBaseUnits) reasons.push("Full goal coverage exceeds the protection-cost limit.");
     let preview: ReturnType<typeof client.optionBook.previewFillOrder> | null = null;
     if (reasons.length === 0) {
@@ -115,8 +121,10 @@ export async function generateProtectionCandidates(goal: Goal, options: Candidat
       catch { reasons.push("The order could not be previewed as fillable."); }
     }
     if (reasons.length || !preview) { rejected.push({ protocolOrderId: id, reasons }); continue; }
-    const strike = new Decimal(strikes[0]!.toString()).div(EIGHT); const quantity = new Decimal(preview.numContracts.toString()).div(SIX);
-    const premium = new Decimal(requiredPremiumBaseUnits.toString()).div(SIX); const worstFloor = strike.mul(quantity).minus(premium); const requiredFloor = protectedValue.minus(allowedLossUsd);
+    const strike = usdFromPriceBaseUnits(strikes[0]!);
+    const quantity = underlyingFromContractBaseUnits(preview.numContracts);
+    const premium = underlyingFromContractBaseUnits(requiredPremiumBaseUnits);
+    const worstFloor = strike.mul(quantity).minus(premium); const requiredFloor = protectedValue.minus(allowedLossUsd);
     if (worstFloor.lessThan(requiredFloor)) { rejected.push({ protocolOrderId: id, reasons: ["The deterministic worst-case floor does not satisfy the requested maximum loss."] }); continue; }
     const coverageBps = calculateGoalCoverageBps(preview.numContracts.toString(), desiredContracts.toString());
     if (coverageBps < 10_000) { rejected.push({ protocolOrderId: id, reasons: ["The available order does not fully cover the stated goal."] }); continue; }
