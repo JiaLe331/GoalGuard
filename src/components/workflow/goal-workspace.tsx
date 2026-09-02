@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
-import { useCapabilities } from "@/components/app/app-providers";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -16,21 +15,15 @@ import { useWallet } from "@/components/wallet/wallet-provider";
 import {
   CouncilDrawer,
   GoalConfirmationForm,
-  ProtectedGoalPanel,
   ProtectionPlanPanel,
-  TradePreviewPanel,
-  TransactionStatusPanel,
+  UnsignedPreviewPanel,
 } from "@/components/workflow/workflow-panels";
 import type { UpdateGoalRequest } from "@/lib/contracts";
 import { ApiClientError, goalGuardApi } from "@/lib/frontend/api-client";
-import { baseTransactionUrl } from "@/lib/frontend/format";
 import {
-  clearExecutionRetry,
   clearPreviewRetry,
   readActiveGoalId,
-  readExecutionRetry,
   readPreviewRetry,
-  saveExecutionRetry,
   savePreviewRetry,
   storageKeys,
 } from "@/lib/frontend/storage";
@@ -43,13 +36,11 @@ import {
 
 export function GoalWorkspace({ goalId }: { goalId: string }) {
   const router = useRouter();
-  const capabilities = useCapabilities();
   const wallet = useWallet();
   const [state, dispatch] = useReducer(workflowReducer, initialWorkflowState);
   const [hydrating, setHydrating] = useState(true);
   const [busy, setBusy] = useState(false);
   const [councilOpen, setCouncilOpen] = useState(false);
-  const pollStartedAt = useRef<number | null>(null);
   const stageHeading = useRef<HTMLDivElement>(null);
   const previewWallet = useRef<string | null>(null);
 
@@ -137,7 +128,7 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
   }, [fail, goalId, state.selectedCandidate]);
 
   const previewTrade = useCallback(async () => {
-    if (wallet.status === "wrong-network") { await wallet.switchToBase(); return; }
+    if (wallet.status === "wrong-network") return;
     if (wallet.status !== "connected" || !wallet.address) { await wallet.connect(); return; }
     if (!state.goal || !state.selectedCandidate || state.decision?.status !== "approved") return;
     setBusy(true);
@@ -160,98 +151,7 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
     finally { setBusy(false); }
   }, [fail, state.decision, state.goal, state.selectedCandidate, wallet]);
 
-  const prepareExecution = useCallback(async () => {
-    if (!state.preview || !wallet.address || wallet.chainId !== 8453 || !capabilities.liveExecutionEnabled) return;
-    setBusy(true);
-    dispatch({ type: "execution_preparing" });
-    try {
-      const previous = readExecutionRetry();
-      const idempotencyKey = previous?.tradeId === state.preview.trade.id && previous.quoteFingerprint === state.preview.trade.quoteFingerprint
-        ? previous.idempotencyKey
-        : crypto.randomUUID();
-      saveExecutionRetry({ tradeId: state.preview.trade.id, quoteFingerprint: state.preview.trade.quoteFingerprint, idempotencyKey, submissionIdempotencyKey: previous?.submissionIdempotencyKey ?? null, txHash: null });
-      const response = await goalGuardApi.prepareExecution({
-        tradeId: state.preview.trade.id,
-        quoteFingerprint: state.preview.trade.quoteFingerprint,
-        walletAddress: wallet.address,
-        chainId: 8453,
-        userConfirmed: true,
-      }, idempotencyKey);
-      dispatch({ type: "execution_prepared", trade: response.data.trade, approval: response.data.approvalTransaction, execution: response.data.executionTransaction });
-    } catch (reason) { fail(reason, "confirming_trade"); }
-    finally { setBusy(false); }
-  }, [capabilities.liveExecutionEnabled, fail, state.preview, wallet.address, wallet.chainId]);
-
-  const submitApproval = useCallback(async () => {
-    if (!state.preparedApproval) return;
-    setBusy(true);
-    try {
-      const result = await wallet.sendTransaction(state.preparedApproval);
-      const receipt = await result.wait();
-      if (!receipt || receipt.status !== 1) throw new Error("The exact approval transaction did not confirm successfully.");
-      dispatch({ type: "approval_confirmed" });
-    } catch (reason) { fail(reason, "confirming_trade"); }
-    finally { setBusy(false); }
-  }, [fail, state.preparedApproval, wallet]);
-
-  const recordKnownSubmission = useCallback(async (txHash: string) => {
-    if (!state.trade || !wallet.address) return;
-    const retry = readExecutionRetry();
-    const submissionIdempotencyKey = retry?.submissionIdempotencyKey ?? crypto.randomUUID();
-    if (retry) saveExecutionRetry({ ...retry, submissionIdempotencyKey, txHash });
-    const response = await goalGuardApi.recordSubmission(state.trade.id, { txHash: txHash as `0x${string}`, walletAddress: wallet.address }, submissionIdempotencyKey);
-    dispatch({ type: "submitted", trade: response.data.trade, txHash });
-    pollStartedAt.current = Date.now();
-  }, [state.trade, wallet.address]);
-
-  const submitExecution = useCallback(async () => {
-    if (!state.preparedExecution || !state.trade) return;
-    setBusy(true);
-    try {
-      const result = await wallet.sendTransaction(state.preparedExecution);
-      const retry = readExecutionRetry();
-      if (retry) saveExecutionRetry({ ...retry, txHash: result.hash });
-      dispatch({ type: "broadcasted", txHash: result.hash });
-      await recordKnownSubmission(result.hash);
-    } catch (reason) { fail(reason, state.txHash ? "transaction_submitted" : "confirming_trade"); }
-    finally { setBusy(false); }
-  }, [fail, recordKnownSubmission, state.preparedExecution, state.trade, state.txHash, wallet]);
-
-  const refreshTrade = useCallback(async () => {
-    if (!state.trade) return;
-    try {
-      const response = await goalGuardApi.getTrade(state.trade.id);
-      dispatch({ type: "trade_refreshed", response });
-      if (response.data.trade.status === "confirmed" && response.data.receipt?.success) clearExecutionRetry();
-    } catch (reason) { fail(reason, "transaction_submitted"); }
-  }, [fail, state.trade]);
-
-  useEffect(() => {
-    if (state.stage !== "transaction_submitted" || !state.trade) return;
-    pollStartedAt.current ??= Date.now();
-    let stopped = false;
-    const tick = async () => {
-      if (stopped || document.visibilityState === "hidden") return;
-      if (Date.now() - pollStartedAt.current! >= 120_000) {
-        dispatch({ type: "notice", notice: "Still pending on Base. Automatic checks paused; use Refresh confirmation to continue." });
-        return;
-      }
-      await refreshTrade();
-      if (!stopped) timer = window.setTimeout(tick, 4_000);
-    };
-    let timer = window.setTimeout(tick, 4_000);
-    return () => { stopped = true; window.clearTimeout(timer); };
-  }, [refreshTrade, state.stage, state.trade]);
-
   async function retryCurrent() {
-    const retry = readExecutionRetry();
-    if (retry?.txHash && state.trade) {
-      setBusy(true);
-      try { await recordKnownSubmission(retry.txHash); dispatch({ type: "clear_error" }); }
-      catch (reason) { fail(reason, "transaction_submitted"); }
-      finally { setBusy(false); }
-      return;
-    }
     if (state.error?.code === "CANDIDATE_STALE") { await findAndReview(undefined, true); return; }
     if (state.error?.code === "QUOTE_EXPIRED") { await previewTrade(); return; }
     if (state.error?.code === "GONKA_UNAVAILABLE" && state.selectedCandidate) { await retryReview(true); return; }
@@ -260,7 +160,6 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
 
   function startAgain() {
     window.localStorage.removeItem(storageKeys.activeGoalId);
-    clearExecutionRetry();
     router.push("/");
   }
 
@@ -268,15 +167,13 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
   const renderContent = () => {
     if (hydrating) return <Card className="p-7"><Skeleton className="h-8 w-56" /><Skeleton className="mt-5 h-64" /></Card>;
     if (state.stage === "recoverable_error" || state.stage === "terminal_error") {
-      return <Card className="mx-auto max-w-2xl p-7 sm:p-9"><Alert tone="error" title={state.error?.code === "NO_SUITABLE_CANDIDATE" ? "No suitable live option" : "This step could not finish"}>{state.error?.message ?? "GoalGuard needs your attention."}{state.error?.requestId ? <span className="mt-2 block font-mono text-xs">Request {state.error.requestId}</span> : null}{state.txHash ? <a className="mt-3 block break-all text-[var(--accent)] underline" href={baseTransactionUrl(state.txHash)} target="_blank" rel="noreferrer">View broadcast transaction</a> : null}</Alert><div className="mt-6 flex flex-wrap gap-3">{state.error?.retryable ? <Button onClick={() => void retryCurrent()} disabled={busy}>{busy ? "Retrying…" : "Retry safely"}</Button> : null}{state.goal ? <Button variant="secondary" onClick={() => dispatch({ type: "clear_error" })}>Return to saved goal</Button> : null}<Button variant="ghost" onClick={startAgain}>Start again</Button></div></Card>;
+      return <Card className="mx-auto max-w-2xl p-7 sm:p-9"><Alert tone="error" title={state.error?.code === "NO_SUITABLE_CANDIDATE" ? "No suitable live option" : "This step could not finish"}>{state.error?.message ?? "GoalGuard needs your attention."}{state.error?.requestId ? <span className="mt-2 block font-mono text-xs">Request {state.error.requestId}</span> : null}</Alert><div className="mt-6 flex flex-wrap gap-3">{state.error?.retryable ? <Button onClick={() => void retryCurrent()} disabled={busy}>{busy ? "Retrying…" : "Retry safely"}</Button> : null}{state.goal ? <Button variant="secondary" onClick={() => dispatch({ type: "clear_error" })}>Return to saved goal</Button> : null}<Button variant="ghost" onClick={startAgain}>Start again</Button></div></Card>;
     }
     if (state.stage === "searching_candidates" || state.stage === "reviewing_candidate") return <Card className="mx-auto max-w-2xl p-8"><ProgressSteps active={state.stage === "searching_candidates" ? "market" : "review"} /><p className="mt-7 text-sm text-[var(--muted)]">This progress follows the active backend request. GoalGuard does not simulate completion.</p></Card>;
     if (state.stage === "confirming_goal" && state.goal) return <GoalConfirmationForm goal={state.goal} busy={busy} fieldErrors={state.error?.fieldErrors ?? {}} onSave={saveGoal} onFind={(value) => findAndReview(value)} />;
     if (["plan_approved", "plan_disputed", "plan_blocked"].includes(state.stage) && planReady) return <ProtectionPlanPanel goal={state.goal!} candidate={state.selectedCandidate!} alternatives={state.candidates.filter((candidate) => candidate.id !== state.selectedCandidate!.id)} decision={state.decision!} busy={busy} onOpenCouncil={() => setCouncilOpen(true)} onRefresh={() => void findAndReview(undefined, true)} onPreview={() => void previewTrade()} />;
-    if ((state.stage === "previewing_trade" || state.stage === "preparing_execution") && state.preview) return <Card className="mx-auto max-w-2xl p-8"><ProgressSteps active="review" /><p className="mt-6 text-sm text-[var(--muted)]">Revalidating the live quote and safety checks…</p></Card>;
-    if (state.stage === "confirming_trade" && state.preview && wallet.address) return <TradePreviewPanel preview={state.preview} walletAddress={wallet.address} executionEnabled={capabilities.liveExecutionEnabled} maxPremiumUsd={capabilities.maxLiveTradePremiumUsd} busy={busy} onBack={() => dispatch({ type: "review_completed", goal: state.goal!, candidate: state.selectedCandidate!, decision: state.decision! })} onConfirm={() => void prepareExecution()} />;
-    if ((state.stage === "awaiting_approval_signature" || state.stage === "awaiting_execution_signature" || state.stage === "transaction_submitted") && state.trade) return <TransactionStatusPanel stage={state.stage} trade={state.trade} txHash={state.txHash} onApproval={() => void submitApproval()} onExecution={() => void submitExecution()} onRefresh={() => void refreshTrade()} />;
-    if (state.stage === "protected" && state.goal && state.selectedCandidate && state.decision && state.trade) return <ProtectedGoalPanel goal={state.goal} candidate={state.selectedCandidate} decision={state.decision} trade={state.trade} explorerUrl={state.receipt?.explorerUrl ?? null} />;
+    if (state.stage === "previewing_trade") return <Card className="mx-auto max-w-2xl p-8"><ProgressSteps active="review" /><p className="mt-6 text-sm text-[var(--muted)]">Revalidating the live quote and constructing an unsigned preview…</p></Card>;
+    if (state.stage === "preview_ready" && state.preview) return <UnsignedPreviewPanel preview={state.preview} walletAddress={wallet.address} onBack={() => dispatch({ type: "review_completed", goal: state.goal!, candidate: state.selectedCandidate!, decision: state.decision! })} />;
     return <EmptyState title="Goal state unavailable">GoalGuard could not map this saved record to a safe frontend state.<div className="mt-5"><Button onClick={() => void hydrate()}>Reload saved goal</Button></div></EmptyState>;
   };
 

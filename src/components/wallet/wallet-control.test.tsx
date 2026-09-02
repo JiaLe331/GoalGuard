@@ -44,15 +44,13 @@ describe("WalletControl", () => {
     expect(provider.request).toHaveBeenCalledWith(expect.objectContaining({ method: "eth_requestAccounts" }));
   });
 
-  it("offers a Base network switch", async () => {
+  it("reports a non-Base network without requesting a switch", async () => {
     const provider = walletProvider("0x1");
     window.ethereum = provider;
     const user = userEvent.setup();
     renderWallet();
     await user.click(screen.getByRole("button", { name: /connect wallet/i }));
-    const switchButton = await screen.findByRole("button", { name: /switch to base/i });
-    await user.click(switchButton);
-    await waitFor(() => expect(screen.getByLabelText(/wallet connected/i)).toBeInTheDocument());
-    expect(provider.request).toHaveBeenCalledWith(expect.objectContaining({ method: "wallet_switchEthereumChain" }));
+    expect(await screen.findByRole("button", { name: /switch your wallet to base/i })).toBeVisible();
+    expect(provider.request).not.toHaveBeenCalledWith(expect.objectContaining({ method: "wallet_switchEthereumChain" }));
   });
 });

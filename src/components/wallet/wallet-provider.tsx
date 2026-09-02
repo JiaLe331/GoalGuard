@@ -1,9 +1,7 @@
 "use client";
 
-import { BrowserProvider, type TransactionReceipt } from "ethers";
+import { BrowserProvider } from "ethers";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-
-import type { PreparedTransaction } from "@/lib/contracts";
 
 const BASE_CHAIN_ID = 8453n;
 
@@ -18,8 +16,6 @@ interface WalletState {
 
 interface WalletContextValue extends WalletState {
   connect: () => Promise<void>;
-  switchToBase: () => Promise<void>;
-  sendTransaction: (transaction: PreparedTransaction) => Promise<{ hash: string; wait: () => Promise<TransactionReceipt | null> }>;
 }
 
 const initialState: WalletState = { status: "idle", address: null, chainId: null, message: null };
@@ -86,34 +82,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const switchToBase = useCallback(async () => {
-    if (!window.ethereum) return;
-    try {
-      const provider = new BrowserProvider(window.ethereum);
-      await provider.send("wallet_switchEthereumChain", [{ chainId: "0x2105" }]);
-      const accounts = await provider.send("eth_accounts", []) as string[];
-      setState({ status: "connected", address: accounts[0] ?? state.address, chainId: 8453, message: null });
-    } catch (error) {
-      setState((current) => ({ ...current, status: "error", message: walletMessage(error, "Could not switch to Base.") }));
-    }
-  }, [state.address]);
-
-  const sendTransaction = useCallback(async (transaction: PreparedTransaction) => {
-    if (!window.ethereum || state.status !== "connected" || state.chainId !== 8453) {
-      throw new Error("Connect a Base wallet before continuing.");
-    }
-    if (transaction.chainId !== 8453) throw new Error("GoalGuard rejected a transaction for the wrong network.");
-    const provider = new BrowserProvider(window.ethereum);
-    const signer = await provider.getSigner();
-    const response = await signer.sendTransaction({
-      to: transaction.to,
-      data: transaction.data,
-      value: BigInt(transaction.valueBaseUnits),
-    });
-    return { hash: response.hash, wait: () => response.wait() };
-  }, [state.chainId, state.status]);
-
-  const value = useMemo(() => ({ ...state, connect, switchToBase, sendTransaction }), [connect, sendTransaction, state, switchToBase]);
+  const value = useMemo(() => ({ ...state, connect }), [connect, state]);
   return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>;
 }
 
