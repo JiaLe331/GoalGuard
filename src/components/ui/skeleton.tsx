@@ -1,3 +1,3 @@
 export function Skeleton({ className = "h-16" }: { className?: string }) {
-  return <div className={`animate-pulse rounded-2xl bg-white/[0.055] ${className}`} aria-hidden="true" />;
+  return <div className={`animate-pulse rounded-[var(--radius-md)] bg-[var(--border-soft)] ${className}`} aria-hidden="true" />;
 }

@@ -1,16 +1,17 @@
-export type StatusTone = "ready" | "warning" | "error" | "neutral";
+export type StatusTone = "ready" | "info" | "warning" | "error" | "neutral";
 
 const toneClasses: Record<StatusTone, string> = {
-  ready: "border-[#91e95f]/25 bg-[#91e95f]/10 text-[#caff9f]",
-  warning: "border-[#ffcd6b]/25 bg-[#ffcd6b]/10 text-[#ffe0a3]",
-  error: "border-[#ff837a]/25 bg-[#ff837a]/10 text-[#ffaaa4]",
-  neutral: "border-white/10 bg-white/[0.05] text-[#bdc9c0]",
+  ready: "border-[color-mix(in_srgb,var(--positive)_40%,var(--border))] bg-[var(--surface)] text-[var(--foreground-soft)] [&>span]:bg-[var(--positive)]",
+  info: "border-[var(--border)] bg-[var(--surface)] text-[var(--foreground-soft)] [&>span]:bg-[var(--foreground)]",
+  warning: "border-[color-mix(in_srgb,var(--accent)_45%,var(--border))] bg-[var(--surface)] text-[var(--foreground-soft)] [&>span]:bg-[var(--accent)]",
+  error: "border-[color-mix(in_srgb,var(--negative)_45%,var(--border))] bg-[var(--surface)] text-[var(--foreground-soft)] [&>span]:bg-[var(--negative)]",
+  neutral: "border-[var(--border)] bg-transparent text-[var(--foreground-soft)] [&>span]:bg-[var(--muted)]",
 };
 
 export function StatusBadge({ label, tone = "neutral" }: { label: string; tone?: StatusTone }) {
   return (
-    <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${toneClasses[tone]}`}>
-      <span className="size-1.5 rounded-full bg-current" aria-hidden="true" />
+    <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold ${toneClasses[tone]}`}>
+      <span className="size-1.5 rounded-full" aria-hidden="true" />
       {label}
     </span>
   );

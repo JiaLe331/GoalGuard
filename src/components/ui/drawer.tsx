@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { X } from "@phosphor-icons/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { useEffect, useRef, type ReactNode, type RefObject } from "react";
 
 import { Button } from "./button";
 
-export function Drawer({ open, title, onClose, children }: { open: boolean; title: string; onClose: () => void; children: ReactNode }) {
+export function Drawer({ open, title, onClose, children, labelledId = "drawer-panel", restoreFocusRef }: { open: boolean; title: string; onClose: () => void; children: ReactNode; labelledId?: string; restoreFocusRef?: RefObject<HTMLElement | null> }) {
   const dialog = useRef<HTMLDivElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     if (!open) return;
@@ -23,19 +26,38 @@ export function Drawer({ open, title, onClose, children }: { open: boolean; titl
       if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
     };
     document.addEventListener("keydown", handleKey);
-    return () => { document.removeEventListener("keydown", handleKey); previous?.focus(); };
-  }, [onClose, open]);
+    return () => { document.removeEventListener("keydown", handleKey); (restoreFocusRef?.current ?? previous)?.focus(); };
+  }, [onClose, open, restoreFocusRef]);
 
-  if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/65 backdrop-blur-sm" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <div ref={dialog} role="dialog" aria-modal="true" aria-labelledby="drawer-title" className="h-full w-full max-w-2xl overflow-y-auto border-l border-white/10 bg-[#0d1711] p-6 shadow-2xl sm:p-8">
-        <div className="mb-8 flex items-center justify-between gap-4">
-          <h2 id="drawer-title" className="text-2xl font-semibold text-white">{title}</h2>
-          <Button ref={closeButton} variant="ghost" onClick={onClose} aria-label="Close panel">Close</Button>
-        </div>
-        {children}
-      </div>
-    </div>
+    <AnimatePresence>
+      {open ? (
+        <motion.div
+          className="fixed inset-0 z-[100] flex justify-end bg-[color-mix(in_srgb,var(--surface-black)_72%,transparent)]"
+          role="presentation"
+          initial={false}
+          onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}
+        >
+          <motion.div
+            ref={dialog}
+            role="dialog"
+            aria-modal="true"
+            id={labelledId}
+            aria-labelledby={`${labelledId}-title`}
+            className="h-full w-full max-w-2xl overflow-y-auto border-l border-[var(--border)] bg-[var(--background)] p-6 shadow-[var(--shadow-hero-module)] sm:p-8"
+            initial={reduceMotion ? false : { x: 28 }}
+            animate={{ x: 0 }}
+            exit={{ x: 20 }}
+            transition={{ duration: reduceMotion ? 0 : 0.22, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div className="mb-8 flex items-center justify-between gap-4">
+              <h2 id={`${labelledId}-title`} className="font-display text-3xl text-[var(--foreground)]">{title}</h2>
+              <Button ref={closeButton} variant="ghost" className="size-11 px-0" onClick={onClose} aria-label="Close panel"><X className="size-5" aria-hidden="true" /></Button>
+            </div>
+            {children}
+          </motion.div>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
   );
 }

@@ -1,13 +1,14 @@
+import { Plus } from "@phosphor-icons/react/dist/ssr";
 import type { ReactNode } from "react";
 
 export function Accordion({ title, children, open = false }: { title: string; children: ReactNode; open?: boolean }) {
   return (
-    <details className="group rounded-2xl border border-white/[0.08] bg-black/10 p-4" open={open}>
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-4">
+    <details className="group border-t border-[var(--border)] py-4" open={open}>
+      <summary className="flex min-h-11 list-none items-center justify-between gap-4 text-sm font-semibold text-[var(--foreground)] focus-visible:outline-2 focus-visible:outline-offset-4">
         {title}
-        <span className="text-[var(--accent)] transition group-open:rotate-45" aria-hidden="true">+</span>
+        <Plus className="size-4 shrink-0 transition-transform duration-[var(--duration-fast)] group-open:rotate-45" aria-hidden="true" />
       </summary>
-      <div className="mt-4 border-t border-white/[0.07] pt-4 text-sm leading-6 text-[#aebcb2]">{children}</div>
+      <div className="pb-2 pt-2 text-sm leading-6 text-[var(--foreground-soft)]">{children}</div>
     </details>
   );
 }

@@ -7,9 +7,9 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variants: Record<ButtonVariant, string> = {
-  primary: "bg-[#cbff6b] text-[#122016] hover:bg-[#dbff95] shadow-[0_10px_30px_rgba(203,255,107,0.16)]",
-  secondary: "border border-white/12 bg-white/[0.06] text-white hover:bg-white/[0.1]",
-  ghost: "text-[#b9c6bc] hover:bg-white/[0.06] hover:text-white",
+  primary: "border border-[var(--button-primary-border)] bg-[var(--button-primary-bg)] text-[var(--button-primary-fg)] hover:bg-[var(--foreground-soft)]",
+  secondary: "border border-[var(--button-secondary-border)] bg-[var(--button-secondary-bg)] text-[var(--button-secondary-fg)] hover:border-[var(--foreground)] hover:bg-[var(--surface-soft)]",
+  ghost: "border border-transparent text-[var(--foreground-soft)] hover:bg-[var(--surface-soft)] hover:text-[var(--foreground)]",
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button({ className = "", variant = "primary", type = "button", ...props }, ref) {
@@ -17,7 +17,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     <button
       ref={ref}
       type={type}
-      className={`inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-full px-5 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#cbff6b] disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${className}`}
+      className={`inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-full px-5 text-sm font-semibold transition-[background-color,border-color,color,transform] duration-[var(--duration-fast)] active:translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)] disabled:cursor-not-allowed disabled:opacity-45 ${variants[variant]} ${className}`}
       {...props}
     />
   );
