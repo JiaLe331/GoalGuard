@@ -30,6 +30,15 @@ function timestampMilliseconds(value: bigint): number | null {
   return Number(value * 1000n);
 }
 
+function nonNegativeBigInt(value: unknown): bigint | null {
+  try {
+    const parsed = typeof value === "bigint" || typeof value === "string" || typeof value === "number" ? BigInt(value) : null;
+    return parsed === null || parsed < 0n ? null : parsed;
+  } catch {
+    return null;
+  }
+}
+
 function previewIsConsistent(
   preview: ReturnType<ThetanutsReadClient["optionBook"]["previewFillOrder"]>,
   order: ThetanutsOrder,
@@ -142,11 +151,12 @@ export async function generateProtectionCandidates(goal: Goal, options: Candidat
     if (expiryMs === null || gapHours === null) reasons.push("The option expiry is invalid.");
     if (expiryMs !== null && expiryMs < deadline) reasons.push("The option expires before the goal deadline.");
     if (gapHours !== null && gapHours > maxDeadlineGapHours) reasons.push(`The expiry is more than ${maxDeadlineGapHours} hours after the deadline.`);
-    const rawDeadline = raw?.orderExpiryTimestamp === undefined ? null : BigInt(raw.orderExpiryTimestamp);
+    const rawDeadline = raw?.orderExpiryTimestamp === undefined ? null : nonNegativeBigInt(raw.orderExpiryTimestamp);
     const orderDeadline = timestampMilliseconds(order.order.deadline ?? rawDeadline ?? 0n);
     if (orderDeadline === null || orderDeadline <= nowMs + 60_000) reasons.push("The order is expired or too close to expiry.");
     if (!validAddress(order.order.collateralToken) || !validAddress(raw?.collateral) || order.order.collateralToken.toLowerCase() !== usdc.address.toLowerCase() || raw.collateral.toLowerCase() !== usdc.address.toLowerCase()) reasons.push("P0 supports USDC-settled OptionBook orders only.");
-    if (order.order.price <= 0n || order.availableAmount <= 0n || raw?.maxCollateralUsable === undefined || BigInt(raw.maxCollateralUsable) <= 0n) reasons.push("The order has no available liquidity.");
+    const maximumCollateral = raw?.maxCollateralUsable === undefined ? null : nonNegativeBigInt(raw.maxCollateralUsable);
+    if (order.order.price <= 0n || order.availableAmount <= 0n || maximumCollateral === null || maximumCollateral <= 0n) reasons.push("The order has no available liquidity.");
     const requiredPremiumBaseUnits = premiumForContracts(desiredContracts, order.order.price);
     const requestedPremiumBaseUnits = options.coverageMode === "proportional_demo" ? proportionalTargetBaseUnits : requiredPremiumBaseUnits;
     if (requestedPremiumBaseUnits <= 0n || (options.coverageMode !== "proportional_demo" && requestedPremiumBaseUnits > budgetBaseUnits)) reasons.push("Full goal coverage exceeds the protection-cost limit.");

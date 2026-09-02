@@ -16,6 +16,7 @@ export function decimalFromBaseUnits(value: bigint, decimals: number): Decimal {
 }
 
 export function decimalToBaseUnits(value: Decimal.Value, decimals: number, rounding: Decimal.Rounding = Decimal.ROUND_FLOOR): bigint {
+  if (typeof value === "number" || typeof value === "string" && !/^(0|[1-9]\d*)(\.\d+)?$/.test(value)) throw new RangeError("Decimal strings must be normalized and numbers are not accepted.");
   const decimal = new Decimal(value);
   if (!decimal.isFinite() || decimal.isNegative() || !Number.isInteger(decimals) || decimals < 0) throw new RangeError("Decimal values must be finite and non-negative.");
   return BigInt(decimal.mul(new Decimal(10).pow(decimals)).toDecimalPlaces(0, rounding).toFixed(0));
