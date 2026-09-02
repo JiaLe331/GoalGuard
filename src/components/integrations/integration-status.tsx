@@ -62,8 +62,8 @@ export function IntegrationStatus() {
     <section aria-labelledby="readiness-heading">
       <div className="mb-5 flex items-center justify-between gap-4">
         <div>
-          <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#91a398]">Service readiness</p>
-          <h2 id="readiness-heading" className="text-xl font-semibold text-white">Live foundations</h2>
+          <p className="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--foreground-soft)]">Service readiness</p>
+          <h2 id="readiness-heading" className="font-display text-3xl text-[var(--foreground)]">Connected services</h2>
         </div>
         <Button variant="ghost" className="min-h-9 px-3" onClick={() => void refresh()} disabled={loading}>
           {loading ? "Checking…" : "Refresh"}
@@ -71,16 +71,16 @@ export function IntegrationStatus() {
       </div>
 
       {error ? (
-        <div className="rounded-2xl border border-[#ff837a]/20 bg-[#ff837a]/10 p-4 text-sm text-[#ffc0bc]" role="alert">{error}</div>
+        <div className="rounded-[var(--radius-md)] border border-[color-mix(in_srgb,var(--negative)_38%,var(--border))] bg-[color-mix(in_srgb,var(--negative)_7%,var(--surface))] p-4 text-sm text-[var(--foreground-soft)]" role="alert">{error}</div>
       ) : (
         <div className="space-y-3" aria-busy={loading}>
           {loading && !data ? [0, 1, 2].map((item) => (
-            <div key={item} className="h-[68px] animate-pulse rounded-2xl bg-white/[0.05]" />
+            <div key={item} className="h-[68px] animate-pulse rounded-[var(--radius-md)] bg-[var(--border-soft)] motion-reduce:animate-none" />
           )) : items.map((item) => (
-            <div key={item.name} className="flex items-center justify-between gap-4 rounded-2xl border border-white/[0.07] bg-black/10 p-4">
+            <div key={item.name} className="flex min-h-16 items-center justify-between gap-4 border-t border-[var(--border)] py-4">
               <div>
-                <p className="text-sm font-semibold text-white">{item.name}</p>
-                <p className="mt-0.5 text-xs text-[#91a398]">{item.description}</p>
+                <p className="text-sm font-semibold text-[var(--foreground)]">{item.name}</p>
+                <p className="mt-0.5 text-xs text-[var(--foreground-soft)]">{item.description}</p>
               </div>
               <StatusBadge label={labels[item.status] ?? item.status} tone={toneFor(item.status)} />
             </div>
