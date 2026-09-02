@@ -80,9 +80,10 @@ export function goalToRow(goal: Goal, ownerSessionHash: string): typeof goals.$i
 }
 
 export function candidateFromRow(row: CandidateRow): ProtectionCandidate {
-  const { rejectionReasonsJson, protocolRawJson, scenariosJson, ...columns } = row;
+  const { coverageMode, rejectionReasonsJson, protocolRawJson, scenariosJson, ...columns } = row;
   return ProtectionCandidateSchema.parse({
     ...columns,
+    coverageMode,
     expiry: iso(columns.expiry), marketAsOf: iso(columns.marketAsOf), createdAt: iso(columns.createdAt), updatedAt: iso(columns.updatedAt),
     rejectionReasons: rejectionReasonsJson,
     protocolRaw: protocolRawJson,
@@ -92,9 +93,10 @@ export function candidateFromRow(row: CandidateRow): ProtectionCandidate {
 
 export function candidateToRow(candidate: ProtectionCandidate): typeof protectionCandidates.$inferInsert {
   const value = ProtectionCandidateSchema.parse(candidate);
-  const { rejectionReasons, protocolRaw, scenarios, ...columns } = value;
+  const { coverageMode, rejectionReasons, protocolRaw, scenarios, ...columns } = value;
   return {
     ...columns,
+    coverageMode,
     rejectionReasonsJson: rejectionReasons,
     protocolRawJson: protocolRaw,
     scenariosJson: scenarios,
