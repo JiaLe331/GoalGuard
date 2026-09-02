@@ -175,6 +175,8 @@ export const previewTradeResponse: PreviewTradeResponse = {
     estimatedGasBaseUnits: "250000",
     walletReadiness: { gas: { symbol: "ETH", balanceBaseUnits: "1000000000000000000", requiredBaseUnits: "100000000000000", sufficient: true }, settlementToken: { symbol: "USDC", balanceBaseUnits: "10000000", requiredBaseUnits: "2500000", sufficient: true }, underlyingExposure: { symbol: "ETH", balanceBaseUnits: "1000000000000000000", requiredBaseUnits: "10000000000000000", sufficient: true } },
     referralDisclosure: { referrerAddress: null, mayReceiveFee: false, message: "No GoalGuard referrer fee is configured." },
+    purpose: "unsigned_transaction_preview",
+    proposal: { premiumAmountBaseUnits: "2500000", quantityBaseUnits: "10000000000000000", coverageMode: "full", goalCoverageBps: 10000 },
     warnings: [],
   },
   meta: fixtureMeta,

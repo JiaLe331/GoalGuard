@@ -166,6 +166,13 @@ export const ReferralDisclosureSchema = z.object({
   message: z.string().trim().min(1),
 }).strict();
 
+export const UnsignedPreviewProposalSchema = z.object({
+  premiumAmountBaseUnits: BaseUnitStringSchema,
+  quantityBaseUnits: BaseUnitStringSchema,
+  coverageMode: CoverageModeSchema,
+  goalCoverageBps: z.number().int().min(0).max(10000),
+}).strict();
+
 export const TradePreviewSchema = z.object({
   trade: TradeSchema,
   candidate: PublicProtectionCandidateSchema,
@@ -175,6 +182,8 @@ export const TradePreviewSchema = z.object({
   estimatedGasBaseUnits: BaseUnitStringSchema.nullable(),
   walletReadiness: WalletReadinessSchema,
   referralDisclosure: ReferralDisclosureSchema,
+  purpose: z.literal("unsigned_transaction_preview"),
+  proposal: UnsignedPreviewProposalSchema,
   warnings: z.array(z.string()),
 }).strict();
 
@@ -265,6 +274,7 @@ export type AllowanceRequirement = z.infer<typeof AllowanceRequirementSchema>;
 export type PreparedTransaction = z.infer<typeof PreparedTransactionSchema>;
 export type WalletReadiness = z.infer<typeof WalletReadinessSchema>;
 export type ReferralDisclosure = z.infer<typeof ReferralDisclosureSchema>;
+export type UnsignedPreviewProposal = z.infer<typeof UnsignedPreviewProposalSchema>;
 export type TradePreview = z.infer<typeof TradePreviewSchema>;
 export type PreviewTradeResponse = z.infer<typeof PreviewTradeResponseSchema>;
 export type PrepareExecutionRequest = z.infer<typeof PrepareExecutionRequestSchema>;
