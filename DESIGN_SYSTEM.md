@@ -1,6 +1,6 @@
 # GoalGuard Design System
 
-**Version:** 3.1
+**Version:** 3.2
 
 **Revised:** 2026-09-03
 
@@ -179,6 +179,20 @@ Use three layers: primitive values, semantic aliases, and component tokens. Comp
   --data-card-fg: var(--foreground-on-strong);
   --footer-bg: var(--surface-strong);
   --footer-fg: var(--foreground-on-strong);
+
+  --pip-body: var(--accent);
+  --pip-purpose: var(--accent);
+  --pip-armour: var(--black);
+  --pip-outline: var(--black);
+  --pip-eye: var(--white);
+  --pip-feature: var(--black);
+  --pip-belly: var(--white);
+  --pip-warning: var(--negative);
+  --pip-warning-surface: var(--negative-surface);
+  --pip-armour-on-dark: var(--white);
+  --pip-outline-on-dark: var(--white);
+  --pip-mark-on-lime: var(--black);
+  --pip-stage-on-lime: var(--white);
 }
 ```
 
@@ -426,6 +440,19 @@ All actions define default, hover, pressed, focus-visible, disabled, and loading
 - Do not use emoji, mixed icon families, 3D icons, or generic crypto glyphs.
 - Decorative icons beside visible text are hidden from assistive technology.
 - Success, warning, rejection, and expiry always combine icon, label, and explanation.
+
+### 9.1 Pip mascot system
+
+Pip the Pangolin is GoalGuard's selected 2D brand companion. The production colourway is Electric Lime: lime body, near-black armour and features on light surfaces, reversed white armour on dark surfaces, and a black-only micro-mark on lime.
+
+- Use `PipMark` for normal brand identity in the navbar, footer, app icon, and small product-brand placements.
+- Use one expressive `PipMascot` per active view at most. Approved poses are neutral, listening, checking, explaining, attentive, safe-stop, and ready.
+- Match the pose to explicit interface state supplied by the parent. Pip never fetches data, infers financial state, or changes workflow behavior.
+- Pip may respond to focus, selection, acknowledgment, request activity, and stage entry. It is not directly clickable or focusable and never follows the cursor.
+- Keep Pip out of financial metrics, scenarios, transaction data, protocol facts, individual council verdicts, repeated rows, and read-only audit surfaces.
+- Ready means an unsigned preview is available to inspect. Do not use cheering, confetti, profit imagery, or any pose that implies protection was executed.
+- Decorative instances are hidden from assistive technology. Visible text and semantic status components remain the sole source of state meaning.
+- On compact screens, reduce the mascot before reducing or obscuring form, status, or action content.
 
 ## 10. Motion
 

@@ -95,6 +95,21 @@
   --footer-bg: var(--surface-strong);
   --footer-fg: var(--foreground-on-strong);
 
+  /* Pip mascot component colors */
+  --pip-body: var(--accent);
+  --pip-purpose: var(--accent);
+  --pip-armour: var(--black);
+  --pip-outline: var(--black);
+  --pip-eye: var(--white);
+  --pip-feature: var(--black);
+  --pip-belly: var(--white);
+  --pip-warning: var(--negative);
+  --pip-warning-surface: var(--negative-surface);
+  --pip-armour-on-dark: var(--white);
+  --pip-outline-on-dark: var(--white);
+  --pip-mark-on-lime: var(--black);
+  --pip-stage-on-lime: var(--white);
+
   /* Elevation */
   --shadow-header: 0 1px 0 rgb(11 12 10 / 0.07);
   --shadow-navbar: 0 12px 34px rgb(11 12 10 / 0.1);

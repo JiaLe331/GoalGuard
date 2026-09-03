@@ -210,47 +210,6 @@ pre,
   color: var(--foreground-soft);
 }
 
-.brand-mark {
-  position: relative;
-  width: 1.35rem;
-  height: 1.35rem;
-  flex: none;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: inset 0 0 0 1px rgb(11 12 10 / 0.12);
-}
-
-.brand-mark::before {
-  position: absolute;
-  inset: 0.28rem;
-  border: 1.5px solid var(--accent-foreground);
-  border-radius: 50% 50% 58% 58%;
-  clip-path: polygon(50% 0, 100% 20%, 86% 76%, 50% 100%, 14% 76%, 0 20%);
-  content: "";
-}
-
-.brand-mark::after {
-  position: absolute;
-  right: -0.1rem;
-  top: 0.15rem;
-  width: 0.32rem;
-  height: 0.32rem;
-  border: 1px solid var(--accent-foreground);
-  border-radius: 50%;
-  background: var(--accent);
-  content: "";
-}
-
-.brand-shield {
-  position: relative;
-  width: 1.25rem;
-  height: 1.45rem;
-  flex: none;
-  border: 1.75px solid currentColor;
-  border-radius: 0.45rem 0.45rem 0.65rem 0.65rem;
-  clip-path: polygon(50% 0, 100% 17%, 88% 74%, 50% 100%, 12% 74%, 0 17%);
-}
-
 .balance-text {
   text-wrap: balance;
 }
