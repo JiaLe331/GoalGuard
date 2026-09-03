@@ -2,6 +2,7 @@
 
 import { createContext, useContext, type ReactNode } from "react";
 
+import { ThemeProvider } from "@/components/theme/theme-provider";
 import { WalletProvider } from "@/components/wallet/wallet-provider";
 
 export interface FrontendCapabilities {
@@ -14,9 +15,11 @@ const CapabilitiesContext = createContext<FrontendCapabilities | null>(null);
 
 export function AppProviders({ capabilities, children }: { capabilities: FrontendCapabilities; children: ReactNode }) {
   return (
-    <CapabilitiesContext.Provider value={capabilities}>
-      <WalletProvider>{children}</WalletProvider>
-    </CapabilitiesContext.Provider>
+    <ThemeProvider>
+      <CapabilitiesContext.Provider value={capabilities}>
+        <WalletProvider>{children}</WalletProvider>
+      </CapabilitiesContext.Provider>
+    </ThemeProvider>
   );
 }
 

@@ -75,9 +75,9 @@ export function IntegrationStatus() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-3" aria-busy={loading}>
           {loading && !data ? [0, 1, 2].map((item) => (
-            <div key={item} className="h-28 animate-pulse rounded-[var(--radius-card)] bg-[var(--gray-200)] motion-reduce:animate-none" />
+            <div key={item} className="h-28 animate-pulse rounded-[var(--radius-card)] bg-[var(--surface-hover)] motion-reduce:animate-none" />
           )) : items.map((item) => (
-            <div key={item.name} className="flex min-h-28 flex-col items-start justify-between gap-4 rounded-[var(--radius-card)] bg-[var(--white)] p-5">
+            <div key={item.name} className="flex min-h-28 flex-col items-start justify-between gap-4 rounded-[var(--radius-card)] bg-[var(--surface-raised)] p-5">
               <div>
                 <p className="font-semibold tracking-[-0.02em] text-[color:var(--foreground)]">{item.name}</p>
                 <p className="mt-1 text-sm text-[color:var(--foreground-soft)]">{item.description}</p>

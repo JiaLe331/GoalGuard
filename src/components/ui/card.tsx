@@ -4,8 +4,8 @@ type CardTone = "subtle" | "white" | "accent" | "dark";
 
 const tones: Record<CardTone, string> = {
   subtle: "bg-[var(--feature-card-bg)] text-[color:var(--feature-card-fg)]",
-  white: "bg-[var(--white)] text-[color:var(--foreground)]",
-  accent: "bg-[var(--accent-soft)] text-[color:var(--accent-foreground)]",
+  white: "bg-[var(--surface-raised)] text-[color:var(--foreground)]",
+  accent: "bg-[var(--accent-soft)] text-[color:var(--accent-soft-foreground)]",
   dark: "bg-[var(--data-card-bg)] text-[color:var(--data-card-fg)]",
 };
 

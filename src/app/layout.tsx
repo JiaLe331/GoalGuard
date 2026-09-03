@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import { AppProviders } from "@/components/app/app-providers";
 import { getFrontendCapabilities } from "@/lib/config/env";
+import { themeBootScript } from "@/lib/frontend/theme";
 
 import "./globals.css";
 
@@ -17,7 +18,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   const capabilities = getFrontendCapabilities();
   return (
-    <html lang="en" data-scroll-behavior="smooth" className={manrope.variable}>
+    <html lang="en" data-scroll-behavior="smooth" className={manrope.variable} suppressHydrationWarning>
+      <head><script dangerouslySetInnerHTML={{ __html: themeBootScript }} /></head>
       <body><AppProviders capabilities={capabilities}>{children}</AppProviders></body>
     </html>
   );
