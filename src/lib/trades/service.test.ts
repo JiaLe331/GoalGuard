@@ -4,7 +4,7 @@ import type { GoalGuardRepository } from "@/lib/db/repository";
 import { ApiRouteError } from "@/lib/server/http";
 import { fixtureCandidate, fixtureDecision, fixtureIds, fixtureReadyGoal } from "@/test/fixtures/goalguard";
 import { type ThetanutsOrder } from "@/lib/thetanuts/client";
-import { serializeOrder } from "@/lib/thetanuts/strategy";
+import { orderId, serializeOrder } from "@/lib/thetanuts/strategy";
 import { prepareExecution, previewTrade, recordSubmission } from "./service";
 
 const now = new Date("2026-08-31T12:00:00.000Z");
@@ -21,7 +21,7 @@ function order(): ThetanutsOrder {
 
 function setup(changed = false) {
   const live = order();
-  const candidate = { ...fixtureCandidate, protocolOrderId: "0x2222222222222222222222222222222222222222:1", protocolRaw: serializeOrder(changed ? { ...live, availableAmount: 1n } : live), marketAsOf: now.toISOString(), expiry: new Date(1_800_000_000_000).toISOString() };
+  const candidate = { ...fixtureCandidate, protocolOrderId: orderId(live), protocolRaw: serializeOrder(changed ? { ...live, availableAmount: 1n } : live), marketAsOf: now.toISOString(), expiry: new Date(1_800_000_000_000).toISOString() };
   const createTrade = vi.fn(async (trade) => trade);
   const repository = {
     getGoal: vi.fn(async () => fixtureReadyGoal), getCandidate: vi.fn(async () => candidate), getDecision: vi.fn(async () => fixtureDecision), getLatestDecision: vi.fn(async () => fixtureDecision), createTrade,

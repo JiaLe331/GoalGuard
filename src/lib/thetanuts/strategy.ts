@@ -51,7 +51,7 @@ function previewIsConsistent(
     && preview.strikes.length === 1 && preview.strikes[0] === strike && preview.expiry === order.order.expiry;
 }
 
-export function orderId(order: ThetanutsOrder) { return `${order.makerAddress.toLowerCase()}:${order.order.nonce.toString()}`; }
+export function orderId(order: ThetanutsOrder) { return order.signature.toLowerCase(); }
 
 export function serializeOrder(order: ThetanutsOrder) {
   return {

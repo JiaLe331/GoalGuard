@@ -14,8 +14,11 @@ const deadline = BigInt(Date.parse("2026-09-02T00:00:00.000Z") / 1000);
 
 const goal: Goal = { schemaVersion: 1, id: "1b3e798c-e0e8-4ab5-9e37-d4526424eb8f", goalType: "rent", customGoalLabel: null, underlyingAsset: "ETH", protectedValueUsd: "1200", deadline: "2026-09-30", maxLossBps: 500, maxPremiumUsd: "3", originalUserMessage: "Protect rent.", status: "searching", createdAt: now.toISOString(), updatedAt: now.toISOString(), parseInferenceId: null, selectedCandidateId: null, councilDecisionId: null, tradeId: null };
 
+// Live Thetanuts market makers reuse the same nonce across many distinct strikes/expiries, so
+// each order's ECDSA signature (not maker:nonce) is what uniquely identifies it; fixtures give
+// each nonce a distinct, correctly-shaped signature to mirror that.
 function order(nonce: bigint, changes: Partial<OrderWithSignature["order"]> = {}): OrderWithSignature {
-  return { order: { maker, taker: "0x0000000000000000000000000000000000000000", option: "0x0000000000000000000000000000000000000000", isBuyer: false, numContracts: 400_000n, price: 750_000_000n, expiry, nonce, optionType: 1, strikes: [300_000_000_000n], collateralToken: usdc, underlyingToken: "0x4444444444444444444444444444444444444444", deadline, ...changes }, signature: `0x${"11".repeat(65)}`, availableAmount: 10_000_000n, makerAddress: maker, rawApiData: { collateral: usdc, priceFeed: "0x5555555555555555555555555555555555555555", implementation: put, strikes: ["300000000000"], isCall: false, isLong: true, orderExpiryTimestamp: Number(deadline), extraOptionData: "0x", maxCollateralUsable: "10000000" } };
+  return { order: { maker, taker: "0x0000000000000000000000000000000000000000", option: "0x0000000000000000000000000000000000000000", isBuyer: false, numContracts: 400_000n, price: 750_000_000n, expiry, nonce, optionType: 1, strikes: [300_000_000_000n], collateralToken: usdc, underlyingToken: "0x4444444444444444444444444444444444444444", deadline, ...changes }, signature: `0x${nonce.toString(16).padStart(130, "0")}`, availableAmount: 10_000_000n, makerAddress: maker, rawApiData: { collateral: usdc, priceFeed: "0x5555555555555555555555555555555555555555", implementation: put, strikes: ["300000000000"], isCall: false, isLong: true, orderExpiryTimestamp: Number(deadline), extraOptionData: "0x", maxCollateralUsable: "10000000" } };
 }
 
 function client(orders: OrderWithSignature[], previewOverride?: (order: OrderWithSignature, amount: bigint) => { numContracts: bigint; maxContracts: bigint; collateralToken: string; pricePerContract: bigint; totalCollateral: bigint; referrer: string; maker: string; expiry: bigint; isCall: boolean; strikes: bigint[] }): CandidateGenerationOptions["client"] {
@@ -70,7 +73,7 @@ describe("deterministic Thetanuts strategy", () => {
 
   it("ranks otherwise equivalent candidates by stable protocol order ID", async () => {
     const result = await generateProtectionCandidates(goal, { client: client([order(9n), order(7n)]), now, maxDeadlineGapHours: 168 });
-    expect(result.candidates.map((candidate) => candidate.protocolOrderId)).toEqual([`${maker}:7`, `${maker}:9`]);
+    expect(result.candidates.map((candidate) => candidate.protocolOrderId)).toEqual([`0x${"0".repeat(129)}7`, `0x${"0".repeat(129)}9`]);
   });
 
   it("uses the official preview to create an explicit, one-USDC proportional demo", async () => {
