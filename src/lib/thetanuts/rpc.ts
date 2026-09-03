@@ -1,5 +1,3 @@
-import "server-only";
-
 import { JsonRpcProvider } from "ethers";
 
 export const BASE_CHAIN_ID = 8453 as const;

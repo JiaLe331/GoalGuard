@@ -1,4 +1,4 @@
-import { runThetanutsSmokeTest } from "../src/lib/thetanuts/client";
+import { runThetanutsSmokeTest } from "../src/lib/thetanuts/client-core";
 import { loadLocalEnvironment } from "./load-local-env";
 
 loadLocalEnvironment();
