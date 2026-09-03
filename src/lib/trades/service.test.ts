@@ -15,7 +15,7 @@ function order(): ThetanutsOrder {
   return {
     order: { maker: "0x2222222222222222222222222222222222222222", taker: "0x0000000000000000000000000000000000000000", option: "0x4444444444444444444444444444444444444444", isBuyer: false, numContracts: 2_500_000_000_000_000n, price: 100_000_000n, expiry: 1_800_000_000n, nonce: 1n, optionType: 1, strikes: [2_800_000_000n], collateralToken: fixtureCandidate.settlementTokenAddress, underlyingToken: "0x5555555555555555555555555555555555555555", deadline: 1_800_000_000n },
     signature: `0x${"11".repeat(65)}`, availableAmount: 10_000_000_000_000_000n, makerAddress: "0x2222222222222222222222222222222222222222",
-    rawApiData: { collateral: fixtureCandidate.settlementTokenAddress, orderExpiryTimestamp: "1800000000" },
+    rawApiData: { collateral: fixtureCandidate.settlementTokenAddress, priceFeed: "0x5555555555555555555555555555555555555555", isCall: false, orderExpiryTimestamp: "1800000000" },
   } as unknown as ThetanutsOrder;
 }
 
@@ -28,7 +28,7 @@ function setup(changed = false) {
   } as unknown as GoalGuardRepository;
   const encodeFillOrder = vi.fn(() => ({ to: optionBook, data: "0xdeadbeef" }));
   const encodeApprove = vi.fn(() => ({ to: fixtureCandidate.settlementTokenAddress, data: "0x095ea7b3" }));
-  const client = { api: { filterOrders: vi.fn(async () => [live]) }, erc20: { getAllowance: vi.fn(async () => 0n), encodeApprove }, optionBook: { previewFillOrder: vi.fn(() => ({ totalCollateral: 2_500_000n, numContracts: 10_000_000_000_000_000n, maxContracts: 10_000_000_000_000_000n })), encodeFillOrder }, chainConfig: {} };
+  const client = { api: { fetchOrders: vi.fn(async () => [live]) }, erc20: { getAllowance: vi.fn(async () => 0n), encodeApprove }, optionBook: { previewFillOrder: vi.fn(() => ({ totalCollateral: 2_500_000n, numContracts: 10_000_000_000_000_000n, maxContracts: 10_000_000_000_000_000n })), encodeFillOrder }, chainConfig: { priceFeeds: { ETH: "0x5555555555555555555555555555555555555555" } } };
   return { candidate, client, createTrade, encodeFillOrder, encodeApprove, repository };
 }
 

@@ -6,7 +6,7 @@ import { getAddress, isAddress, isHexString, ZeroAddress } from "ethers";
 import { readServerEnvironment } from "@/lib/config/env";
 import type { CandidateRejection, CoverageMode, Goal, ProtectionCandidate, ScenarioResult } from "@/lib/contracts";
 import { ApiRouteError } from "@/lib/server/http";
-import { parseThetanutsMarketData, parseThetanutsOrders, type ThetanutsOrder, type ThetanutsReadClient, withConfiguredThetanutsRead } from "./client";
+import { fetchEthPutOrders, parseThetanutsMarketData, type ThetanutsOrder, type ThetanutsReadClient, withConfiguredThetanutsRead } from "./client";
 import { calculateGoalCoverageBps } from "@/lib/protection/coverage";
 import {
   USDC_DECIMALS,
@@ -107,13 +107,12 @@ export async function generateProtectionCandidates(goal: Goal, options: Candidat
   try {
     if (options.client) {
       client = options.client;
-      [orders, market] = await Promise.all([client.api.filterOrders({ asset: "ETH", type: "put", minExpiry: Math.floor(nowMs / 1000) }), client.api.getMarketData()]);
-      orders = parseThetanutsOrders(orders);
+      [orders, market] = await Promise.all([fetchEthPutOrders(client, Math.floor(nowMs / 1000)), client.api.getMarketData()]);
       market = parseThetanutsMarketData(market);
     } else {
       ({ client, orders, market } = await withConfiguredThetanutsRead(async (configuredClient) => ({
         client: configuredClient,
-        orders: parseThetanutsOrders(await configuredClient.api.filterOrders({ asset: "ETH", type: "put", minExpiry: Math.floor(nowMs / 1000) })),
+        orders: await fetchEthPutOrders(configuredClient, Math.floor(nowMs / 1000)),
         market: parseThetanutsMarketData(await configuredClient.api.getMarketData()),
       })));
     }
