@@ -52,14 +52,37 @@ test("keeps an incomplete Gonka draft and asks exactly one clarification", async
   await expect(page.getByRole("button", { name: "Continue" })).toBeVisible();
 });
 
-test("keeps the landing interface usable without horizontal overflow at target widths", async ({ page }) => {
+test("keeps the landing interface usable without horizontal overflow across the responsive range", async ({ page }) => {
+  test.setTimeout(90_000);
   await page.emulateMedia({ reducedMotion: "reduce" });
-  for (const width of [375, 768, 1024, 1280, 1440]) {
-    await page.setViewportSize({ width, height: 900 });
+  const sizes = [
+    { width: 320, height: 700 }, { width: 360, height: 780 }, { width: 375, height: 812 }, { width: 430, height: 932 },
+    { width: 640, height: 900 }, { width: 667, height: 375 }, { width: 768, height: 1024 }, { width: 844, height: 390 },
+    { width: 912, height: 1368 }, { width: 1024, height: 768 }, { width: 1280, height: 800 }, { width: 1440, height: 900 }, { width: 1920, height: 1080 },
+  ];
+  for (const { width, height } of sizes) {
+    await page.setViewportSize({ width, height });
     await page.goto("/");
     await expect(page.getByRole("heading", { name: /protect the purpose behind your money/i })).toBeVisible();
     const dimensions = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }));
     expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.client);
+    const navigation = page.getByRole("navigation", { name: "Primary navigation" });
+    const radius = Number.parseFloat(await navigation.evaluate((element) => getComputedStyle(element).borderRadius));
+    expect(radius).toBeGreaterThan(30);
+    if (width < 1200) {
+      const composer = page.locator("#goal-composer");
+      const orbit = page.locator(".protection-orbit");
+      expect((await composer.boundingBox())?.y ?? 0).toBeLessThan((await orbit.boundingBox())?.y ?? 0);
+    }
+    if (width === 1280) {
+      const orbit = page.locator(".protection-orbit");
+      await orbit.scrollIntoViewIfNeeded();
+      const before = await orbit.evaluate((element) => getComputedStyle(element).transform);
+      const bounds = await orbit.boundingBox();
+      if (bounds) await page.mouse.move(bounds.x + bounds.width - 10, bounds.y + 10);
+      await page.waitForTimeout(120);
+      await expect(orbit).toHaveCSS("transform", before);
+    }
     if (width === 1280) {
       const desktopAction = page.getByRole("navigation", { name: "Primary navigation" }).getByRole("link", { name: "Start a goal" }).first();
       await expect(desktopAction).toBeVisible();
@@ -72,4 +95,18 @@ test("keeps the landing interface usable without horizontal overflow at target w
     }
     await page.screenshot({ animations: "disabled" });
   }
+});
+
+test("supports persisted light, dark, and system appearance", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Choose appearance" }).click();
+  await page.getByText("Dark", { exact: true }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+
+  await page.getByRole("button", { name: "Choose appearance" }).click();
+  await page.getByText("System", { exact: true }).click();
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 });

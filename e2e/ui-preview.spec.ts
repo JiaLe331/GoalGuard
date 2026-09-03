@@ -38,3 +38,26 @@ test("previews every post-goal interface state without backend or wallet traffic
   await expect(page.getByRole("button", { name: /^(sign|send transaction|broadcast|approve exact amount)/i })).toHaveCount(0);
   await expectNoSeriousAccessibilityViolations(page);
 });
+
+test("keeps representative workflow states within every target viewport", async ({ page }) => {
+  test.setTimeout(90_000);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const states = ["goal-confirmation", "plan-approved", "council-drawer", "preview-confirmation", "demo-ready", "preview-failure"];
+  for (const { width, height } of [{ width: 320, height: 700 }, { width: 375, height: 812 }, { width: 640, height: 900 }, { width: 667, height: 375 }, { width: 768, height: 1024 }, { width: 1024, height: 768 }, { width: 1280, height: 800 }, { width: 1440, height: 900 }]) {
+    await page.setViewportSize({ width, height });
+    for (const state of states) {
+      await page.goto(`/dev/ui-preview?state=${state}`);
+      const dimensions = await page.evaluate(() => ({
+        scroll: document.documentElement.scrollWidth,
+        client: document.documentElement.clientWidth,
+        offenders: Array.from(document.querySelectorAll<HTMLElement>("body *")).flatMap((element) => {
+          const rect = element.getBoundingClientRect();
+          return rect.right > document.documentElement.clientWidth + 1 || rect.left < -1
+            ? [`${element.tagName.toLowerCase()}.${element.className}`]
+            : [];
+        }).slice(0, 5),
+      }));
+      expect(dimensions.scroll, `${state} overflowed at ${width}px: ${dimensions.offenders.join(", ")}`).toBeLessThanOrEqual(dimensions.client);
+    }
+  }
+});
