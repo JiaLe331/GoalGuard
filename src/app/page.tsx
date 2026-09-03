@@ -13,6 +13,7 @@ import {
 
 import { GoalComposer } from "@/components/goals/goal-composer";
 import { IntegrationStatus } from "@/components/integrations/integration-status";
+import { ProtectionOrbit } from "@/components/marketing/protection-orbit";
 import { FloatingEditorialNavbar } from "@/components/navigation/floating-editorial-navbar";
 
 const advantages = [
@@ -38,43 +39,11 @@ const advantages = [
   },
 ] as const;
 
-function ProtectionComposition() {
-  return (
-    <div className="relative mt-10 min-h-72 overflow-hidden rounded-[var(--radius-feature)] bg-[var(--accent-soft)] sm:min-h-80" aria-label="GoalGuard turns a goal into a reviewed protection plan">
-      <div className="absolute -bottom-32 -right-20 size-[23rem] rounded-full border-[4.5rem] border-[var(--accent)] sm:-right-8 sm:size-[28rem]" aria-hidden="true" />
-      <svg className="absolute left-7 top-8 h-20 w-32 text-[color:var(--black)] sm:left-10 sm:top-10" viewBox="0 0 140 80" fill="none" aria-hidden="true">
-        <path d="M4 56c20-24 39-31 58-19 18 11 29 3 38-12 8-12 20-13 36-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      </svg>
-
-      <div className="absolute left-5 top-24 w-[72%] -rotate-2 rounded-3xl bg-[var(--white)] p-5 shadow-[var(--shadow-float)] sm:left-10 sm:top-28 sm:w-[62%] sm:p-6">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-[0.68rem] font-bold uppercase tracking-[0.1em] text-[color:var(--foreground-muted)]">Protection plan</p>
-            <p className="mt-1 text-lg font-semibold tracking-[-0.03em]">Purpose stays visible</p>
-          </div>
-          <span className="grid size-10 place-items-center rounded-full bg-[var(--accent)]"><ShieldCheck className="size-5" aria-hidden="true" /></span>
-        </div>
-        <div className="mt-5 grid grid-cols-3 gap-2">
-          {["Cost", "Floor", "Expiry"].map((label) => <div key={label} className="rounded-xl bg-[var(--surface-muted)] px-3 py-2 text-xs font-semibold">{label}</div>)}
-        </div>
-      </div>
-
-      <div className="absolute bottom-5 right-5 w-[58%] rounded-3xl bg-[var(--black)] p-5 text-[color:var(--white)] shadow-[var(--shadow-float-strong)] sm:bottom-8 sm:right-8 sm:w-[48%]">
-        <p className="text-[0.68rem] font-bold uppercase tracking-[0.1em] text-[color:var(--gray-300)]">Council review</p>
-        <p className="mt-2 text-xl font-medium tracking-[-0.04em]">3 independent checks</p>
-        <div className="mt-5 space-y-2" aria-hidden="true">
-          {["Fit", "Risk", "Clarity"].map((label, index) => <div key={label} className="flex items-center gap-2 text-xs text-[color:var(--gray-300)]"><span className="grid size-5 place-items-center rounded-full bg-[var(--accent)] text-[color:var(--black)]"><Check className="size-3" /></span>{index + 1}. {label}</div>)}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function HowItWorksIllustration({ variant }: { variant: "goal" | "review" }) {
   if (variant === "goal") {
     return (
       <div className="relative min-h-48 overflow-hidden" aria-hidden="true">
-        <div className="absolute -bottom-20 right-4 h-64 w-28 rotate-12 rounded-full bg-[var(--black)]" />
+        <div className="absolute -bottom-20 right-4 h-64 w-28 rotate-12 rounded-full bg-[var(--surface-strong)]" />
         <div className="absolute -bottom-12 right-[-2rem] h-44 w-36 rounded-[2.5rem] bg-[var(--accent)] opacity-90" />
         <svg className="absolute bottom-8 right-0 h-16 w-28" viewBox="0 0 120 70" fill="none"><path d="M2 45c18-18 34-18 48-5 15 15 36 15 68-9" stroke="currentColor" strokeWidth="2" /></svg>
       </div>
@@ -96,25 +65,26 @@ export default function Home() {
       <FloatingEditorialNavbar />
 
       <main id="main-content" tabIndex={-1} className="min-h-screen outline-none">
-        <section id="top" className="page-shell pb-20 pt-5 sm:pt-7 lg:pb-28">
-          <div className="relative isolate overflow-hidden rounded-[2rem] bg-[var(--hero-bg)] px-5 py-7 text-[color:var(--hero-fg)] sm:rounded-[var(--radius-section)] sm:px-8 sm:py-10 lg:min-h-[46rem] lg:px-16 lg:py-16 xl:px-20">
+        <section id="top" className="page-shell pb-16 pt-4 sm:pb-20 sm:pt-6 min-[1200px]:pb-28">
+          <div className="relative isolate overflow-hidden rounded-[1.75rem] bg-[var(--hero-bg)] px-4 py-7 text-[color:var(--hero-fg)] sm:rounded-[var(--radius-section)] sm:px-8 sm:py-10 min-[1200px]:px-16 min-[1200px]:py-16 min-[1440px]:px-20">
             <div className="absolute -left-32 -top-36 size-96 rounded-full border-[5rem] border-[color-mix(in_srgb,var(--white)_26%,transparent)]" aria-hidden="true" />
-            <div className="absolute left-[48%] top-20 hidden h-32 w-40 rotate-[-10deg] rounded-full border-2 border-[var(--black)] lg:block" aria-hidden="true" />
+            <div className="absolute left-[48%] top-20 hidden h-32 w-40 rotate-[-10deg] rounded-full border-2 border-[var(--accent-foreground)] min-[1200px]:block" aria-hidden="true" />
 
-            <div className="relative z-10 grid gap-10 lg:grid-cols-12 lg:gap-8">
-              <div className="flex min-w-0 flex-col lg:col-span-7 lg:pt-2">
+            <div className="relative z-10 grid gap-8 sm:gap-10 min-[1200px]:grid-cols-12 min-[1200px]:gap-8">
+              <div className="flex min-w-0 flex-col min-[1200px]:col-span-7 min-[1200px]:pt-2">
                 <p className="section-eyebrow"><Sparkle className="size-4" aria-hidden="true" />Purpose-first ETH protection</p>
                 <h1 className="display-heading mt-6 max-w-[8.5ch]">Protect the purpose behind your money.</h1>
                 <p className="pretty-text mt-7 max-w-xl text-lg leading-8 sm:text-xl">Turn a real-life goal into a live, independently reviewed downside-protection plan—then inspect the exact Base transaction data without signing anything.</p>
-                <a href="#how-it-works" className="mt-8 inline-flex min-h-12 w-fit items-center gap-2 rounded-full bg-[var(--black)] px-6 text-sm font-semibold text-[color:var(--white)] transition-colors hover:bg-[var(--button-primary-hover)]">See how protection works<ArrowDown className="size-4" aria-hidden="true" /></a>
-                <ProtectionComposition />
+                <a href="#how-it-works" className="mt-8 inline-flex min-h-12 w-fit items-center gap-2 rounded-full bg-[var(--surface-strong)] px-6 text-sm font-semibold text-[color:var(--foreground-on-strong)] transition-[background-color,transform] duration-[var(--duration-press)] hover:bg-[var(--surface-strong-raised)] active:scale-[0.98]">See how protection works<ArrowDown className="size-4" aria-hidden="true" /></a>
               </div>
 
-              <div id="goal-composer" className="section-anchor relative z-20 lg:col-span-5 lg:pl-3">
-                <div className="rounded-[1.75rem] bg-[var(--white)] p-5 text-[color:var(--foreground)] shadow-[var(--shadow-float-strong)] sm:p-7 lg:sticky lg:top-28">
+              <div id="goal-composer" className="section-anchor relative z-20 mx-auto w-full max-w-3xl min-[1200px]:col-span-5 min-[1200px]:row-span-2 min-[1200px]:max-w-none min-[1200px]:pl-3">
+                <div className="rounded-[1.5rem] bg-[var(--surface-raised)] p-5 text-[color:var(--foreground)] shadow-[var(--shadow-float-strong)] sm:rounded-[1.75rem] sm:p-7 min-[1200px]:sticky min-[1200px]:top-28">
                   <GoalComposer />
                 </div>
               </div>
+
+              <div className="min-w-0 min-[1200px]:col-span-7"><ProtectionOrbit /></div>
             </div>
           </div>
         </section>
@@ -191,16 +161,16 @@ export default function Home() {
 
             <div className="relative min-h-[30rem] overflow-hidden rounded-[var(--radius-feature)] bg-[var(--surface-subtle)]" aria-label="GoalGuard keeps purpose, option, and review information connected">
               <div className="absolute -bottom-20 -right-16 size-[26rem] rounded-full bg-[var(--accent)]" aria-hidden="true" />
-              <div className="absolute left-7 top-9 rounded-2xl bg-[var(--white)] px-5 py-4 shadow-[var(--shadow-float)] sm:left-12 sm:top-14">
+              <div className="absolute left-7 top-9 rounded-2xl bg-[var(--surface-raised)] px-5 py-4 shadow-[var(--shadow-float)] sm:left-12 sm:top-14">
                 <p className="text-xs font-bold uppercase tracking-[0.1em] text-[color:var(--foreground-muted)]">Purpose</p>
                 <p className="mt-1 font-semibold">Your real-world deadline</p>
               </div>
-              <div className="absolute right-5 top-[38%] w-[72%] rounded-2xl bg-[var(--white)] px-5 py-4 shadow-[var(--shadow-float)] sm:right-9 sm:w-[64%]">
+              <div className="absolute right-5 top-[38%] w-[72%] rounded-2xl bg-[var(--surface-raised)] px-5 py-4 shadow-[var(--shadow-float)] sm:right-9 sm:w-[64%]">
                 <p className="text-xs font-bold uppercase tracking-[0.1em] text-[color:var(--foreground-muted)]">Live option</p>
                 <p className="mt-1 font-semibold">Cost · floor · coverage · expiry</p>
               </div>
-              <div className="absolute bottom-8 left-5 w-[76%] rounded-2xl bg-[var(--black)] px-5 py-5 text-[color:var(--white)] shadow-[var(--shadow-float-strong)] sm:bottom-12 sm:left-10 sm:w-[66%]">
-                <p className="text-xs font-bold uppercase tracking-[0.1em] text-[color:var(--gray-300)]">Unsigned preview</p>
+              <div className="absolute bottom-8 left-5 w-[76%] rounded-2xl bg-[var(--surface-strong)] px-5 py-5 text-[color:var(--foreground-on-strong)] shadow-[var(--shadow-float-strong)] sm:bottom-12 sm:left-10 sm:w-[66%]">
+                <p className="text-xs font-bold uppercase tracking-[0.1em] text-[color:var(--foreground-on-strong-muted)]">Unsigned preview</p>
                 <p className="mt-2 text-xl font-medium tracking-[-0.04em]">Exact data. No funds moved.</p>
               </div>
             </div>
@@ -208,16 +178,16 @@ export default function Home() {
         </section>
 
         <section className="page-shell py-20 lg:py-28">
-          <div className="relative overflow-hidden rounded-[2.25rem] bg-[var(--black)] px-7 py-14 text-[color:var(--white)] sm:rounded-[var(--radius-section)] sm:px-12 sm:py-20 lg:px-20">
+          <div className="relative overflow-hidden rounded-[2.25rem] bg-[var(--surface-strong)] px-7 py-14 text-[color:var(--foreground-on-strong)] sm:rounded-[var(--radius-section)] sm:px-12 sm:py-20 lg:px-20">
             <div className="absolute -right-24 -top-32 size-96 rounded-full border-[4rem] border-[var(--accent)] opacity-20" aria-hidden="true" />
             <div className="relative grid gap-10 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-end">
               <div>
-                <p className="section-eyebrow text-[color:var(--gray-300)]"><ShieldCheck className="size-4" aria-hidden="true" />Unsigned preview only</p>
+                <p className="section-eyebrow text-[color:var(--foreground-on-strong-muted)]"><ShieldCheck className="size-4" aria-hidden="true" />Unsigned preview only</p>
                 <h2 className="section-heading mt-5 max-w-4xl">Know what would happen before anything can happen.</h2>
-                <p className="mt-6 max-w-2xl text-lg leading-8 text-[color:var(--gray-300)]">The final screen contains inspectable transaction targets, values, calldata, readiness, timestamps, and audit references—with no signing action.</p>
+                <p className="mt-6 max-w-2xl text-lg leading-8 text-[color:var(--foreground-on-strong-muted)]">The final screen contains inspectable transaction targets, values, calldata, readiness, timestamps, and audit references—with no signing action.</p>
               </div>
-              <ul className="space-y-3 text-sm text-[color:var(--gray-300)]">
-                {["No private keys reach the server", "No wallet signature or transaction broadcast", "No protected position is created", "Stale facts require a fresh review"].map((item) => <li key={item} className="flex items-center gap-3 border-t border-[var(--border-on-strong)] pt-3"><span className="grid size-6 place-items-center rounded-full bg-[var(--accent)] text-[color:var(--black)]"><Check className="size-3.5" aria-hidden="true" /></span>{item}</li>)}
+              <ul className="space-y-3 text-sm text-[color:var(--foreground-on-strong-muted)]">
+                {["No private keys reach the server", "No wallet signature or transaction broadcast", "No protected position is created", "Stale facts require a fresh review"].map((item) => <li key={item} className="flex items-center gap-3 border-t border-[var(--border-on-strong)] pt-3"><span className="grid size-6 place-items-center rounded-full bg-[var(--accent)] text-[color:var(--accent-foreground)]"><Check className="size-3.5" aria-hidden="true" /></span>{item}</li>)}
               </ul>
             </div>
           </div>
@@ -226,7 +196,7 @@ export default function Home() {
         <section className="px-5 py-28 text-center lg:py-40">
           <h2 className="section-heading mx-auto max-w-3xl">Start with what the money is for.</h2>
           <p className="mx-auto mt-5 max-w-xl text-lg text-[color:var(--foreground-soft)]">Define the goal first. Every protection decision follows from there.</p>
-          <a href="#goal-composer" className="mt-8 inline-flex min-h-14 items-center gap-2 rounded-full bg-[var(--black)] px-8 text-sm font-semibold text-[color:var(--white)] transition-colors hover:bg-[var(--button-primary-hover)]">Create a protection goal<ArrowRight className="size-4" aria-hidden="true" /></a>
+          <a href="#goal-composer" className="mt-8 inline-flex min-h-14 items-center gap-2 rounded-full bg-[var(--button-primary-bg)] px-8 text-sm font-semibold text-[color:var(--button-primary-fg)] transition-[background-color,transform] duration-[var(--duration-press)] hover:bg-[var(--button-primary-hover)] active:scale-[0.98]">Create a protection goal<ArrowRight className="size-4" aria-hidden="true" /></a>
         </section>
       </main>
 
@@ -234,18 +204,18 @@ export default function Home() {
         <div className="page-shell grid gap-12 py-14 sm:py-20 lg:grid-cols-[1.2fr_1fr_1fr]">
           <div>
             <div className="flex items-center gap-2.5 text-xl font-semibold tracking-[-0.035em]"><span className="brand-mark" aria-hidden="true" />GoalGuard</div>
-            <p className="mt-4 max-w-sm text-sm leading-6 text-[color:var(--gray-300)]">Goal-first ETH downside protection with transparent, independently reviewed unsigned previews.</p>
+            <p className="mt-4 max-w-sm text-sm leading-6 text-[color:var(--foreground-on-strong-muted)]">Goal-first ETH downside protection with transparent, independently reviewed unsigned previews.</p>
           </div>
           <div>
             <p className="text-sm font-semibold">Explore</p>
-            <nav aria-label="Footer navigation" className="mt-4 grid gap-3 text-sm text-[color:var(--gray-300)]"><a href="#how-it-works" className="w-fit hover:text-[color:var(--white)]">How it works</a><a href="#trust-safety" className="w-fit hover:text-[color:var(--white)]">Trust & safety</a><a href="#live-foundations" className="w-fit hover:text-[color:var(--white)]">Live foundations</a></nav>
+            <nav aria-label="Footer navigation" className="mt-4 grid gap-3 text-sm text-[color:var(--foreground-on-strong-muted)]"><a href="#how-it-works" className="w-fit hover:text-[color:var(--foreground-on-strong)]">How it works</a><a href="#trust-safety" className="w-fit hover:text-[color:var(--foreground-on-strong)]">Trust & safety</a><a href="#live-foundations" className="w-fit hover:text-[color:var(--foreground-on-strong)]">Live foundations</a></nav>
           </div>
           <div>
             <p className="text-sm font-semibold">Release boundary</p>
-            <p className="mt-4 text-sm leading-6 text-[color:var(--gray-300)]">Preview only · Base chain ID 8453<br />No signing or broadcasting</p>
+            <p className="mt-4 text-sm leading-6 text-[color:var(--foreground-on-strong-muted)]">Preview only · Base chain ID 8453<br />No signing or broadcasting</p>
           </div>
         </div>
-        <div className="page-shell"><div className="flex flex-col gap-2 border-t border-[var(--border-on-strong)] py-6 text-xs text-[color:var(--gray-300)] sm:flex-row sm:items-center sm:justify-between"><p>GoalGuard · MUBA Hacks 2026</p><p>Built with Gonka, Thetanuts, and Base.</p></div></div>
+        <div className="page-shell"><div className="flex flex-col gap-2 border-t border-[var(--border-on-strong)] py-6 text-xs text-[color:var(--foreground-on-strong-muted)] sm:flex-row sm:items-center sm:justify-between"><p>GoalGuard · MUBA Hacks 2026</p><p>Built with Gonka, Thetanuts, and Base.</p></div></div>
       </footer>
     </>
   );

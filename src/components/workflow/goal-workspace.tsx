@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
 import { Alert } from "@/components/ui/alert";
+import { FloatingEditorialNavbar } from "@/components/navigation/floating-editorial-navbar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -198,7 +198,7 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
   return (
     <main className="min-h-screen bg-[var(--background)] pb-12">
       <a href="#workflow-content" className="skip-link">Skip to current step</a>
-      <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--white)] shadow-[var(--shadow-header)]"><div className="reading-shell flex min-h-20 items-center justify-between gap-4"><Link href="/" className="flex min-h-11 items-center gap-2.5 rounded-sm pr-3"><span className="brand-mark" aria-hidden="true" /><span><span className="block font-semibold tracking-[-0.035em]">GoalGuard</span><span className="block text-xs font-semibold uppercase tracking-[0.1em] text-[color:var(--foreground-muted)]">Preview only</span></span></Link><WalletControl /></div></header>
+      <FloatingEditorialNavbar variant="workflow" contextLabel={`${presentation.eyebrow} · ${presentation.title}`} walletSlot={<WalletControl compact />} />
       <div id="workflow-content" ref={focusTarget} tabIndex={-1} className="outline-none">
         <StageShell {...presentation}>
           {state.notice ? <Alert className="mb-5" tone="info" title="Safety note">{state.notice}</Alert> : null}

@@ -36,7 +36,7 @@ export function Drawer({ open, title, onClose, children, labelledId = "drawer-pa
     <AnimatePresence>
       {open ? (
         <motion.div
-          className="fixed inset-0 z-[100] flex justify-end bg-[color-mix(in_srgb,var(--surface-black)_72%,transparent)]"
+          className="fixed inset-0 z-[100] flex items-end justify-end bg-[var(--scrim)] sm:items-stretch"
           role="presentation"
           initial={false}
           onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}
@@ -47,14 +47,15 @@ export function Drawer({ open, title, onClose, children, labelledId = "drawer-pa
             aria-modal="true"
             id={labelledId}
             aria-labelledby={`${labelledId}-title`}
-            className="h-full w-full max-w-2xl overflow-y-auto border-l border-[var(--border)] bg-[var(--background)] p-6 shadow-[var(--shadow-float-strong)] sm:p-8"
-            initial={reduceMotion ? false : { x: 28 }}
-            animate={{ x: 0 }}
-            exit={{ x: 20 }}
+            className="max-h-[calc(100dvh-max(1rem,env(safe-area-inset-top)))] min-w-0 w-full max-w-full overflow-x-hidden overflow-y-auto rounded-t-[var(--radius-feature)] border border-[var(--border)] bg-[var(--background)] px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4 shadow-[var(--shadow-float-strong)] sm:h-full sm:max-h-none sm:max-w-2xl sm:rounded-none sm:border-y-0 sm:border-r-0 sm:p-8"
+            initial={reduceMotion ? false : { opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduceMotion ? undefined : { opacity: 0, y: 16 }}
             transition={{ duration: reduceMotion ? 0 : 0.22, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="mb-8 flex items-center justify-between gap-4">
-              <h2 id={`${labelledId}-title`} className="text-3xl font-semibold tracking-[-0.045em] text-[color:var(--foreground)]">{title}</h2>
+            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[var(--border-strong)] sm:hidden" aria-hidden="true" />
+            <div className="mb-6 flex items-center justify-between gap-4 sm:mb-8">
+              <h2 id={`${labelledId}-title`} className="text-2xl font-semibold tracking-[-0.045em] text-[color:var(--foreground)] sm:text-3xl">{title}</h2>
               <Button ref={closeButton} variant="ghost" className="size-11 px-0" onClick={onClose} aria-label="Close panel"><X className="size-5" aria-hidden="true" /></Button>
             </div>
             {children}

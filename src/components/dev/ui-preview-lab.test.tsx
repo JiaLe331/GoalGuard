@@ -11,6 +11,7 @@ import {
   previewTradeResponse,
 } from "@/test/fixtures/goalguard";
 import { uiPreviewStates } from "@/lib/frontend/ui-preview";
+import { ThemeProvider } from "@/components/theme/theme-provider";
 import { UiPreviewLab, type UiPreviewSamples } from "./ui-preview-lab";
 
 const samples: UiPreviewSamples = {
@@ -23,9 +24,13 @@ const samples: UiPreviewSamples = {
   meta: previewTradeResponse.meta,
 };
 
+function renderLab(initialState: Parameters<typeof UiPreviewLab>[0]["initialState"]) {
+  return render(<ThemeProvider><UiPreviewLab initialState={initialState} samples={samples} /></ThemeProvider>);
+}
+
 describe("UiPreviewLab", () => {
   it("discloses sample mode and exposes every state through a labelled control", () => {
-    render(<UiPreviewLab initialState="goal-confirmation" samples={samples} />);
+    renderLab("goal-confirmation");
     expect(screen.getByText("Development UI preview — sample data")).toBeVisible();
     const selector = screen.getByLabelText("Interface state");
     expect(selector).toBeVisible();
@@ -36,7 +41,7 @@ describe("UiPreviewLab", () => {
     const user = userEvent.setup();
     const fetchSpy = vi.spyOn(globalThis, "fetch");
     const storageSpy = vi.spyOn(Storage.prototype, "setItem");
-    render(<UiPreviewLab initialState="goal-confirmation" samples={samples} />);
+    renderLab("goal-confirmation");
 
     const selector = screen.getByLabelText("Interface state");
     for (const item of uiPreviewStates) {
@@ -55,7 +60,7 @@ describe("UiPreviewLab", () => {
 
   it("requires the real acknowledgment control before traversing preview generation", async () => {
     const user = userEvent.setup();
-    render(<UiPreviewLab initialState="preview-confirmation" samples={samples} />);
+    renderLab("preview-confirmation");
     const generate = screen.getByRole("button", { name: "Generate unsigned preview" });
     expect(generate).toBeDisabled();
     await user.click(screen.getByRole("checkbox"));

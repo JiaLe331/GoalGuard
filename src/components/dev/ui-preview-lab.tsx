@@ -1,11 +1,11 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Flask, ShieldCheck } from "@phosphor-icons/react";
-import Link from "next/link";
+import { ArrowLeft, ArrowRight, ShieldCheck } from "@phosphor-icons/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { FloatingEditorialNavbar } from "@/components/navigation/floating-editorial-navbar";
 import {
   ActiveProtectionPanel,
   CouncilDrawer,
@@ -199,21 +199,14 @@ export function UiPreviewLab({ initialState, samples }: { initialState: UiPrevie
   return (
     <>
       <a href="#preview-content" className="skip-link">Skip to previewed interface</a>
-      <header className="border-b border-[var(--border)] bg-[var(--white)]">
-        <div className="page-shell flex min-h-20 flex-wrap items-center justify-between gap-4 py-3">
-          <Link href="/" prefetch={false} className="flex min-h-11 items-center gap-2.5 rounded-sm pr-2 text-[1.05rem] font-semibold tracking-[-0.035em]" aria-label="GoalGuard home">
-            <span className="brand-mark" aria-hidden="true" />GoalGuard
-          </Link>
-          <span className="inline-flex min-h-11 items-center gap-2 text-xs font-bold uppercase tracking-[0.08em]"><Flask className="size-4" aria-hidden="true" />Local interface lab</span>
-        </div>
-      </header>
+      <FloatingEditorialNavbar variant="workflow" contextLabel={`${frame.eyebrow} · ${frame.title}`} statusLabel="Local interface lab" walletSlot={<span className="hidden min-h-11 items-center rounded-full bg-[var(--accent-soft)] px-4 text-xs font-bold uppercase tracking-[0.08em] text-[color:var(--accent-soft-foreground)] min-[520px]:inline-flex">Sample data</span>} />
 
       <main id="preview-content" tabIndex={-1} className="min-h-screen outline-none">
         <div className="reading-shell pt-6 sm:pt-8">
           <Alert tone="warning" title="Development UI preview — sample data">
             Production panels are running with canonical local fixtures. Controls stay in this tab: no API, wallet, storage, signature, or broadcast request is made.
           </Alert>
-          <div className="mt-4 grid gap-3 rounded-[var(--radius-card)] border border-[var(--border)] bg-[var(--white)] p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+          <div className="mt-4 grid gap-3 rounded-[var(--radius-card)] border border-[var(--border)] bg-[var(--surface-raised)] p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
             <label htmlFor="preview-state" className="grid gap-2 text-sm font-semibold">
               Interface state
               <select
