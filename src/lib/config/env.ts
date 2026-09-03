@@ -1,23 +1,29 @@
 import { z } from "zod";
 
-const optionalNonEmpty = z.string().trim().min(1).optional();
+const optional = <T extends z.ZodType>(schema: T) => z.preprocess(
+  (value) => typeof value === "string" && value.trim() === "" ? undefined : value,
+  schema.optional(),
+);
+
+const optionalNonEmpty = optional(z.string().trim().min(1));
+const optionalUrl = optional(z.string().url());
 
 export const ServerEnvironmentSchema = z.object({
   GONKA_API_KEY: optionalNonEmpty,
-  GONKA_BASE_URL: z.string().url().optional(),
+  GONKA_BASE_URL: optionalUrl,
   GONKA_STRATEGIST_MODEL: optionalNonEmpty,
   GONKA_RISK_AUDITOR_MODEL: optionalNonEmpty,
   GONKA_CONSUMER_ADVOCATE_MODEL: optionalNonEmpty,
   GONKA_REQUEST_ID_HEADER: z.string().trim().min(1).default("x-request-id"),
-  THETANUTS_RPC_URL: z.string().url().optional(),
-  THETANUTS_RPC_FALLBACK_URL: z.string().url().optional(),
-  THETANUTS_REFERRER_ADDRESS: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional(),
+  THETANUTS_RPC_URL: optionalUrl,
+  THETANUTS_RPC_FALLBACK_URL: optionalUrl,
+  THETANUTS_REFERRER_ADDRESS: optional(z.string().regex(/^0x[0-9a-fA-F]{40}$/)),
   ENABLE_LIVE_THETANUTS_EXECUTION: z.enum(["true", "false"]).default("false"),
   MAX_LIVE_TRADE_PREMIUM_USD: z.string().regex(/^(0|[1-9]\d*)(\.\d+)?$/).default("3"),
   MAX_DEADLINE_GAP_HOURS: z.coerce.number().int().positive().default(168),
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
-  DATABASE_URL: z.string().startsWith("postgres").optional(),
-  DATABASE_DIRECT_URL: z.string().startsWith("postgres").optional(),
+  DATABASE_URL: optional(z.string().startsWith("postgres")),
+  DATABASE_DIRECT_URL: optional(z.string().startsWith("postgres")),
   TRADE_WORKER_NAME: z.string().trim().min(1).default("trade-monitor"),
   TRADE_WORKER_POLL_MS: z.coerce.number().int().min(1000).default(5000),
   TRADE_WORKER_HEARTBEAT_MS: z.coerce.number().int().min(1000).default(15000),

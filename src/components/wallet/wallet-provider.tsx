@@ -16,6 +16,7 @@ interface WalletState {
 
 interface WalletContextValue extends WalletState {
   connect: () => Promise<void>;
+  switchToBase: () => Promise<void>;
 }
 
 const initialState: WalletState = { status: "idle", address: null, chainId: null, message: null };
@@ -82,7 +83,19 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const value = useMemo(() => ({ ...state, connect }), [connect, state]);
+  const switchToBase = useCallback(async () => {
+    if (!window.ethereum) return;
+    try {
+      const provider = new BrowserProvider(window.ethereum);
+      await provider.send("wallet_switchEthereumChain", [{ chainId: "0x2105" }]);
+      const accounts = await provider.send("eth_accounts", []) as string[];
+      setState({ status: "connected", address: accounts[0] ?? state.address, chainId: 8453, message: null });
+    } catch (error) {
+      setState((current) => ({ ...current, status: "error", message: walletMessage(error, "Could not switch to Base.") }));
+    }
+  }, [state.address]);
+
+  const value = useMemo(() => ({ ...state, connect, switchToBase }), [connect, state, switchToBase]);
   return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>;
 }
 

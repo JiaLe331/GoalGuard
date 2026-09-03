@@ -62,25 +62,25 @@ export function IntegrationStatus() {
     <section aria-labelledby="readiness-heading">
       <div className="mb-5 flex items-center justify-between gap-4">
         <div>
-          <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#91a398]">Service readiness</p>
-          <h2 id="readiness-heading" className="text-xl font-semibold text-white">Live foundations</h2>
+          <p className="section-eyebrow text-[color:var(--foreground-muted)]">Service readiness</p>
+          <h3 id="readiness-heading" className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-[color:var(--foreground)]">Current connections</h3>
         </div>
-        <Button variant="ghost" className="min-h-9 px-3" onClick={() => void refresh()} disabled={loading}>
+        <Button variant="secondary" className="min-h-11 px-4" onClick={() => void refresh()} disabled={loading}>
           {loading ? "Checking…" : "Refresh"}
         </Button>
       </div>
 
       {error ? (
-        <div className="rounded-2xl border border-[#ff837a]/20 bg-[#ff837a]/10 p-4 text-sm text-[#ffc0bc]" role="alert">{error}</div>
+        <div className="rounded-[var(--radius-md)] border border-[color-mix(in_srgb,var(--negative)_38%,var(--border))] bg-[color-mix(in_srgb,var(--negative)_7%,var(--surface))] p-4 text-sm text-[color:var(--foreground-soft)]" role="alert">{error}</div>
       ) : (
-        <div className="space-y-3" aria-busy={loading}>
+        <div className="grid gap-3 sm:grid-cols-3" aria-busy={loading}>
           {loading && !data ? [0, 1, 2].map((item) => (
-            <div key={item} className="h-[68px] animate-pulse rounded-2xl bg-white/[0.05]" />
+            <div key={item} className="h-28 animate-pulse rounded-[var(--radius-card)] bg-[var(--gray-200)] motion-reduce:animate-none" />
           )) : items.map((item) => (
-            <div key={item.name} className="flex items-center justify-between gap-4 rounded-2xl border border-white/[0.07] bg-black/10 p-4">
+            <div key={item.name} className="flex min-h-28 flex-col items-start justify-between gap-4 rounded-[var(--radius-card)] bg-[var(--white)] p-5">
               <div>
-                <p className="text-sm font-semibold text-white">{item.name}</p>
-                <p className="mt-0.5 text-xs text-[#91a398]">{item.description}</p>
+                <p className="font-semibold tracking-[-0.02em] text-[color:var(--foreground)]">{item.name}</p>
+                <p className="mt-1 text-sm text-[color:var(--foreground-soft)]">{item.description}</p>
               </div>
               <StatusBadge label={labels[item.status] ?? item.status} tone={toneFor(item.status)} />
             </div>

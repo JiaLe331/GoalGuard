@@ -5,6 +5,7 @@
 - These instructions apply to the whole repository.
 - Read a deeper `AGENTS.md` first if a future subproject adds one.
 - Treat `goalguard_prd.md`, especially Section 17, as the normative product and contract specification.
+- Treat `DESIGN_SYSTEM.md` as the frontend visual and interaction source of truth after the PRD's product, safety, and contract requirements.
 
 ## Current State
 

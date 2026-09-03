@@ -4,6 +4,7 @@ import {
   ApiErrorResponseSchema,
   GenerateCandidatesResponseSchema,
   GetGoalResponseSchema,
+  type JsonValue,
   ParseGoalResponseSchema,
   PreviewTradeResponseSchema,
   ReviewCandidateResponseSchema,
@@ -25,6 +26,7 @@ export class ApiClientError extends Error {
     readonly retryable: boolean,
     readonly fieldErrors: Record<string, string[]> = {},
     readonly requestId: string | null = null,
+    readonly details: JsonValue | null = null,
   ) {
     super(message);
     this.name = "ApiClientError";
@@ -74,7 +76,7 @@ export async function requestGoalGuard<T>(path: string, options: RequestOptions)
       );
     }
     const { error, meta } = parsedError.data;
-    throw new ApiClientError(error.message, error.code, error.retryable, error.fieldErrors, meta.requestId);
+    throw new ApiClientError(error.message, error.code, error.retryable, error.fieldErrors, meta.requestId, error.details);
   }
 
   const parsed = options.schema.safeParse(payload);
