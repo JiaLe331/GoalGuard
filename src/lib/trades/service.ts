@@ -10,7 +10,7 @@ import type { GoalGuardRepository } from "@/lib/db/repository";
 import { PostgresGoalGuardRepository } from "@/lib/db/repository";
 import { hashJson, sha256 } from "@/lib/domain/hash";
 import { ApiRouteError } from "@/lib/server/http";
-import { type ThetanutsOrder, type ThetanutsReadClient, withConfiguredThetanutsRead } from "@/lib/thetanuts/client";
+import { fetchEthPutOrders, type ThetanutsOrder, type ThetanutsReadClient, withConfiguredThetanutsRead } from "@/lib/thetanuts/client";
 import { orderId, serializeOrder } from "@/lib/thetanuts/strategy";
 
 const BASE_CHAIN_ID = 8453 as const;
@@ -39,7 +39,7 @@ function assertCandidateInvariants(candidate: ProtectionCandidate, nowMs: number
 async function buildUnsignedPreview(candidate: ProtectionCandidate, walletAddress: string, now: Date, withClient: <T>(operation: (client: PreviewClient) => Promise<T>) => Promise<T>) {
   if (!candidate.protocolOrderId) throw new ApiRouteError("NOT_FOUND", "Candidate order was not found.", 404);
   return withClient(async (client) => {
-    const orders = await client.api.filterOrders({ asset: "ETH", type: "put", minExpiry: Math.floor(now.getTime() / 1000) });
+    const orders = await fetchEthPutOrders(client, Math.floor(now.getTime() / 1000));
     const order = orders.find((item) => orderId(item) === candidate.protocolOrderId);
     if (!order) stale("The selected live order is no longer available.");
     if (hashJson(serializeOrder(order)) !== hashJson(candidate.protocolRaw)) stale("The selected live order changed and requires a new review.");

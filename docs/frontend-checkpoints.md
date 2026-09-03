@@ -1,6 +1,6 @@
 # Frontend checkpoints
 
-Last verified: **2026-09-03** on `feat/frontend-fe7-main-integration`, based on `origin/main` at `7d8ba76`.
+Last verified: **2026-09-03** on `feat/frontend-fe7-main-integration`, based on `origin/main` at `1c34f43`.
 
 GoalGuard P0 is a preview-only product. No reachable frontend state can prepare a live execution, request a signature, broadcast a transaction, or record a submission. The backend execution and submission routes remain unchanged and fail closed.
 
@@ -56,7 +56,7 @@ Record final command results here after each implementation pass:
 ```text
 pnpm lint: PASS
 pnpm typecheck: PASS
-pnpm test: PASS (25 files, 127 tests)
+pnpm test: PASS (25 files, 129 tests)
 pnpm build: PASS (Next.js 16.3.3 Turbopack)
 pnpm test:e2e: PASS (5 Chromium tests)
 Node runtime: PASS on Node.js 22.19.0
