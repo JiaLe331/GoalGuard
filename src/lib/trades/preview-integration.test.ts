@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { CouncilDecision, Goal, ProtectionCandidate, Trade } from "@/lib/contracts";
+import type { CouncilDecision, ProtectionCandidate, Trade } from "@/lib/contracts";
 import type { GoalGuardRepository } from "@/lib/db/repository";
 import { ApiRouteError } from "@/lib/server/http";
 import type { ThetanutsOrder, ThetanutsReadClient } from "@/lib/thetanuts/client";
