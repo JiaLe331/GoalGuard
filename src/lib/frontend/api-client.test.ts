@@ -17,8 +17,9 @@ describe("GoalGuard API client", () => {
   });
 
   it("preserves canonical error metadata", async () => {
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ error: { code: "GONKA_UNAVAILABLE", message: "Review unavailable", retryable: true, fieldErrors: {}, details: null }, meta: getDraftGoalResponse.meta }), { status: 502 }));
-    await expect(requestGoalGuard("/api/goals/id", { schema: GetGoalResponseSchema })).rejects.toEqual(expect.objectContaining({ code: "GONKA_UNAVAILABLE", requestId: getDraftGoalResponse.meta.requestId }));
+    const details = { checks: ["strategist unavailable"] };
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ error: { code: "GONKA_UNAVAILABLE", message: "Review unavailable", retryable: true, fieldErrors: {}, details }, meta: getDraftGoalResponse.meta }), { status: 502 }));
+    await expect(requestGoalGuard("/api/goals/id", { schema: GetGoalResponseSchema })).rejects.toEqual(expect.objectContaining({ code: "GONKA_UNAVAILABLE", requestId: getDraftGoalResponse.meta.requestId, details }));
   });
 
   it("sends the caller's idempotency key for trade preview", async () => {

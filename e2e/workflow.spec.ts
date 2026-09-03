@@ -65,8 +65,8 @@ async function completeToPlan(page: Page) {
   await page.getByRole("button", { name: /create protection goal/i }).click();
   expect((await parseCompleted).ok()).toBe(true);
   await expect(page.locator("#goal-input-error")).toHaveCount(0);
-  await expect(page).toHaveURL(new RegExp(`/goals/${parseGoalResponse.data.goal!.id}$`));
-  await expect(page.getByRole("heading", { name: /make sure goalguard understood you/i })).toBeVisible();
+  await expect(page).toHaveURL(new RegExp(`/goals/${parseGoalResponse.data.goal!.id}$`), { timeout: 10_000 });
+  await expect(page.getByRole("heading", { name: /make the goal exact/i })).toBeVisible();
 
   await page.getByRole("button", { name: /find protection options/i }).click();
   await expect(page.getByRole("heading", { name: /rent protection/i })).toBeVisible();

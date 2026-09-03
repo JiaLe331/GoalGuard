@@ -1,16 +1,17 @@
-export type StatusTone = "ready" | "warning" | "error" | "neutral";
+export type StatusTone = "ready" | "info" | "warning" | "error" | "neutral";
 
 const toneClasses: Record<StatusTone, string> = {
-  ready: "border-[#91e95f]/25 bg-[#91e95f]/10 text-[#caff9f]",
-  warning: "border-[#ffcd6b]/25 bg-[#ffcd6b]/10 text-[#ffe0a3]",
-  error: "border-[#ff837a]/25 bg-[#ff837a]/10 text-[#ffaaa4]",
-  neutral: "border-white/10 bg-white/[0.05] text-[#bdc9c0]",
+  ready: "border-[var(--positive-surface)] bg-[var(--positive-surface)] text-[color:var(--positive)] [&>span]:bg-[var(--positive)]",
+  info: "border-[var(--accent-soft)] bg-[var(--accent-soft)] text-[color:var(--foreground)] [&>span]:bg-[var(--foreground)]",
+  warning: "border-[var(--warning-surface)] bg-[var(--warning-surface)] text-[color:var(--warning)] [&>span]:bg-[var(--warning)]",
+  error: "border-[var(--negative-surface)] bg-[var(--negative-surface)] text-[color:var(--negative)] [&>span]:bg-[var(--negative)]",
+  neutral: "border-[var(--surface-muted)] bg-[var(--surface-muted)] text-[color:var(--foreground-soft)] [&>span]:bg-[var(--foreground-muted)]",
 };
 
 export function StatusBadge({ label, tone = "neutral" }: { label: string; tone?: StatusTone }) {
   return (
-    <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${toneClasses[tone]}`}>
-      <span className="size-1.5 rounded-full bg-current" aria-hidden="true" />
+    <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold ${toneClasses[tone]}`}>
+      <span className="size-1.5 rounded-full" aria-hidden="true" />
       {label}
     </span>
   );

@@ -49,6 +49,12 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000). Missing integrations are reported safely. The submitted and demonstrated build is preview-only.
 
+### Preview the complete frontend without backend credentials
+
+While `pnpm dev` is running, open [http://localhost:3000/dev/ui-preview](http://localhost:3000/dev/ui-preview). This development-only interface lab renders the real production panels with canonical sample data, including approved/disputed/blocked plans, the council drawer, preview confirmation, the demo-ready result, error states, insufficient wallet readiness, and reload recovery.
+
+The lab is deliberately local-only: it does not call backend routes, request a wallet, write browser storage, request a signature, or broadcast a transaction. It is not linked from the product navigation, is marked `noindex`, and returns 404 in production.
+
 ## Environment
 
 | Variable | Purpose |
@@ -56,7 +62,7 @@ Open [http://localhost:3000](http://localhost:3000). Missing integrations are re
 | `GONKA_API_KEY`, `GONKA_BASE_URL` | Server-only Gonka Router configuration. |
 | `GONKA_STRATEGIST_MODEL`, `GONKA_RISK_AUDITOR_MODEL`, `GONKA_CONSUMER_ADVOCATE_MODEL` | Role models; at least two IDs must be distinct. |
 | `GONKA_REQUEST_ID_HEADER` | Gonka audit request-ID header. |
-| `THETANUTS_RPC_URL` | Base mainnet RPC. |
+| `THETANUTS_RPC_URL`, `THETANUTS_RPC_FALLBACK_URL` | Primary and fallback Base mainnet RPC endpoints. |
 | `THETANUTS_REFERRER_ADDRESS` | Optional disclosed referrer for the unsigned fill preview. |
 | `ENABLE_LIVE_THETANUTS_EXECUTION` | Fixed at `false` for the submitted and demonstrated build; it is not an approval switch. |
 | `MAX_LIVE_TRADE_PREMIUM_USD` | Proposed preview cap; default `3`. |
