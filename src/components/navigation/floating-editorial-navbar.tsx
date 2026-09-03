@@ -3,6 +3,7 @@
 import { List, ShieldCheck } from "@phosphor-icons/react";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
+import { PipMark } from "@/components/brand/pip-mascot";
 import { ThemeSelector } from "@/components/theme/theme-selector";
 import { Button } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/drawer";
@@ -22,7 +23,7 @@ const defaultPrimaryAction: EditorialNavLink = { label: "Start a goal", href: "#
 export function GoalGuardBrand({ href = "#top" }: { href?: string }) {
   return (
     <a href={href} className="flex min-h-11 min-w-0 items-center gap-2.5 rounded-full px-1.5 text-[1.05rem] font-semibold tracking-[-0.035em]" aria-label="GoalGuard home">
-      <span className="brand-mark" aria-hidden="true" />
+      <PipMark size="md" />
       <span className="truncate">GoalGuard</span>
     </a>
   );

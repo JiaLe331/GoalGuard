@@ -4,6 +4,8 @@ import { Check, ShieldCheck } from "@phosphor-icons/react";
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "motion/react";
 import type { PointerEvent } from "react";
 
+import { PipMark } from "@/components/brand/pip-mascot";
+
 export function ProtectionOrbit() {
   const reduceMotion = useReducedMotion();
   const pointerX = useMotionValue(0);
@@ -53,7 +55,7 @@ export function ProtectionOrbit() {
             <p className="text-xs font-bold uppercase tracking-[0.1em] text-[color:var(--foreground-muted)]">01 · Purpose attached</p>
             <p className="mt-1 text-lg font-semibold tracking-[-0.03em]">Your goal sets the guardrail</p>
           </div>
-          <span className="brand-mark" aria-hidden="true" />
+          <PipMark surface="light" />
         </div>
         <div className="mt-5 grid grid-cols-3 gap-2">
           {["Cost limit", "Loss limit", "Deadline"].map((label) => <div key={label} className="rounded-xl bg-[var(--surface-muted)] px-3 py-2 text-xs font-semibold">{label}</div>)}

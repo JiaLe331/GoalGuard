@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -19,6 +19,28 @@ describe("GoalComposer", () => {
     await user.click(screen.getByRole("button", { name: /create protection goal/i }));
     expect(screen.getByRole("alert")).toHaveTextContent("Describe the money");
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("moves Pip from neutral to listening with accessible form focus", () => {
+    const { container } = render(<GoalComposer />);
+    const textbox = screen.getByRole("textbox");
+    expect(container.querySelector('[data-pip-pose="neutral"][data-pip-artwork="full"]')).toBeInTheDocument();
+    fireEvent.focus(textbox);
+    expect(container.querySelector('[data-pip-pose="listening"]')).toBeInTheDocument();
+    fireEvent.blur(textbox);
+    expect(container.querySelector('[data-pip-pose="neutral"]')).toBeInTheDocument();
+  });
+
+  it("shows checking Pip only while goal parsing is active", async () => {
+    let resolveRequest!: (response: Response) => void;
+    vi.spyOn(globalThis, "fetch").mockImplementation(() => new Promise<Response>((resolve) => { resolveRequest = resolve; }));
+    const { container } = render(<GoalComposer />);
+    const textbox = screen.getByRole("textbox");
+    fireEvent.change(textbox, { target: { value: "Protect my rent fund." } });
+    fireEvent.submit(textbox.closest("form")!);
+    expect(container.querySelector('[data-pip-pose="checking"][data-pip-active="true"]')).toBeInTheDocument();
+    resolveRequest(new Response(JSON.stringify(parseGoalResponse), { status: 200 }));
+    await waitFor(() => expect(push).toHaveBeenCalled());
   });
 
   it("preserves an incomplete draft and asks one clarification", async () => {

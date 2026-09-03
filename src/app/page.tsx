@@ -11,6 +11,7 @@ import {
   Sparkle,
 } from "@phosphor-icons/react/dist/ssr";
 
+import { PipMark, PipMascot } from "@/components/brand/pip-mascot";
 import { GoalComposer } from "@/components/goals/goal-composer";
 import { IntegrationStatus } from "@/components/integrations/integration-status";
 import { ProtectionOrbit } from "@/components/marketing/protection-orbit";
@@ -50,10 +51,9 @@ function HowItWorksIllustration({ variant }: { variant: "goal" | "review" }) {
     );
   }
   return (
-    <div className="relative min-h-48 overflow-hidden" aria-hidden="true">
-      <div className="absolute bottom-3 right-5 size-40 rounded-full border-[1.1rem] border-[var(--accent)]" />
-      <div className="absolute bottom-10 right-12 size-28 rounded-full border-[0.8rem] border-[var(--accent-soft)]" />
-      <svg className="absolute bottom-16 right-14 h-20 w-24" viewBox="0 0 100 80" fill="none"><path d="M5 62 29 51l25 8 21-38 21 13" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+    <div className="relative grid min-h-48 place-items-end overflow-hidden" aria-hidden="true">
+      <div className="absolute -bottom-8 right-0 size-48 rounded-full bg-[var(--accent-soft)]" />
+      <PipMascot pose="explaining" size="lg" className="relative -bottom-1 right-0" />
     </div>
   );
 }
@@ -203,7 +203,7 @@ export default function Home() {
       <footer className="rounded-t-[2.25rem] bg-[var(--footer-bg)] text-[color:var(--footer-fg)] sm:rounded-t-[var(--radius-section)]">
         <div className="page-shell grid gap-12 py-14 sm:py-20 lg:grid-cols-[1.2fr_1fr_1fr]">
           <div>
-            <div className="flex items-center gap-2.5 text-xl font-semibold tracking-[-0.035em]"><span className="brand-mark" aria-hidden="true" />GoalGuard</div>
+            <div className="flex items-center gap-2.5 text-xl font-semibold tracking-[-0.035em]"><PipMark surface="dark" />GoalGuard</div>
             <p className="mt-4 max-w-sm text-sm leading-6 text-[color:var(--foreground-on-strong-muted)]">Goal-first ETH downside protection with transparent, independently reviewed unsigned previews.</p>
           </div>
           <div>
