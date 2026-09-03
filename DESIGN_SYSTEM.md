@@ -1,6 +1,6 @@
 # GoalGuard Design System
 
-**Version:** 3.0
+**Version:** 3.1
 
 **Revised:** 2026-09-03
 
@@ -16,7 +16,7 @@ Product truth, safety boundaries, and canonical data contracts remain governed b
 
 The intended result is:
 
-> A spacious, approachable financial product with a white canvas, decisive black utility surfaces, electric-lime moments, oversized geometric typography, and product-led abstract compositions.
+> A spacious, approachable financial product with an adaptive light/dark canvas, decisive utility surfaces, electric-lime moments, oversized geometric typography, and GoalGuard-specific protection-orbit compositions.
 
 This version deliberately replaces the previous warm editorial direction.
 
@@ -25,12 +25,12 @@ This version deliberately replaces the previous warm editorial direction.
 | Instrument Serif and italic emphasis | One confident geometric sans-serif family |
 | Warm off-white and terracotta | Pure white, near-black, electric lime, cool neutrals |
 | Architectural photography | Abstract geometry and truthful GoalGuard UI compositions |
-| Floating glass/pill navbar | Flat, full-width sticky header with restrained elevation |
+| Floating glass navbar | Solid floating pill header with restrained elevation |
 | Small editorial cards and thin rules | Large soft-gray modules and open whitespace |
 | Luxury-publication tone | Clear, optimistic, product-first financial utility |
 | Dark surfaces used sparingly as small cards | Dark surfaces used intentionally for data, safety, and major CTA bands |
 
-Do not blend version 2.1 styling back into this system. In particular, do not reintroduce serif display text, terracotta, warm canvas tones, glassmorphism, architectural imagery, or a detached pill-shaped header.
+Do not blend version 2.1 styling back into this system. In particular, do not reintroduce serif display text, terracotta, warm canvas tones, glassmorphism, or architectural imagery. The approved pill header is solid and readable, never translucent decoration.
 
 ## 1. Design principles
 
@@ -184,7 +184,16 @@ Use three layers: primitive values, semantic aliases, and component tokens. Comp
 
 The only permitted component-level literal above is the primary-button hover color. Move it into primitives if more than one component uses it.
 
-### 2.4 Color usage and accessibility
+### 2.4 Dark appearance
+
+- Appearance supports `system`, `light`, and `dark`; System is the default.
+- Explicit Light or Dark choice persists in the non-sensitive `goalguard-theme` cookie. Returning to System removes the override.
+- Apply the resolved theme before first paint and update `color-scheme`; System continues listening to operating-system changes.
+- Dark mode uses `#0d100c` canvas, `#121610` surface, `#181d15` raised surface, `#f3f5ec` foreground, and `#c1c7b9` supporting text. Borders use `#343b30` and `#505a48`.
+- Lime stays `#c9f52b`, but is used as a bounded surface or action. Do not add glow, neon text, or luminous grid effects.
+- Components consume semantic surface and content tokens. `--white` and `--black` remain stable primitives for deliberate artwork only, not adaptive app surfaces.
+
+### 2.5 Color usage and accessibility
 
 - White is the dominant page canvas.
 - Near-black is the dominant text color and the default primary-action surface.
@@ -256,7 +265,7 @@ Preferred compositions:
 
 ## 5. `FloatingEditorialNavbar`
 
-The component name remains for compatibility, but its previous floating-pill appearance is retired. “Floating” now means it stays available while the page scrolls; visually it follows the supplied flat full-width header.
+The navigation is a solid floating capsule shared by the landing page, workflow, and development preview. It borrows the sample's calm spacing while the guard-point mark, explicit preview status, appearance selector, and workflow context make it distinctly GoalGuard.
 
 ### 5.1 Information architecture
 
@@ -281,45 +290,48 @@ GoalGuard | How it works | Trust & safety | Live foundations | Preview only | Co
   inset-block-start: 0;
   z-index: 50;
   width: 100%;
-  min-height: 84px;
-  color: var(--navbar-fg);
-  background: var(--navbar-bg);
-  border-block-end: 1px solid var(--navbar-border);
+  padding: max(12px, env(safe-area-inset-top)) 16px 0;
 }
 
 .floating-editorial-navbar__inner {
-  width: min(calc(100% - 64px), 1540px);
-  min-height: inherit;
+  width: min(100%, 1540px);
+  min-height: 64px;
   margin-inline: auto;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
   align-items: center;
-  gap: 32px;
+  border: 1px solid var(--navbar-border);
+  border-radius: var(--radius-pill);
+  color: var(--navbar-fg);
+  background: var(--navbar-bg);
+  box-shadow: var(--shadow-navbar);
 }
 ```
 
-- No rounded outer container, backdrop blur, glass treatment, or detached top gap.
-- Brand is left-aligned, primary links are centered, and utilities are right-aligned.
-- The logo may use one 10–12px lime dot beside the wordmark.
+- No backdrop blur, transparency, gradient, glow, or animated height.
+- Brand is left-aligned, primary links are centered, and utilities are right-aligned at 1200px and wider.
+- The logo uses the lime guard-point mark: a compact shield within an orbit point, not the sample's plain dot.
 - Links are plain text with generous spacing, not individual pills.
 - Active state combines darker text and a 2px underline or bottom marker.
-- Only the primary CTA is pill-shaped.
-- After scrolling, a subtle `--shadow-header` may replace the bottom rule; do not animate height or hide the header.
+- Theme, wallet, menu, and the primary CTA are individually operable controls inside the shared capsule.
+- After scrolling, elevation may strengthen without changing size or hiding the header.
+- Workflow mode replaces marketing links with a concise current-stage label and preserves the Preview only status.
 
 ### 5.3 Mobile specification
 
 Below 768px:
 
 ```text
-GoalGuard | Preview only | Menu
+GoalGuard | Appearance | Menu
 ```
 
-- Header height: 64px; horizontal padding: 20px.
+- Header inner height: 60px; viewport inset: 8px on narrow phones.
 - Move navigation, wallet control, and CTA into one accessible menu sheet.
 - Menu trigger exposes `aria-expanded` and `aria-controls`.
 - The sheet traps focus, closes on Escape and outside press, locks background scroll, and restores focus to the trigger.
 - Links and controls have at least 44px targets.
 - At 200% zoom, switch to this layout before items clip or wrap unpredictably.
+
+Between 768px and 1199px, use the compact capsule: keep brand, status, appearance, and menu/action controls visible while moving secondary links into the sheet. The full desktop row begins only at 1200px.
 
 ## 6. Hero system
 
@@ -337,25 +349,25 @@ White page canvas
 ```
 
 - Panel radius: 48–56px desktop, 28–32px mobile.
-- Panel minimum height: 680–780px desktop; content determines height on smaller screens.
+- Content determines height through 1199px. Do not force a viewport-taller hero. At 1200px and wider the composition may use a balanced minimum height only when both columns remain readable.
 - Internal padding: `clamp(32px, 5vw, 80px)`.
-- Headline width: roughly 7 columns and no more than three lines.
+- Headline width: roughly 7 columns and no more than three lines on wide desktop; natural wrapping takes priority below that range.
 - Primary CTA uses black/white. A secondary text link may sit beside it when it points to a real section.
 - Preserve the goal composer as the product's primary action; do not replace it with an app-download motif.
 
 ### 6.2 Product composition
 
-Use layered HTML/CSS and simple inline SVG:
+Use layered HTML/CSS and simple inline SVG as a GoalGuard protection orbit:
 
-- one large off-white or white “protection plan” panel tilted no more than 5 degrees;
-- one near-black exact-facts panel overlapping it;
+- one raised “purpose attached” panel linked visually to the user's cost, loss, and deadline guardrails;
+- one near-black independent-review panel overlapping it;
 - optional floating chips for floor, expiry, coverage, or council result only when backed by canonical data;
 - large lime-black-white abstract arcs or rounded shapes behind the panels;
 - one or two thin hand-drawn-style SVG strokes as quiet directional accents.
 
 No stock photo, architectural photo, phone screenshot, coin imagery, candlestick dashboard, Apple mark, or invented portfolio chart. Production mockups must render real current state or content-safe generic labels such as “Protection floor” without invented numeric values.
 
-On mobile, remove rotation and fragile overlap. Stack the composer before the preview modules in reading order.
+On mobile, remove fragile overlap, keep the artwork compact, and stack the composer before the protection orbit in reading and focus order. On fine pointers only, the orbit may tilt by at most 4 degrees and resets immediately on leave. Coarse pointers and reduced-motion mode remain static.
 
 ## 7. Surfaces, cards, and illustrations
 
@@ -482,11 +494,13 @@ Apply Web3 UX principles through familiar behavior and explicit information.
 
 ## 13. Responsive behavior
 
-Test at 375px, 768px, 1024px, and 1440px; also verify 320px minimum width and 200% zoom.
+Layout is fluid from 320px upward. Validate at 320, 360, 375, 430, 768, 912, 1024, 1280, 1440, and 1920px, plus representative phone landscape and effective 200% zoom.
 
-- **Desktop ≥1024px:** 12-column layouts, oversized headings, intentional overlap inside bounded illustration regions.
-- **Tablet 768–1023px:** 8-column layouts, reduced headline scale, two-column cards only when readable, simplified product overlap.
-- **Mobile <768px:** one reading column, 20px gutters, 48–60px hero heading, stacked modules, no rotation or off-screen composition.
+- **Wide desktop ≥1200px:** 12-column hero with a 7/5 split, full pill navigation, oversized headings, and bounded illustration overlap.
+- **Tablet and compact desktop 768–1199px:** single-column hero with a readable composer capped near 768px, compact navigation, reduced headline scale, and component-driven card columns.
+- **Mobile 480–767px:** one reading column, 20px gutters, stacked modules, and simplified product overlap.
+- **Compact mobile 320–479px:** 16px gutters, 44–52px hero heading, smaller radii and section spacing, and no rotation or off-screen composition.
+- Component grids use container queries or auto-fit sizing so behavior follows available space rather than the viewport alone.
 - Large rounded sections reduce radius and padding proportionally on small screens.
 - Controls remain at least 44×44px with at least 8px separation where accidental activation is plausible.
 - No horizontal document overflow. Wide identifiers wrap; structured transaction data may use an explicitly labelled internal scroll region only when unavoidable.
@@ -497,8 +511,8 @@ Test at 375px, 768px, 1024px, and 1440px; also verify 320px minimum width and 20
 Landing-page rhythm:
 
 ```text
-Flat sticky FloatingEditorialNavbar
-Electric-lime hero + goal composer + factual GoalGuard UI composition
+Solid floating pill navbar
+Electric-lime hero + goal composer + GoalGuard protection orbit
 Large “How protection works” heading
 Two wide soft-gray explanation modules
 Open two-column trust/safety advantages list with lime icon discs
@@ -515,11 +529,11 @@ This sequence is a visual rhythm, not permission to create unsupported routes, c
 
 ```text
 Layout:      PageContainer, Section, Grid, SplitLayout, Stack, Cluster
-Navigation:  FloatingEditorialNavbar, NavLink, NavCTA, MobileNavigation
+Navigation:  FloatingEditorialNavbar, GoalGuardBrand, ThemeSelector, MobileNavigation
 Typography:  DisplayHeading, SectionHeading, LeadText, BodyText, Metadata, FinancialValue
 Actions:     PrimaryButton, SecondaryButton, TextLink, IconButton, CopyButton
 Marketing:   LimeHero, FeatureModule, AdvantageItem, FoundationRail, DarkCTABand
-Illustration: AbstractArc, DataChip, ProtectionPlanMockup, DirectionalStroke
+Illustration: ProtectionOrbit, AbstractArc, DataChip, DirectionalStroke
 Workflow:    StageShell, MetricCard, TrustRail, ScenarioComparison, CouncilCard
 Preview:     UnsignedTransactionCard, PreviewSafetySummary, ExpiryStatus
 Utility:     Divider, StatusBadge, Alert, Drawer, Accordion, ErrorSummary
@@ -541,6 +555,7 @@ Create a reusable component only when it serves a real production state. Do not 
 10. Do not ship links to sections or routes that do not exist.
 11. Preserve canonical contract parsing, workflow error details, server-authoritative state, and the unsigned-preview safety boundary.
 12. The prior architectural hero asset must not appear in the active landing design. Its removal from the repository is a separate cleanup decision.
+13. Resolve System/Light/Dark before paint without reading the cookie in the server layout; preserve static landing generation.
 
 ## 17. Anti-patterns
 
@@ -548,7 +563,7 @@ Reject a screen if it contains any of the following:
 
 - serif or italic display typography;
 - warm beige/terracotta styling;
-- a floating glass or rounded outer navbar container;
+- a translucent or glass pill navbar, glow, or decorative blur;
 - architectural, laptop, coin, or generic finance stock imagery;
 - neon-on-dark cyber styling, grids, glows, or holographic effects;
 - excessive small cards, badges, borders, shadows, or nested pills;
@@ -562,9 +577,9 @@ Reject a screen if it contains any of the following:
 
 ### Visual match
 
-- [ ] White is the dominant canvas; near-black and electric lime create the main contrast.
+- [ ] Light mode uses a dominant white canvas; dark mode uses layered near-black surfaces. Electric lime creates the shared brand contrast.
 - [ ] Manrope drives all hierarchy; no serif or italic editorial styling remains.
-- [ ] The header is flat, full-width, and sticky—not a detached pill.
+- [ ] Landing, workflow, and preview lab share the solid floating pill header without wrapping or clipping.
 - [ ] The hero is a large rounded lime panel with an oversized sans headline and one dominant black action.
 - [ ] Product-led abstract compositions replace architectural photography.
 - [ ] Feature cards are large, soft-gray, sparse, and mostly shadowless.
@@ -589,6 +604,7 @@ Reject a screen if it contains any of the following:
 - [ ] Status uses icon plus text, never color alone.
 - [ ] Reduced motion, 200% zoom, 320px width, and no-horizontal-overflow checks pass.
 - [ ] Meaningful charts or comparisons have direct labels and semantic text/table equivalents.
+- [ ] System, Light, and Dark appearance choices are keyboard accessible; explicit choice survives reload and System follows OS changes.
 
 ### Validation
 
