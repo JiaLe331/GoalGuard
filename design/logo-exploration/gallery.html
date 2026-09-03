@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>GoalGuard logo exploration</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #0b0c0a;
+        --muted: #5d605a;
+        --canvas: #ffffff;
+        --surface: #f2f3f0;
+        --line: #dfe1dc;
+        --lime: #c9f52b;
+        --radius: 28px;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        color: var(--ink);
+        background: var(--canvas);
+        font-family: Manrope, Inter, "Segoe UI", sans-serif;
+        line-height: 1.5;
+      }
+      a { color: inherit; }
+      a:focus-visible, button:focus-visible {
+        outline: 3px solid var(--ink);
+        outline-offset: 3px;
+      }
+      .page { width: min(1480px, calc(100% - 32px)); margin: 0 auto; }
+      .intro {
+        display: grid;
+        grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr);
+        gap: 48px;
+        padding: clamp(48px, 8vw, 112px) 0 56px;
+        border-bottom: 1px solid var(--line);
+      }
+      .eyebrow { margin: 0 0 18px; font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+      h1 { max-width: 900px; margin: 0; font-size: clamp(44px, 7vw, 104px); line-height: .92; letter-spacing: -.065em; }
+      .intro p { max-width: 42rem; margin: 24px 0 0; color: var(--muted); font-size: clamp(16px, 1.5vw, 20px); }
+      .brief { align-self: end; padding: 24px; border-radius: var(--radius); background: var(--lime); }
+      .brief strong { display: block; margin-bottom: 8px; font-size: 20px; }
+      .brief p { margin: 0; color: var(--ink); font-size: 15px; }
+      .jump { display: flex; flex-wrap: wrap; gap: 8px; padding: 24px 0 56px; }
+      .jump a, .asset-links a {
+        display: inline-flex;
+        min-height: 44px;
+        align-items: center;
+        justify-content: center;
+        padding: 0 16px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 700;
+        transition: background-color 120ms ease, border-color 120ms ease;
+      }
+      .jump a:hover, .asset-links a:hover { border-color: var(--ink); background: var(--surface); }
+      .option { padding: 72px 0; border-top: 1px solid var(--line); }
+      .option:first-of-type { border-top: 0; }
+      .option-head { display: grid; grid-template-columns: minmax(0, .7fr) minmax(320px, 1.3fr); gap: 32px; align-items: end; margin-bottom: 28px; }
+      .number { display: block; margin-bottom: 8px; color: var(--muted); font-size: 13px; font-weight: 800; letter-spacing: .12em; }
+      h2 { margin: 0; font-size: clamp(36px, 5vw, 72px); line-height: .95; letter-spacing: -.055em; }
+      .option-copy { max-width: 700px; margin: 0; color: var(--muted); font-size: 17px; }
+      .applications { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(320px, .6fr); gap: 16px; }
+      .context-stack { display: grid; gap: 16px; }
+      .nav-demo {
+        display: flex;
+        min-height: 92px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        padding: 14px 18px 14px 24px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255,255,255,.96);
+        box-shadow: 0 16px 40px rgba(11,12,10,.08);
+      }
+      .nav-demo img { width: min(300px, 56%); height: auto; }
+      .nav-links { display: flex; align-items: center; gap: clamp(12px, 2vw, 28px); font-size: 14px; font-weight: 700; }
+      .nav-cta { padding: 12px 18px; border-radius: 999px; color: white; background: var(--ink); white-space: nowrap; }
+      .surfaces { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+      .surface { min-height: 184px; display: flex; align-items: center; justify-content: center; padding: 28px; border-radius: var(--radius); }
+      .surface img { width: min(100%, 320px); height: auto; }
+      .surface.light { border: 1px solid var(--line); background: white; }
+      .surface.dark { background: var(--ink); }
+      .surface.lime { background: var(--lime); }
+      .favicon-card { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 20px; align-items: center; padding: 22px; border-radius: var(--radius); background: var(--surface); }
+      .favicon-card img { width: 96px; height: 96px; border-radius: 22px; box-shadow: 0 16px 28px rgba(11,12,10,.16); }
+      .favicon-card h3, .size-card h3 { margin: 0 0 6px; font-size: 16px; }
+      .favicon-card p, .size-card p { margin: 0; color: var(--muted); font-size: 13px; }
+      .size-card { padding: 24px; border: 1px solid var(--line); border-radius: var(--radius); }
+      .sizes { display: flex; min-height: 132px; align-items: flex-end; gap: 18px; margin-top: 18px; overflow-x: auto; }
+      .size { display: grid; justify-items: center; gap: 8px; flex: none; color: var(--muted); font-size: 11px; }
+      .size img { display: block; }
+      .asset-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+      .verdict { margin-top: 16px; padding: 18px 20px; border-left: 5px solid var(--lime); background: #f8f8f6; font-size: 14px; }
+      .pip-showcase { display: grid; grid-template-columns: minmax(280px, .72fr) minmax(0, 1.28fr); gap: 16px; margin-top: 16px; }
+      .pip-character-stage { position: relative; min-height: 520px; display: grid; place-items: center; overflow: hidden; padding: 32px; border-radius: 40px; background: var(--lime); }
+      .pip-character-stage::before { position: absolute; width: 70%; aspect-ratio: 1; border: 1px solid rgb(11 12 10 / .22); border-radius: 50%; content: ""; }
+      .pip-character-stage img { position: relative; width: min(100%, 420px); transition: transform 220ms cubic-bezier(.22,1,.36,1); }
+      .pip-character-stage:hover img { transform: translateY(-6px); }
+      .pip-character-label { position: absolute; left: 24px; bottom: 22px; padding: 10px 14px; border-radius: 999px; background: var(--ink); color: white; font-size: 12px; font-weight: 800; letter-spacing: .08em; }
+      .pip-boards { display: grid; gap: 16px; }
+      .pip-board { min-width: 0; padding: 20px; border: 1px solid var(--line); border-radius: 32px; background: white; }
+      .pip-board img { display: block; width: 100%; height: auto; border-radius: 20px; }
+      .pip-board h3 { margin: 0 0 4px; font-size: 18px; }
+      .pip-board p { margin: 0 0 16px; color: var(--muted); font-size: 14px; }
+      .usage-note { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+      .usage-note div { padding: 18px; border-radius: 22px; background: var(--surface); }
+      .usage-note strong { display: block; margin-bottom: 6px; }
+      .usage-note span { color: var(--muted); font-size: 13px; }
+      footer { padding: 64px 0 96px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+      @media (max-width: 900px) {
+        .intro, .option-head, .applications, .pip-showcase { grid-template-columns: 1fr; }
+        .option-head { align-items: start; }
+        .brief { max-width: 560px; }
+      }
+      @media (max-width: 680px) {
+        .page { width: min(100% - 24px, 1480px); }
+        .surfaces { grid-template-columns: 1fr; }
+        .surface { min-height: 150px; }
+        .nav-links span:not(.nav-cta) { display: none; }
+        .nav-demo { min-height: 76px; padding-left: 16px; }
+        .nav-demo img { width: min(230px, 60%); }
+        .favicon-card { grid-template-columns: 80px minmax(0, 1fr); }
+        .favicon-card img { width: 72px; height: 72px; border-radius: 18px; }
+        .pip-character-stage { min-height: 380px; }
+        .usage-note { grid-template-columns: 1fr; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        *, *::before, *::after { transition-duration: .01ms !important; }
+        .pip-character-stage:hover img { transform: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="page">
+        <header class="intro">
+          <div>
+            <p class="eyebrow">GoalGuard identity study · 03 September 2026</p>
+            <h1>Protection, without hiding the purpose.</h1>
+            <p>Four abstract combination systems and an expanded mascot study built from open boundaries, visible cores, and deliberate forward space. The second mascot round explicitly moves beyond the lime side-profile animal formula.</p>
+          </div>
+          <aside class="brief" aria-label="Design constraint">
+            <strong>One visual rule</strong>
+            <p>The user’s goal stays visible. Protection shapes organise around it, never turn it into a lock, shield, token, or guarantee badge.</p>
+          </aside>
+        </header>
+        <nav class="jump" aria-label="Logo options">
+          <a href="#orbit">01 Purpose Orbit</a>
+          <a href="#passage">02 Safe Passage</a>
+          <a href="#dual">03 Dual Guard</a>
+          <a href="#core">04 Purpose Core</a>
+          <a href="#pip">05 Pip the Pangolin</a>
+          <a href="#mascot-round-two">Mascot round two</a>
+          <a href="#pip-colour">Pip colour</a>
+        </nav>
+      </div>
+
+      <div class="page">
+        <section class="option" id="orbit">
+          <div class="option-head">
+            <div><span class="number">OPTION 01</span><h2>Purpose Orbit</h2></div>
+            <p class="option-copy">A calm open orbit holds a visible lime purpose point. Its offset exit and inner bar suggest a “G” without becoming a literal monogram or target.</p>
+          </div>
+          <div class="applications">
+            <div class="context-stack">
+              <div class="nav-demo"><img src="assets/purpose-orbit/lockup.svg" alt="Purpose Orbit GoalGuard logo" /><div class="nav-links"><span>How it works</span><span>Trust</span><span class="nav-cta">Set a goal</span></div></div>
+              <div class="surfaces">
+                <div class="surface light"><img src="assets/purpose-orbit/lockup.svg" alt="Purpose Orbit on white" /></div>
+                <div class="surface dark"><img src="assets/purpose-orbit/lockup-dark.svg" alt="Purpose Orbit reversed on near-black" /></div>
+                <div class="surface lime"><img src="assets/purpose-orbit/lockup-lime.svg" alt="Purpose Orbit in black on lime" /></div>
+              </div>
+            </div>
+            <div class="context-stack">
+              <div class="favicon-card"><img src="assets/purpose-orbit/favicon.svg" alt="Purpose Orbit app icon" /><div><h3>Quiet confidence</h3><p>Best public-facing and favicon silhouette.</p></div></div>
+              <div class="size-card"><h3>Small-size test</h3><p>Rendered from one vector source.</p><div class="sizes" data-mark="purpose-orbit"></div><div class="asset-links"><a href="assets/purpose-orbit/symbol.svg">Symbol SVG</a><a href="assets/purpose-orbit/variants.svg">All variants</a></div></div>
+            </div>
+          </div>
+          <p class="verdict"><strong>Best for:</strong> the most approachable, purpose-led master brand.</p>
+        </section>
+
+        <section class="option" id="passage">
+          <div class="option-head">
+            <div><span class="number">OPTION 02</span><h2>Safe Passage</h2></div>
+            <p class="option-copy">Two rounded, offset paths create a bounded route with a lime waypoint. The open diagonal construction gives the system pace without suggesting market growth.</p>
+          </div>
+          <div class="applications">
+            <div class="context-stack">
+              <div class="nav-demo"><img src="assets/safe-passage/lockup.svg" alt="Safe Passage GoalGuard logo" /><div class="nav-links"><span>How it works</span><span>Trust</span><span class="nav-cta">Set a goal</span></div></div>
+              <div class="surfaces">
+                <div class="surface light"><img src="assets/safe-passage/lockup.svg" alt="Safe Passage on white" /></div>
+                <div class="surface dark"><img src="assets/safe-passage/lockup-dark.svg" alt="Safe Passage reversed on near-black" /></div>
+                <div class="surface lime"><img src="assets/safe-passage/lockup-lime.svg" alt="Safe Passage in black on lime" /></div>
+              </div>
+            </div>
+            <div class="context-stack">
+              <div class="favicon-card"><img src="assets/safe-passage/favicon.svg" alt="Safe Passage app icon" /><div><h3>Guided momentum</h3><p>Most dynamic and technology-oriented.</p></div></div>
+              <div class="size-card"><h3>Small-size test</h3><p>Rendered from one vector source.</p><div class="sizes" data-mark="safe-passage"></div><div class="asset-links"><a href="assets/safe-passage/symbol.svg">Symbol SVG</a><a href="assets/safe-passage/variants.svg">All variants</a></div></div>
+            </div>
+          </div>
+          <p class="verdict"><strong>Watch:</strong> validate that users read “guided passage,” not logistics or routing.</p>
+        </section>
+
+        <section class="option" id="dual">
+          <div class="option-head">
+            <div><span class="number">OPTION 03</span><h2>Dual Guard</h2></div>
+            <p class="option-copy">Mirrored, open “G” structures create a protected centre while retaining two clear exits. The central lime lozenge acts as the user’s purpose, not a token.</p>
+          </div>
+          <div class="applications">
+            <div class="context-stack">
+              <div class="nav-demo"><img src="assets/dual-guard/lockup.svg" alt="Dual Guard GoalGuard logo" /><div class="nav-links"><span>How it works</span><span>Trust</span><span class="nav-cta">Set a goal</span></div></div>
+              <div class="surfaces">
+                <div class="surface light"><img src="assets/dual-guard/lockup.svg" alt="Dual Guard on white" /></div>
+                <div class="surface dark"><img src="assets/dual-guard/lockup-dark.svg" alt="Dual Guard reversed on near-black" /></div>
+                <div class="surface lime"><img src="assets/dual-guard/lockup-lime.svg" alt="Dual Guard in black on lime" /></div>
+              </div>
+            </div>
+            <div class="context-stack">
+              <div class="favicon-card"><img src="assets/dual-guard/favicon.svg" alt="Dual Guard app icon" /><div><h3>Product authority</h3><p>Strongest name connection and app identity.</p></div></div>
+              <div class="size-card"><h3>Small-size test</h3><p>Rendered from one vector source.</p><div class="sizes" data-mark="dual-guard"></div><div class="asset-links"><a href="assets/dual-guard/symbol.svg">Symbol SVG</a><a href="assets/dual-guard/variants.svg">All variants</a></div></div>
+            </div>
+          </div>
+          <p class="verdict"><strong>Best for:</strong> a compact product mark with the clearest GoalGuard mnemonic.</p>
+        </section>
+
+        <section class="option" id="core">
+          <div class="option-head">
+            <div><span class="number">OPTION 04</span><h2>Purpose Core</h2></div>
+            <p class="option-copy">A family of rounded modules organises around an intentionally exposed centre. The unequal pieces feel adaptive and give future product motion a natural grammar.</p>
+          </div>
+          <div class="applications">
+            <div class="context-stack">
+              <div class="nav-demo"><img src="assets/purpose-core/lockup.svg" alt="Purpose Core GoalGuard logo" /><div class="nav-links"><span>How it works</span><span>Trust</span><span class="nav-cta">Set a goal</span></div></div>
+              <div class="surfaces">
+                <div class="surface light"><img src="assets/purpose-core/lockup.svg" alt="Purpose Core on white" /></div>
+                <div class="surface dark"><img src="assets/purpose-core/lockup-dark.svg" alt="Purpose Core reversed on near-black" /></div>
+                <div class="surface lime"><img src="assets/purpose-core/lockup-lime.svg" alt="Purpose Core in black on lime" /></div>
+              </div>
+            </div>
+            <div class="context-stack">
+              <div class="favicon-card"><img src="assets/purpose-core/favicon.svg" alt="Purpose Core app icon" /><div><h3>Distinctive system</h3><p>Best foundation for restrained motion.</p></div></div>
+              <div class="size-card"><h3>Small-size test</h3><p>Rendered from one vector source.</p><div class="sizes" data-mark="purpose-core"></div><div class="asset-links"><a href="assets/purpose-core/symbol.svg">Symbol SVG</a><a href="assets/purpose-core/variants.svg">All variants</a></div></div>
+            </div>
+          </div>
+          <p class="verdict"><strong>Best for:</strong> a distinctive living identity across loading, council, and progress states.</p>
+        </section>
+
+        <section class="option" id="pip">
+          <div class="option-head">
+            <div><span class="number">OPTION 05 · MASCOT SYSTEM</span><h2>Pip the Pangolin</h2></div>
+            <p class="option-copy">The selected mascot direction: a calm three-quarter pangolin whose bold scales organise around a visible purpose point. Pip acts as a patient guide through unfamiliar financial protection—not an adviser, authority, or celebration device.</p>
+          </div>
+          <div class="applications">
+            <div class="context-stack">
+              <div class="nav-demo"><img src="assets/pip-pangolin/lockup.svg" alt="Pip the Pangolin GoalGuard logo" /><div class="nav-links"><span>How it works</span><span>Trust</span><span class="nav-cta">Set a goal</span></div></div>
+              <div class="surfaces">
+                <div class="surface light"><img src="assets/pip-pangolin/lockup.svg" alt="Pip GoalGuard logo on white" /></div>
+                <div class="surface dark"><img src="assets/pip-pangolin/lockup-dark.svg" alt="Pip GoalGuard logo reversed on near-black" /></div>
+                <div class="surface lime"><img src="assets/pip-pangolin/lockup-lime.svg" alt="Pip GoalGuard logo in black on lime" /></div>
+              </div>
+            </div>
+            <div class="context-stack">
+              <div class="favicon-card"><img src="assets/pip-pangolin/favicon.svg" alt="Pip compact pangolin app icon" /><div><h3>Responsive hybrid</h3><p>The same snout, purpose ring, and three-scale silhouette now connect every brand size.</p></div></div>
+              <div class="size-card"><h3>Micro-mark test</h3><p>Only the defining snout, eye, scales, and purpose ring remain at dense sizes.</p><div class="sizes" data-mark="pip-pangolin" data-file="micro-mark.svg"></div><div class="asset-links"><a href="assets/pip-pangolin/mascot-head.svg">Mascot head</a><a href="assets/pip-pangolin/variants.svg">Variant SVG</a><a href="assets/pip-pangolin/variants.png">Variant PNG</a><a href="assets/pip-pangolin/lockup-stacked.svg">Stacked lockup</a></div></div>
+            </div>
+          </div>
+
+          <div class="pip-showcase">
+            <div class="pip-character-stage">
+              <img src="assets/pip-pangolin/mascot-neutral.svg" width="480" height="480" alt="Pip standing calmly with an open tail and a visible purpose point" />
+              <span class="pip-character-label">NEUTRAL GUIDE POSE</span>
+            </div>
+            <div class="pip-boards">
+              <article class="pip-board"><h3>Expression without financial theatre</h3><p>Six restrained states support comprehension, uncertainty, and recovery. Text always carries the meaning.</p><a href="pip-expression-sheet.svg"><img loading="lazy" src="pip-expression-sheet.svg" width="1500" height="1050" alt="Six-state Pip expression sheet" /></a><div class="asset-links"><a href="pip-expression-sheet.svg">SVG sheet</a><a href="pip-expression-sheet.png">PNG sheet</a></div></article>
+              <article class="pip-board"><h3>Selective application</h3><p>Pip appears where reassurance helps and stays away from exact transaction and financial-data surfaces.</p><a href="pip-application-sheet.svg"><img loading="lazy" src="pip-application-sheet.svg" width="1600" height="1500" alt="Pip application placement mockups" /></a><div class="asset-links"><a href="pip-application-sheet.svg">SVG sheet</a><a href="pip-application-sheet.png">PNG sheet</a></div></article>
+            </div>
+          </div>
+          <div class="usage-note" aria-label="Pip usage boundaries">
+            <div><strong>Present</strong><span>Composer, active search, education, safe recovery, confirmation, and calm demo-ready acknowledgement.</span></div>
+            <div><strong>Absent</strong><span>Financial tables, calldata, request IDs, council verdict icons, repeated cards, and toast notifications.</span></div>
+            <div><strong>Accessible</strong><span>Decorative instances are hidden; meaningful uses retain adjacent text and static reduced-motion equivalents.</span></div>
+          </div>
+          <p class="verdict"><strong>Selected:</strong> Pip will proceed as the GoalGuard mascot, with the colour system refined so electric lime becomes the purpose signal rather than the entire face.</p>
+        </section>
+
+        <section class="option" id="mascot-round-two">
+          <div class="option-head">
+            <div><span class="number">FOLLOW-UP STUDY</span><h2>Beyond Pip</h2></div>
+            <p class="option-copy">This completed comparison tested Pip against four different archetypes. Although the study identified other strong silhouettes, the team selected Pip and carried its learnings into a more distinctive colour treatment.</p>
+          </div>
+          <article class="pip-board">
+            <h3>Five genuinely different mascot roles</h3>
+            <p>This board records the exploration before selection. Pip is now the chosen direction; the master system remains 2D, with 3D reserved for campaign derivatives.</p>
+            <a href="mascot-exploration.html"><img loading="lazy" src="mascot-directions.png" width="1600" height="2118" alt="Comparison of Pip, Tavi, Miro, Nook, and Lumi mascot directions with a 2D versus 3D recommendation" /></a>
+            <div class="asset-links"><a href="mascot-exploration.html">Open comparison gallery</a><a href="MASCOT_EXPLORATION.md">Read design rationale</a><a href="mascot-directions.png">PNG board</a></div>
+          </article>
+          <p class="verdict"><strong>Decision:</strong> proceed with Pip. Preserve this board as evidence of the alternatives considered rather than replacing its original evaluation.</p>
+        </section>
+
+        <section class="option" id="pip-colour">
+          <div class="option-head">
+            <div><span class="number">SELECTED MASCOT · COLOUR STUDY</span><h2>Pip keeps the lime</h2></div>
+            <p class="option-copy">Five harmonious treatments tested whether electric lime should fill Pip or act only as the purpose signal. Electric Lime is now selected for production, with posture and expression providing the distinctive character.</p>
+          </div>
+          <article class="pip-board">
+            <h3>Electric Lime selected, alternates archived</h3>
+            <p>Electric Lime is the production colourway. Soft Lime and Cloud Neutral remain design-system-compatible studies; Meadow Mint and Quiet Periwinkle remain illustration and campaign explorations.</p>
+            <a href="pip-colour-harmony.html"><img loading="lazy" src="pip-colour-harmony.png" width="1600" height="1474" alt="Historical comparison board of five Pip colour harmonies" /></a>
+            <div class="asset-links"><a href="pip-colour-harmony.html">Open colour gallery</a><a href="pip-colour-harmony.png">PNG board</a><a href="PIP_MASCOT_SPEC.md">Updated mascot specification</a></div>
+          </article>
+          <p class="verdict"><strong>Selected:</strong> electric-lime body with near-black armour on light surfaces; reversed white armour on dark; black-only mark on lime.</p>
+        </section>
+      </div>
+    </main>
+    <footer><div class="page">Exploration only · not connected to production UI · Geometry remains editable SVG.</div></footer>
+    <script>
+      const sizes = [16, 24, 32, 48, 128];
+      document.querySelectorAll('[data-mark]').forEach((row) => {
+        const name = row.getAttribute('data-mark');
+        const file = row.getAttribute('data-file') || 'symbol.svg';
+        sizes.forEach((size) => {
+          const item = document.createElement('span');
+          item.className = 'size';
+          item.innerHTML = `<img src="assets/${name}/${file}" alt="" width="${size}" height="${size}"><span>${size}px</span>`;
+          row.appendChild(item);
+        });
+      });
+    </script>
+  </body>
+</html>

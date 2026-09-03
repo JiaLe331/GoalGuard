@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 96" role="img" aria-labelledby="title">
+  <title id="title">GoalGuard Dual Guard horizontal logo</title>
+  <g transform="translate(16 16)"><path d="M28 8H18L6 20v24l12 12h10V43h-6l-5-5V26l5-5h6V8Z" fill="#0B0C0A"/><path d="M36 8h10l12 12v24L46 56H36V43h6l5-5V26l-5-5h-6V8Z" fill="#0B0C0A"/><rect x="28" y="24" width="8" height="16" rx="4" fill="#C9F52B"/></g>
+  <text x="96" y="60" fill="#0B0C0A" font-family="Manrope, Inter, Segoe UI, sans-serif" font-size="34" font-weight="700" letter-spacing="-1.7">GoalGuard</text>
+</svg>

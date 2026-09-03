@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" role="img" aria-labelledby="title desc">
+  <title id="title">Tavi the tortoise</title>
+  <desc id="desc">A front-facing geometric tortoise with a lime shell built around a visible purpose point.</desc>
+  <path d="M93 236c-18 0-31 13-31 30v14h62v-16c0-16-13-28-31-28Zm134 0c-18 0-31 12-31 28v16h62v-14c0-17-13-30-31-30Z" fill="#0B0C0A"/>
+  <path d="M160 32c-25 0-44 20-44 45v23h88V77c0-25-19-45-44-45Z" fill="#0B0C0A"/>
+  <circle cx="145" cy="68" r="5" fill="#FFFFFF"/><circle cx="175" cy="68" r="5" fill="#FFFFFF"/>
+  <path d="M151 82c6 4 12 4 18 0" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/>
+  <path d="M52 220C52 133 94 86 160 86s108 47 108 134c0 37-24 65-58 65H110c-34 0-58-28-58-65Z" fill="#C9F52B" stroke="#0B0C0A" stroke-width="10"/>
+  <path d="M160 91v189M71 151h178M60 216h200M99 112l61 39 61-39M91 151l69 65 69-65M91 264l69-48 69 48" fill="none" stroke="#0B0C0A" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="160" cy="216" r="22" fill="#FFFFFF" stroke="#0B0C0A" stroke-width="7"/>
+  <circle cx="160" cy="216" r="10" fill="#C9F52B"/>
+</svg>
