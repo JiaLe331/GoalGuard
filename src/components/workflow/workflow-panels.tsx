@@ -187,7 +187,7 @@ export function ActiveProtectionPanel({ stage }: { stage: "searching_candidates"
         <p className="mt-6 max-w-xl text-base leading-7 text-[color:var(--text-on-dark-muted)]">{content[1]}</p>
         <div className="mt-9 flex items-center gap-3 text-sm" role="status"><HourglassHigh className="size-5 animate-pulse motion-reduce:animate-none" aria-hidden="true" />Waiting for a truthful backend result—no simulated percentage.</div>
       </div>
-      <ol className="relative border-t border-[var(--dark-border)] p-7 text-sm text-[color:var(--gray-300)] lg:border-l lg:border-t-0 lg:p-8" aria-label="Live request provenance">
+      <ol className="relative border-t border-[var(--dark-border)] p-7 text-sm text-[color:var(--foreground-on-strong-muted)] lg:border-l lg:border-t-0 lg:p-8" aria-label="Live request provenance">
         <li className="border-t border-[var(--dark-border)] py-4">01 · Read authoritative inputs</li>
         <li className="border-t border-[var(--dark-border)] py-4">02 · Apply deterministic checks</li>
         <li className="border-y border-[var(--dark-border)] py-4">03 · Return an auditable result</li>
@@ -220,8 +220,8 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
           <h1 className="mt-6 max-w-3xl text-4xl font-semibold leading-[1.02] tracking-[-0.055em] sm:text-6xl">A protection plan for {goalName(goal)}.</h1>
           <p className="mt-4 max-w-2xl text-[color:var(--foreground-soft)]">A live ETH put limits the selected downside through its displayed expiry. It does not guarantee the full goal after that time.</p>
         </div>
-        <div className="border-t border-[var(--border)] bg-[var(--white)] p-6 sm:p-8">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="border-t border-[var(--border)] bg-[var(--surface-raised)] p-6 sm:p-8">
+          <div className="metric-grid grid gap-3">
             <MetricCard label="Goal amount" value={formatUsd(goal.protectedValueUsd)} />
             <MetricCard label="Protection cost" value={formatUsd(candidate.premiumUsd)} tone="accent" />
             <MetricCard label="Estimated floor" value={formatUsd(candidate.estimatedFloorUsd)} tone="accent" />
@@ -289,8 +289,8 @@ export function PreviewConfirmationPanel({ goal, candidate, walletAddress, ackno
         <h1 className="mt-5 text-4xl font-semibold leading-[1.02] tracking-[-0.05em] sm:text-5xl">Confirm the facts before generating an unsigned preview.</h1>
         <p className="mt-3 max-w-3xl text-[color:var(--foreground-soft)]">Back makes no API change. Generate calls the preview endpoint once and returns transaction data for inspection only.</p>
       </div>
-      <div className="border-t border-[var(--border)] bg-[var(--white)] p-6 sm:p-8">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="border-t border-[var(--border)] bg-[var(--surface-raised)] p-6 sm:p-8">
+        <div className="metric-grid grid gap-3">
           <MetricCard label="Purpose" value={goalName(goal)} />
           <MetricCard label="Exact cost" value={formatUsd(candidate.premiumUsd)} tone="accent" />
           <MetricCard label="Maximum cost at risk" value={formatUsd(candidate.maxPremiumLossUsd)} />
@@ -299,7 +299,7 @@ export function PreviewConfirmationPanel({ goal, candidate, walletAddress, ackno
           <MetricCard label="Connected wallet" value={<span className="text-base tabular-nums">{shortenAddress(walletAddress)}</span>} hint="Base · chain ID 8453" />
         </div>
         <Alert className="mt-5" tone="warning" title="Preview, not protection">Generating the preview does not move funds, create an allowance, sign a transaction, or create a protected position.</Alert>
-        <label className="mt-5 flex min-h-14 cursor-pointer items-start gap-3 rounded-[var(--radius-control)] border-2 border-[var(--foreground)] bg-[var(--accent-soft)] p-4 text-sm leading-6 text-[color:var(--foreground-soft)]">
+        <label className="mt-5 flex min-h-14 cursor-pointer items-start gap-3 rounded-[var(--radius-control)] border-2 border-[var(--foreground)] bg-[var(--accent-soft)] p-4 text-sm leading-6 text-[color:var(--accent-soft-foreground)] focus-within:outline-2 focus-within:outline-offset-3 focus-within:outline-[var(--focus-ring)]">
           <input type="checkbox" checked={acknowledged} onChange={(event) => onAcknowledged(event.target.checked)} className="mt-1 size-5 shrink-0 accent-[var(--foreground)]" />
           I understand the exact cost, expiry, coverage, connected wallet, and that this produces unsigned transaction data only.
         </label>
@@ -332,14 +332,14 @@ export function DemoPreviewReadyPanel({ goal, preview, meta, decision, onStartAn
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
       <Card tone="white" className="overflow-hidden">
-        <div className="bg-[var(--black)] p-6 text-[color:var(--white)] sm:p-10">
+        <div className="bg-[var(--surface-strong)] p-6 text-[color:var(--foreground-on-strong)] sm:p-10">
           <StatusBadge label={expired ? "Preview expired" : "Demo preview ready"} tone={expired ? "warning" : "ready"} />
           <h1 className="mt-5 text-4xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl">Protection Plan Ready <span className="text-[color:var(--accent)]">(Demo)</span></h1>
           <p className="mt-4 text-lg font-semibold">No funds moved; no protected position was created</p>
-          <p className="mt-2 max-w-3xl text-[color:var(--gray-300)]">This is a time-limited, unsigned snapshot of the approved plan and wallet requirements.</p>
+          <p className="mt-2 max-w-3xl text-[color:var(--foreground-on-strong-muted)]">This is a time-limited, unsigned snapshot of the approved plan and wallet requirements.</p>
         </div>
         <div className="p-6 sm:p-8">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="metric-grid grid gap-3">
             <MetricCard label="Purpose" value={goalName(goal)} />
             <MetricCard label="Proposed cost" value={formatUsd(preview.candidate.premiumUsd)} tone="accent" />
             <MetricCard label="Estimated floor" value={formatUsd(preview.candidate.estimatedFloorUsd)} tone="accent" />

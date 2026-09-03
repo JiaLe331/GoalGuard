@@ -26,10 +26,10 @@ export function StageShell({ step, title, eyebrow, children }: { step: number; t
             const current = number === step;
             const stateClass = current ? "text-[color:var(--foreground)]" : "text-[color:var(--foreground-soft)]";
             const numberClass = current
-              ? "border-[var(--black)] bg-[var(--black)] text-[color:var(--white)]"
+              ? "border-[var(--surface-strong)] bg-[var(--surface-strong)] text-[color:var(--foreground-on-strong)]"
               : complete
-                ? "border-[var(--accent)] bg-[var(--accent)] text-[color:var(--black)]"
-                : "border-[var(--border-strong)] bg-[var(--white)]";
+                ? "border-[var(--accent)] bg-[var(--accent)] text-[color:var(--accent-foreground)]"
+                : "border-[var(--border-strong)] bg-[var(--surface-raised)]";
             return (
               <li key={label} aria-current={current ? "step" : undefined} className={"relative flex min-h-12 items-center gap-3 rounded-xl px-3 " + stateClass}>
                 <span className={"grid size-7 shrink-0 place-items-center rounded-full border text-xs font-semibold tabular-nums " + numberClass}>{complete ? <Check className="size-4" aria-hidden="true" /> : number}</span>
@@ -40,6 +40,7 @@ export function StageShell({ step, title, eyebrow, children }: { step: number; t
         </ol>
       </div>
       <motion.section
+        className="workflow-stage"
         key={step + "-" + title}
         initial={reducedMotion ? false : { opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -62,31 +63,37 @@ export function MetricCard({ label, value, hint, tone = "default" }: { label: st
     : accent
       ? "bg-[var(--accent)] text-[color:var(--accent-foreground)]"
       : "bg-[var(--surface-muted)] text-[color:var(--foreground)]";
+  const supportingClass = dark
+    ? "text-[color:var(--text-on-dark-muted)]"
+    : accent
+      ? "text-[color:var(--accent-foreground)]"
+      : "text-[color:var(--foreground-soft)]";
   return (
     <div className={"rounded-[var(--radius-card)] p-5 " + stateClass}>
-      <p className={"text-xs font-semibold uppercase tracking-[0.1em] " + (dark ? "text-[color:var(--text-on-dark-muted)]" : "text-[color:var(--foreground-soft)]")}>{label}</p>
+      <p className={"text-xs font-semibold uppercase tracking-[0.1em] " + supportingClass}>{label}</p>
       <div className="mt-3 text-xl font-semibold tracking-[-0.035em] tabular-nums">{value}</div>
-      {hint ? <p className={"mt-2 text-sm leading-5 " + (dark ? "text-[color:var(--text-on-dark-muted)]" : "text-[color:var(--foreground-soft)]")}>{hint}</p> : null}
+      {hint ? <p className={"mt-2 text-sm leading-5 " + supportingClass}>{hint}</p> : null}
     </div>
   );
 }
 
 export function ScenarioComparison({ scenarios }: { scenarios: ScenarioResult[] }) {
+  const reducedMotion = useReducedMotion();
   const values = scenarios.map((scenario) => Number(scenario.netProtectedValueUsd));
   const max = Math.max(...values, 1);
   const labels = { down: "Market down", flat: "Market flat", up: "Market up", custom: "Custom" } as const;
   return (
-    <div>
-      <div className="space-y-5" aria-hidden="true">
+    <div className="min-w-0" role="list" aria-label="Estimated value after protection by market scenario">
+      <div className="space-y-5">
         {scenarios.map((scenario) => (
-          <div key={scenario.key} className="grid gap-2 sm:grid-cols-[7.5rem_1fr_7rem] sm:items-center">
+          <div key={scenario.key} role="listitem" className="scenario-row grid min-w-0 gap-2">
             <span className="text-sm text-[color:var(--foreground-soft)]">{labels[scenario.key]}</span>
-            <div className="h-3 overflow-hidden rounded-full bg-[var(--gray-200)]"><div className="h-full min-w-1 rounded-full bg-[var(--accent)]" style={{ width: Math.max(4, Math.min(100, (Number(scenario.netProtectedValueUsd) / max) * 100)) + "%" }} /></div>
-            <span className="text-left text-sm font-semibold tabular-nums sm:text-right">{formatUsd(scenario.netProtectedValueUsd)}</span>
+            <div className="h-3 overflow-hidden rounded-full bg-[var(--scenario-track)]" aria-hidden="true"><motion.div className="h-full min-w-1 origin-left rounded-full bg-[var(--accent)]" initial={reducedMotion ? false : { scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: reducedMotion ? 0 : 0.42, ease: [0.16, 1, 0.3, 1] }} style={{ width: Math.max(4, Math.min(100, (Number(scenario.netProtectedValueUsd) / max) * 100)) + "%" }} /></div>
+            <span className="text-left text-sm font-semibold tabular-nums scenario-value">{formatUsd(scenario.netProtectedValueUsd)}</span>
+            <span className="sr-only">Settlement price {formatUsd(scenario.settlementPriceUsd)}. Net protected value {formatUsd(scenario.netProtectedValueUsd)}.</span>
           </div>
         ))}
       </div>
-      <table className="sr-only"><caption>Estimated value after protection by market scenario</caption><thead><tr><th>Scenario</th><th>Settlement price</th><th>Net protected value</th></tr></thead><tbody>{scenarios.map((scenario) => <tr key={scenario.key}><td>{labels[scenario.key]}</td><td>{formatUsd(scenario.settlementPriceUsd)}</td><td>{formatUsd(scenario.netProtectedValueUsd)}</td></tr>)}</tbody></table>
     </div>
   );
 }
@@ -96,9 +103,9 @@ export function CouncilCard({ review, label }: { review: CouncilReview; label: s
   const statusColor = review.verdict === "approve" ? "var(--positive)" : review.verdict === "uncertain" ? "var(--accent)" : "var(--negative)";
   const VerdictIcon = review.verdict === "approve" ? CheckCircle : review.verdict === "uncertain" ? Question : XCircle;
   return (
-    <article className="rounded-[var(--radius-card)] border-l-4 bg-[var(--surface-subtle)] p-5 sm:p-6" style={{ borderColor: statusColor }}>
+    <article className="min-w-0 rounded-[var(--radius-card)] border-l-4 bg-[var(--surface-subtle)] p-5 sm:p-6" style={{ borderColor: statusColor }}>
       <div className="flex items-start justify-between gap-4">
-        <div><p className="text-xs font-semibold uppercase tracking-[0.12em]">{review.verdict}</p><h3 className="mt-1 text-2xl font-semibold tracking-[-0.04em]">{label}</h3></div>
+        <div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-[0.12em]">{review.verdict}</p><h3 className="mt-1 text-2xl font-semibold tracking-[-0.04em]">{label}</h3></div>
         <VerdictIcon className="size-6" style={{ color: statusColor }} weight={review.verdict === "approve" ? "fill" : "regular"} aria-hidden="true" />
       </div>
       <p className="mt-4 text-sm leading-6 text-[color:var(--foreground-soft)]">{review.summary}</p>
@@ -118,12 +125,15 @@ export function UnsignedTransactionCard({ title, to, data, value, chainId }: { t
   return (
     <article className="rounded-[var(--radius-card)] border border-[var(--dark-border)] bg-[var(--finance-card-bg)] p-5 text-[color:var(--finance-card-fg)] sm:p-6">
       <div className="flex items-center gap-3"><ShieldCheck className="size-6" aria-hidden="true" /><div><p className="text-xs uppercase tracking-[0.1em] text-[color:var(--finance-card-muted)]">Unsigned transaction</p><h3 className="font-semibold">{title}</h3></div></div>
-      <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-2">
+      <dl className="mt-5 grid min-w-0 gap-4 text-sm sm:grid-cols-2">
         <div className="sm:col-span-2"><dt className="text-xs text-[color:var(--finance-card-muted)]">Target</dt><dd className="mt-1 flex items-center gap-2"><code className="overflow-anywhere tabular-nums">{shortenAddress(to)}</code><button className="grid size-11 place-items-center rounded-full hover:bg-[var(--surface-dark-raised)]" aria-label="Copy transaction target" onClick={() => void copy(to, "to")}><Copy aria-hidden="true" /></button><span className="sr-only" aria-live="polite">{copied === "to" ? "Target copied" : ""}</span></dd></div>
         <div><dt className="text-xs text-[color:var(--finance-card-muted)]">Base chain ID</dt><dd className="mt-1 tabular-nums">{chainId}</dd></div>
         <div><dt className="text-xs text-[color:var(--finance-card-muted)]">Value</dt><dd className="mt-1 tabular-nums">{value} wei</dd></div>
-        <div className="sm:col-span-2"><dt className="text-xs text-[color:var(--finance-card-muted)]">Calldata</dt><dd className="mt-1 flex items-center gap-2"><code className="min-w-0 flex-1 truncate text-[color:var(--finance-card-muted)] tabular-nums">{data}</code><button className="grid size-11 place-items-center rounded-full hover:bg-[var(--surface-dark-raised)]" aria-label="Copy transaction calldata" onClick={() => void copy(data, "data")}><Copy aria-hidden="true" /></button><span className="sr-only" aria-live="polite">{copied === "data" ? "Calldata copied" : ""}</span></dd></div>
       </dl>
+      <details className="group mt-4 border-t border-[var(--dark-border)] pt-3">
+        <summary className="flex min-h-11 list-none items-center justify-between gap-3 text-sm font-semibold">Inspect calldata <span className="text-xs font-normal text-[color:var(--finance-card-muted)] group-open:hidden">Hidden for readability</span><span className="hidden text-xs font-normal text-[color:var(--finance-card-muted)] group-open:inline">Collapse</span></summary>
+        <div className="mt-2 flex min-w-0 items-center gap-2"><code className="overflow-anywhere min-w-0 flex-1 text-xs text-[color:var(--finance-card-muted)] tabular-nums">{data}</code><button className="grid size-11 shrink-0 place-items-center rounded-full hover:bg-[var(--surface-dark-raised)]" aria-label="Copy transaction calldata" onClick={() => void copy(data, "data")}><Copy aria-hidden="true" /></button><span className="sr-only" aria-live="polite">{copied === "data" ? "Calldata copied" : ""}</span></div>
+      </details>
     </article>
   );
 }
