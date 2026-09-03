@@ -473,7 +473,7 @@ export function WorkflowErrorPanel({ error, onRetry, onEdit }: { error: Workflow
       <p className="mt-5 text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--foreground-soft)]">{error.code.replaceAll("_", " ")}</p>
       <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-[-0.05em]">The protection flow stopped safely.</h1>
       <p className="mt-4 text-[color:var(--foreground-soft)]">{error.message}</p>
-      {details.length ? <div className="mt-5 border-y border-[var(--border)] py-4"><p className="text-sm font-semibold">What the live check found</p><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[color:var(--foreground-soft)]">{details.map((line) => <li key={line}>{line}</li>)}</ul></div> : null}
+      {details.length ? <div className="mt-5 border-y border-[var(--border)] py-4"><p className="text-sm font-semibold">What the live check found</p><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[color:var(--foreground-soft)]">{details.map((line, index) => <li key={`${index}:${line}`}>{line}</li>)}</ul></div> : null}
       {error.requestId ? <p className="overflow-anywhere mt-5 text-xs tabular-nums">Request {error.requestId}</p> : null}
       <div className="mt-7 flex flex-col gap-3 sm:flex-row">{error.retryable && !editFirst ? <Button onClick={onRetry}>Try this step again</Button> : null}<Button variant={editFirst ? "primary" : "secondary"} onClick={onEdit}><PencilSimple aria-hidden="true" />Edit goal constraints</Button></div>
     </Card>
