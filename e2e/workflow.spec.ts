@@ -68,9 +68,16 @@ async function completeToPlan(page: Page) {
   await expect(page).toHaveURL(new RegExp(`/goals/${parseGoalResponse.data.goal!.id}$`), { timeout: 10_000 });
   await expect(page.getByRole("heading", { name: /make the goal exact/i })).toBeVisible();
 
-  await page.getByRole("button", { name: /find protection options/i }).click();
-  await expect(page.getByRole("heading", { name: /rent protection/i })).toBeVisible();
-  await expect(page.getByText("3/3 council checks passed")).toBeVisible();
+  await page.getByRole("button", { name: /find live protection/i }).click();
+  await expect(page.getByRole("heading", { name: /a protection plan for rent/i })).toBeVisible();
+  await expect(page.getByText("3 of 3 checks passed")).toBeVisible();
+}
+
+async function openPreviewConfirmation(page: Page) {
+  await page.getByRole("button", { name: /connect wallet to continue/i }).click();
+  await expect(page.getByLabel(/wallet connected/i)).toBeVisible();
+  await page.getByRole("button", { name: /continue to unsigned preview/i }).click();
+  await page.getByRole("checkbox").check();
 }
 
 test("completes the contract-wired frontend through a preview-only trade", async ({ page }) => {
@@ -80,10 +87,9 @@ test("completes the contract-wired frontend through a preview-only trade", async
   const refreshCompleted = page.waitForResponse((response) => new URL(response.url()).pathname === "/api/protection/candidates");
   await page.getByRole("button", { name: /refresh live options/i }).click();
   expect((await refreshCompleted).ok()).toBe(true);
-  await expect(page.getByText("3/3 council checks passed")).toBeVisible();
+  await expect(page.getByText("3 of 3 checks passed")).toBeVisible();
 
-  await page.getByRole("button", { name: /generate unsigned preview/i }).click();
-  await expect(page.getByLabel(/wallet connected/i)).toBeVisible();
+  await openPreviewConfirmation(page);
   const previewButton = page.getByRole("button", { name: /generate unsigned preview/i });
   await previewButton.evaluate((button) => {
     button.dispatchEvent(new MouseEvent("click", { bubbles: true }));
@@ -111,8 +117,7 @@ test("labels a partial candidate as a proportional demo and never as full protec
   };
   await installWorkflowFixtures(page, partialPreview);
   await completeToPlan(page);
-  await page.getByRole("button", { name: /generate unsigned preview/i }).click();
-  await expect(page.getByLabel(/wallet connected/i)).toBeVisible();
+  await openPreviewConfirmation(page);
   await page.getByRole("button", { name: /generate unsigned preview/i }).click();
   await expect(page.getByRole("heading", { name: /protection plan ready \(demo\)/i })).toBeVisible();
   await expect(page.getByText("Proportional micro-hedge demo", { exact: true })).toBeVisible();

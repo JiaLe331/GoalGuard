@@ -61,3 +61,21 @@ test("keeps representative workflow states within every target viewport", async 
     }
   }
 });
+
+test("limits Pip activity points to active requests and honors reduced motion", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/dev/ui-preview?state=searching");
+  const activityPoint = page.locator('[data-pip-activity-point="true"]').first();
+  await activityPoint.waitFor();
+  await page.waitForTimeout(500);
+  expect(await activityPoint.evaluate((element) => element.getAnimations().some((animation) => animation.playState === "running"))).toBe(true);
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.reload();
+  await activityPoint.waitFor();
+  await page.waitForTimeout(500);
+  expect(await activityPoint.evaluate((element) => element.getAnimations().some((animation) => animation.playState === "running"))).toBe(false);
+
+  await page.getByRole("combobox", { name: "Interface state" }).selectOption("plan-approved");
+  await expect(activityPoint).toHaveCount(0);
+});

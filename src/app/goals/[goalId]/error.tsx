@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { PipMascot } from "@/components/brand/pip-mascot";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
@@ -9,7 +10,7 @@ export default function GoalError({ reset }: { error: Error & { digest?: string 
   return (
     <main className="grid min-h-screen place-items-center px-5">
       <Card className="max-w-xl p-8 text-center sm:p-10">
-        <span className="brand-shield mx-auto" aria-hidden="true" />
+        <PipMascot pose="safe-stop" size="md" className="mx-auto" />
         <p className="mt-5 text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--foreground-soft)]">Safe stop</p>
         <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-[-0.05em]">The saved goal could not be displayed.</h1>
         <p className="mt-4 text-sm leading-6 text-[color:var(--foreground-soft)]">No transaction was submitted. Retry the current view or return to a new goal.</p>

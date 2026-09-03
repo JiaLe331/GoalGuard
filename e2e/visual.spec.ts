@@ -22,6 +22,9 @@ test("captures deterministic light and dark responsive UI evidence", async ({ pa
       await page.setViewportSize({ width, height: 900 });
       for (const screen of [
         { name: "landing", url: "/" },
+        { name: "searching", url: "/dev/ui-preview?state=searching" },
+        { name: "blocked-plan", url: "/dev/ui-preview?state=plan-blocked" },
+        { name: "preview-confirmation", url: "/dev/ui-preview?state=preview-confirmation" },
         { name: "approved-plan", url: "/dev/ui-preview?state=plan-approved" },
         { name: "demo-ready", url: "/dev/ui-preview?state=demo-ready" },
       ]) {

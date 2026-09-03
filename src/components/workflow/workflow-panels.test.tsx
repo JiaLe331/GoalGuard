@@ -2,16 +2,58 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { fixtureDecision, fixtureGoal, previewTradeResponse } from "@/test/fixtures/goalguard";
-import { CouncilDrawer, DemoPreviewReadyPanel, GoalConfirmationForm, PreviewConfirmationPanel } from "./workflow-panels";
+import { fixtureBlockedDecision, fixtureDecision, fixtureGoal, fixturePublicCandidate, fixtureTrade, previewTradeResponse } from "@/test/fixtures/goalguard";
+import { ActiveProtectionPanel, CouncilDrawer, DemoPreviewReadyPanel, GoalConfirmationForm, PreviewConfirmationPanel, ProtectionPlanPanel, ReadOnlyTradePanel, WorkflowErrorPanel } from "./workflow-panels";
 
 describe("workflow panels", () => {
   it("exposes every council role and Gonka request ID", () => {
-    render(<CouncilDrawer decision={fixtureDecision} open onClose={vi.fn()} />);
+    const { container } = render(<CouncilDrawer decision={fixtureDecision} open onClose={vi.fn()} />);
     expect(screen.getByRole("heading", { name: "Strategist" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Risk Auditor" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Consumer Advocate" })).toBeInTheDocument();
     expect(screen.getByText(/gonka-request-1/i)).toBeInTheDocument();
+    expect(container.querySelectorAll('[data-pip-pose="explaining"]')).toHaveLength(1);
+  });
+
+  it("maps active backend stages to distinct Pip poses", () => {
+    const { container, rerender } = render(<ActiveProtectionPanel stage="searching_candidates" />);
+    expect(container.querySelector('[data-pip-pose="checking"][data-pip-active="true"]')).toBeInTheDocument();
+    rerender(<ActiveProtectionPanel stage="reviewing_candidate" />);
+    expect(container.querySelector('[data-pip-pose="explaining"]')).toBeInTheDocument();
+    rerender(<ActiveProtectionPanel stage="generating_preview" />);
+    expect(container.querySelector('[data-pip-pose="attentive"]')).toBeInTheDocument();
+  });
+
+  it("keeps expressive Pip in its original colours on dark workflow surfaces", () => {
+    const { container, rerender } = render(<ActiveProtectionPanel stage="searching_candidates" />);
+    expect(container.querySelector('[data-pip-pose="checking"]')).toHaveAttribute("data-pip-surface", "light");
+    rerender(<DemoPreviewReadyPanel goal={fixtureGoal} preview={previewTradeResponse.data} meta={previewTradeResponse.meta} decision={fixtureDecision} onStartAnother={vi.fn()} onFreshPreview={vi.fn()} />);
+    expect(container.querySelector('[data-pip-pose="ready"]')).toHaveAttribute("data-pip-surface", "light");
+    expect(container.querySelector('[data-pip-pose="ready"]')).toHaveAttribute("data-pip-artwork", "full");
+  });
+
+  it("keeps approved and read-only financial surfaces mascot-free", () => {
+    const callbacks = { onContinue: vi.fn(), onRefresh: vi.fn(), onOpenCouncil: vi.fn() };
+    const { container, rerender } = render(<ProtectionPlanPanel goal={fixtureGoal} candidate={fixturePublicCandidate} alternatives={[]} decision={fixtureDecision} busy={false} walletStatus="other" {...callbacks} />);
+    expect(container.querySelector("[data-pip-pose]")).not.toBeInTheDocument();
+    rerender(<ReadOnlyTradePanel goal={fixtureGoal} trade={fixtureTrade} onStartAnother={vi.fn()} />);
+    expect(container.querySelector("[data-pip-pose]")).not.toBeInTheDocument();
+  });
+
+  it("uses safe-stop Pip for blocked plans and workflow errors", () => {
+    const callbacks = { onContinue: vi.fn(), onRefresh: vi.fn(), onOpenCouncil: vi.fn() };
+    const { container, rerender } = render(<ProtectionPlanPanel goal={fixtureGoal} candidate={fixturePublicCandidate} alternatives={[]} decision={fixtureBlockedDecision} busy={false} walletStatus="other" {...callbacks} />);
+    expect(container.querySelectorAll('[data-pip-pose="safe-stop"]')).toHaveLength(1);
+    rerender(<WorkflowErrorPanel error={{ code: "NO_SUITABLE_CANDIDATE", message: "No candidate matched.", retryable: true, fieldErrors: {}, details: null, requestId: null, returnStage: "confirming_goal" }} onRetry={vi.fn()} onEdit={vi.fn()} />);
+    expect(container.querySelectorAll('[data-pip-pose="safe-stop"]')).toHaveLength(1);
+  });
+
+  it("gives the council drawer mascot precedence over an underlying blocked plan", () => {
+    const callbacks = { onContinue: vi.fn(), onRefresh: vi.fn(), onOpenCouncil: vi.fn() };
+    const { container } = render(<><ProtectionPlanPanel goal={fixtureGoal} candidate={fixturePublicCandidate} alternatives={[]} decision={fixtureBlockedDecision} busy={false} walletStatus="other" suppressMascot {...callbacks} /><CouncilDrawer decision={fixtureBlockedDecision} open onClose={vi.fn()} /></>);
+    expect(container.querySelectorAll("[data-pip-pose]")).toHaveLength(1);
+    expect(container.querySelector('[data-pip-pose="explaining"]')).toBeInTheDocument();
+    expect(container.querySelector('[data-pip-pose="safe-stop"]')).not.toBeInTheDocument();
   });
 
   it("requires acknowledgment before generating the unsigned preview", async () => {

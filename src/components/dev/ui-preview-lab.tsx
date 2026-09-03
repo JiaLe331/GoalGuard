@@ -157,6 +157,7 @@ export function UiPreviewLab({ initialState, samples }: { initialState: UiPrevie
             decision={decision}
             busy={false}
             walletStatus="connected"
+            suppressMascot={councilOpen}
             onContinue={() => selectState("preview-confirmation")}
             onRefresh={() => selectState("searching")}
             onOpenCouncil={() => { setCouncilOpen(true); selectState("council-drawer"); }}

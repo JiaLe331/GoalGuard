@@ -3,6 +3,7 @@
 import { ArrowLeft, ArrowRight, CheckCircle, Copy, HourglassHigh, PencilSimple, Receipt, ShieldCheck, Warning } from "@phosphor-icons/react";
 import { useEffect, useMemo, useState } from "react";
 
+import { PipMascot, type PipPose } from "@/components/brand/pip-mascot";
 import { Accordion } from "@/components/ui/accordion";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -163,6 +164,10 @@ export function GoalConfirmationForm({ goal, busy, fieldErrors, onSave, onFind }
         </div>
       </Card>
       <aside className="space-y-3">
+        <Card tone="white" className="flex items-center gap-3 p-4">
+          <PipMascot pose="listening" size="sm" />
+          <p className="text-sm leading-6 text-[color:var(--foreground-soft)]">Set the purpose, amount, and limits at your pace. Nothing moves while you edit.</p>
+        </Card>
         <MetricCard label="Purpose" value={goalName(goal)} tone="accent" />
         <MetricCard label="Asset" value="ETH on Base" hint="One supported network keeps the preview easy to verify." />
         <Alert tone="info" title="Unsigned preview only">No transaction will be signed or broadcast from this experience.</Alert>
@@ -177,6 +182,7 @@ export function ActiveProtectionPanel({ stage }: { stage: "searching_candidates"
     : stage === "reviewing_candidate"
       ? ["Three independent checks", "The Gonka council is reviewing fit, downside risk, and clarity. Deterministic values cannot be changed by the reviewers."]
       : ["Generating unsigned preview", "GoalGuard is revalidating the approved option, wallet readiness, allowance, and exact Base calldata."];
+  const pipPose: PipPose = stage === "searching_candidates" ? "checking" : stage === "reviewing_candidate" ? "explaining" : "attentive";
 
   return (
     <div className="relative isolate mx-auto grid min-h-[34rem] max-w-5xl overflow-hidden rounded-[var(--radius-section)] bg-[var(--surface-dark)] text-[color:var(--text-on-dark)] lg:grid-cols-[1fr_20rem]">
@@ -187,22 +193,26 @@ export function ActiveProtectionPanel({ stage }: { stage: "searching_candidates"
         <p className="mt-6 max-w-xl text-base leading-7 text-[color:var(--text-on-dark-muted)]">{content[1]}</p>
         <div className="mt-9 flex items-center gap-3 text-sm" role="status"><HourglassHigh className="size-5 animate-pulse motion-reduce:animate-none" aria-hidden="true" />Waiting for a truthful backend result—no simulated percentage.</div>
       </div>
-      <ol className="relative border-t border-[var(--dark-border)] p-7 text-sm text-[color:var(--foreground-on-strong-muted)] lg:border-l lg:border-t-0 lg:p-8" aria-label="Live request provenance">
-        <li className="border-t border-[var(--dark-border)] py-4">01 · Read authoritative inputs</li>
-        <li className="border-t border-[var(--dark-border)] py-4">02 · Apply deterministic checks</li>
-        <li className="border-y border-[var(--dark-border)] py-4">03 · Return an auditable result</li>
-      </ol>
+      <div className="relative border-t border-[var(--dark-border)] lg:border-l lg:border-t-0">
+        <div className="grid place-items-center px-7 pt-6 lg:px-8 lg:pt-8"><div className="grid size-40 place-items-center rounded-full bg-[var(--white)]"><PipMascot pose={pipPose} surface="light" active size="md" /></div></div>
+        <ol className="p-7 pt-2 text-sm text-[color:var(--foreground-on-strong-muted)] lg:p-8 lg:pt-2" aria-label="Live request provenance">
+          <li className="border-t border-[var(--dark-border)] py-4">01 · Read authoritative inputs</li>
+          <li className="border-t border-[var(--dark-border)] py-4">02 · Apply deterministic checks</li>
+          <li className="border-y border-[var(--dark-border)] py-4">03 · Return an auditable result</li>
+        </ol>
+      </div>
     </div>
   );
 }
 
-export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, busy, walletStatus, onContinue, onRefresh, onOpenCouncil }: {
+export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, busy, walletStatus, suppressMascot = false, onContinue, onRefresh, onOpenCouncil }: {
   goal: Goal;
   candidate: PublicProtectionCandidate;
   alternatives: PublicProtectionCandidate[];
   decision: CouncilDecision;
   busy: boolean;
   walletStatus: "connected" | "wrong-network" | "other";
+  suppressMascot?: boolean;
   onContinue: () => void;
   onRefresh: () => void;
   onOpenCouncil: () => void;
@@ -255,7 +265,7 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
           <p className="mt-2 text-sm leading-6 text-[color:var(--foreground-soft)]">Council attempt {decision.attempt}. Reviewers explain and challenge; deterministic financial values stay fixed.</p>
           <Button className="mt-5 w-full" variant="secondary" onClick={onOpenCouncil}>Open council review</Button>
         </Card>
-        {!approved ? <Alert tone={decision.status === "disputed" ? "warning" : "error"} title={decision.status === "disputed" ? "Council needs another look" : "This plan cannot proceed"}>{decision.blockedReasons[0] ?? "Open the council review to see the concern before refreshing live options."}</Alert> : null}
+        {!approved ? <div className={`grid items-center gap-2 ${suppressMascot ? "grid-cols-1" : "grid-cols-[auto_minmax(0,1fr)]"}`}>{suppressMascot ? null : <PipMascot pose="safe-stop" size="sm" />}<Alert tone={decision.status === "disputed" ? "warning" : "error"} title={decision.status === "disputed" ? "Council needs another look" : "This plan cannot proceed"}>{decision.blockedReasons[0] ?? "Open the council review to see the concern before refreshing live options."}</Alert></div> : null}
         <div className="grid gap-3"><Button onClick={onContinue} disabled={!approved || busy}>{cta}<ArrowRight aria-hidden="true" /></Button><Button variant="ghost" onClick={onRefresh} disabled={busy}>Refresh live options</Button></div>
       </aside>
     </div>
@@ -265,7 +275,10 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
 export function CouncilDrawer({ decision, open, onClose }: { decision: CouncilDecision; open: boolean; onClose: () => void }) {
   return (
     <Drawer open={open} title="GoalGuard council review" onClose={onClose}>
-      <p className="mb-5 text-sm leading-6 text-[color:var(--foreground-soft)]">Three Gonka roles independently check plan fit, risk, and clarity. Their request IDs make the review traceable.</p>
+      <div className="mb-5 flex items-center gap-3">
+        <PipMascot pose="explaining" size="sm" />
+        <p className="text-sm leading-6 text-[color:var(--foreground-soft)]">Three Gonka roles independently check plan fit, risk, and clarity. Their request IDs make the review traceable.</p>
+      </div>
       <div className="grid gap-4">{decision.reviews.map((review) => <CouncilCard key={review.id} review={review} label={roleLabels[review.role]} />)}</div>
       <div className="mt-5"><Alert tone={decision.status === "approved" ? "success" : decision.status === "disputed" ? "warning" : "error"} title={"Council result: " + decision.status}>{decision.blockedReasons.length ? decision.blockedReasons.join(" ") : "All " + decision.approvedReviewCount + " checks approved this plan."}</Alert></div>
     </Drawer>
@@ -284,10 +297,13 @@ export function PreviewConfirmationPanel({ goal, candidate, walletAddress, ackno
 }) {
   return (
     <Card className="mx-auto max-w-5xl overflow-hidden">
-      <div className="p-6 sm:p-9">
-        <StatusBadge label="Final review · no wallet signature" tone="info" />
-        <h1 className="mt-5 text-4xl font-semibold leading-[1.02] tracking-[-0.05em] sm:text-5xl">Confirm the facts before generating an unsigned preview.</h1>
-        <p className="mt-3 max-w-3xl text-[color:var(--foreground-soft)]">Back makes no API change. Generate calls the preview endpoint once and returns transaction data for inspection only.</p>
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 p-6 sm:gap-6 sm:p-9">
+        <div>
+          <StatusBadge label="Final review · no wallet signature" tone="info" />
+          <h1 className="mt-5 text-4xl font-semibold leading-[1.02] tracking-[-0.05em] sm:text-5xl">Confirm the facts before generating an unsigned preview.</h1>
+          <p className="mt-3 max-w-3xl text-[color:var(--foreground-soft)]">Back makes no API change. Generate calls the preview endpoint once and returns transaction data for inspection only.</p>
+        </div>
+        <PipMascot key={acknowledged ? "acknowledged" : "unacknowledged"} pose="attentive" active={acknowledged} size="sm" className="-mr-2 sm:mr-0" />
       </div>
       <div className="border-t border-[var(--border)] bg-[var(--surface-raised)] p-6 sm:p-8">
         <div className="metric-grid grid gap-3">
@@ -328,23 +344,34 @@ export function DemoPreviewReadyPanel({ goal, preview, meta, decision, onStartAn
   }, [preview.trade.previewExpiresAt]);
   const expired = seconds === 0;
   const readiness = Object.entries(preview.walletReadiness);
+  const proportional = preview.candidate.coverageMode === "proportional_demo";
 
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
       <Card tone="white" className="overflow-hidden">
-        <div className="bg-[var(--surface-strong)] p-6 text-[color:var(--foreground-on-strong)] sm:p-10">
-          <StatusBadge label={expired ? "Preview expired" : "Demo preview ready"} tone={expired ? "warning" : "ready"} />
-          <h1 className="mt-5 text-4xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl">Protection Plan Ready <span className="text-[color:var(--accent)]">(Demo)</span></h1>
-          <p className="mt-4 text-lg font-semibold">No funds moved; no protected position was created</p>
-          <p className="mt-2 max-w-3xl text-[color:var(--foreground-on-strong-muted)]">This is a time-limited, unsigned snapshot of the approved plan and wallet requirements.</p>
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 bg-[var(--surface-strong)] p-6 text-[color:var(--foreground-on-strong)] sm:gap-6 sm:p-10">
+          <div>
+            <div className="flex flex-wrap gap-2">
+              <StatusBadge label={expired ? "Preview expired" : "Demo preview ready"} tone={expired ? "warning" : "ready"} />
+              {proportional ? <StatusBadge label="Proportional micro-hedge demo" tone="warning" /> : null}
+            </div>
+            <h1 className="mt-5 text-4xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl">Protection Plan Ready <span className="text-[color:var(--accent)]">(Demo)</span></h1>
+            <p className="mt-4 text-lg font-semibold">No funds moved; no protected position was created</p>
+            <p className="mt-2 max-w-3xl text-[color:var(--foreground-on-strong-muted)]">This is a time-limited, unsigned snapshot of the approved plan and wallet requirements.</p>
+          </div>
+          <div className="grid size-24 place-items-center rounded-full bg-[var(--white)] sm:size-36">
+            <PipMascot pose={expired ? "safe-stop" : "ready"} surface="light" size="sm" form="full" className="h-24 w-24 sm:h-32 sm:w-36" />
+          </div>
         </div>
         <div className="p-6 sm:p-8">
           <div className="metric-grid grid gap-3">
             <MetricCard label="Purpose" value={goalName(goal)} />
             <MetricCard label="Proposed cost" value={formatUsd(preview.candidate.premiumUsd)} tone="accent" />
             <MetricCard label="Estimated floor" value={formatUsd(preview.candidate.estimatedFloorUsd)} tone="accent" />
+            {proportional ? <MetricCard label="Goal coverage" value={formatPercentFromBps(preview.candidate.goalCoverageBps)} /> : null}
             <MetricCard label="Expires in" value={<span className={(expired ? "text-[color:var(--accent)] " : "") + "tabular-nums"}>{formatCountdown(seconds)}</span>} />
           </div>
+          {proportional ? <Alert className="mt-5" tone="warning" title="Partial goal coverage">This proportional demo does not fully protect the original amount. It covers {formatPercentFromBps(preview.candidate.goalCoverageBps)} of the stated goal.</Alert> : null}
 
           <section className="mt-8" aria-labelledby="readiness-title">
             <h2 id="readiness-title" className="text-3xl font-semibold tracking-[-0.045em]">Wallet readiness</h2>
@@ -410,7 +437,7 @@ export function WorkflowErrorPanel({ error, onRetry, onEdit }: { error: Workflow
   const editFirst = ["NO_SUITABLE_CANDIDATE", "GOAL_INCOMPLETE"].includes(error.code);
   return (
     <Card className="mx-auto max-w-3xl p-6 sm:p-10">
-      <span className="grid size-14 place-items-center rounded-full bg-[var(--negative-surface)] text-[color:var(--negative)]"><Warning className="size-7" aria-hidden="true" /></span>
+      <div className="flex items-start justify-between gap-4"><span className="grid size-14 shrink-0 place-items-center rounded-full bg-[var(--negative-surface)] text-[color:var(--negative)]"><Warning className="size-7" aria-hidden="true" /></span><PipMascot pose="safe-stop" size="sm" /></div>
       <p className="mt-5 text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--foreground-soft)]">{error.code.replaceAll("_", " ")}</p>
       <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-[-0.05em]">The protection flow stopped safely.</h1>
       <p className="mt-4 text-[color:var(--foreground-soft)]">{error.message}</p>
