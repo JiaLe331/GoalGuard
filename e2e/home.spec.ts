@@ -3,13 +3,39 @@ import { fixtureMeta } from "../src/test/fixtures/goalguard";
 import { expectNoSeriousAccessibilityViolations } from "./accessibility";
 
 test("renders the honest GoalGuard P0 entry shell", async ({ page }) => {
+  await page.route("**/api/integrations/status", (route) => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({
+      data: {
+        database: { status: "ready" },
+        gonka: { status: "unconfigured", model: null, requestId: null },
+        thetanuts: { status: "unconfigured", chainId: 8453, activeEthPutCount: null, marketAsOf: null },
+      },
+      meta: fixtureMeta,
+    }),
+  }));
   await page.goto("/");
   await expect(page.getByRole("heading", { name: /protect the purpose behind your money/i })).toBeVisible();
   await expect(page.getByRole("heading", { name: /what are you protecting/i })).toBeVisible();
-  await expect(page.getByText(/unsigned preview only/i)).toBeVisible();
-  await expect(page.getByText(/no signing or broadcast in this demo/i)).toBeVisible();
+  await expect(page.getByRole("heading", { name: /from your goal to a plan you can actually inspect/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /clear advantages without hidden custody/i })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: /primary navigation/i })).toBeVisible();
+  await expect(page.getByText(/no wallet signature or transaction broadcast/i)).toBeVisible();
+  await expect(page.getByText(/unsigned preview only/i).first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Refresh" })).toBeVisible();
   await expect(page.getByText("Needs setup")).toHaveCount(2);
+  await expect(page.locator("img")).toHaveCount(0);
+  const visualSystem = await page.evaluate(() => {
+    const hero = document.querySelector<HTMLElement>("#top > div");
+    const header = document.querySelector<HTMLElement>("header[data-scrolled]");
+    return {
+      heroBackground: hero ? getComputedStyle(hero).backgroundColor : "",
+      headerPosition: header ? getComputedStyle(header).position : "",
+    };
+  });
+  expect(visualSystem.heroBackground).toBe("rgb(201, 245, 43)");
+  expect(visualSystem.headerPosition).toBe("sticky");
   await expectNoSeriousAccessibilityViolations(page);
 });
 
@@ -24,4 +50,26 @@ test("keeps an incomplete Gonka draft and asks exactly one clarification", async
   ).toBeVisible();
   await expect(page.getByRole("textbox", { name: /by what date/i })).toHaveValue("");
   await expect(page.getByRole("button", { name: "Continue" })).toBeVisible();
+});
+
+test("keeps the landing interface usable without horizontal overflow at target widths", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  for (const width of [375, 768, 1024, 1280, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/");
+    await expect(page.getByRole("heading", { name: /protect the purpose behind your money/i })).toBeVisible();
+    const dimensions = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }));
+    expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.client);
+    if (width === 1280) {
+      const desktopAction = page.getByRole("navigation", { name: "Primary navigation" }).getByRole("link", { name: "Start a goal" }).first();
+      await expect(desktopAction).toBeVisible();
+      const actionLayout = await desktopAction.evaluate((element) => ({
+        height: element.getBoundingClientRect().height,
+        whiteSpace: getComputedStyle(element).whiteSpace,
+      }));
+      expect(actionLayout.whiteSpace).toBe("nowrap");
+      expect(actionLayout.height).toBeLessThanOrEqual(50);
+    }
+    await page.screenshot({ animations: "disabled" });
+  }
 });

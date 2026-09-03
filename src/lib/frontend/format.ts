@@ -25,6 +25,11 @@ export function shortenAddress(value: string) {
   return `${value.slice(0, 6)}…${value.slice(-4)}`;
 }
 
+export function formatBaseUnits(value: string, decimals: number, maximumFractionDigits = 6) {
+  const amount = new Decimal(value).div(new Decimal(10).pow(decimals));
+  return amount.toDecimalPlaces(maximumFractionDigits).toString();
+}
+
 export function baseTransactionUrl(hash: string) {
   return `https://basescan.org/tx/${hash}`;
 }

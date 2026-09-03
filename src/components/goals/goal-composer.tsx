@@ -1,5 +1,6 @@
 "use client";
 
+import { AirplaneTilt, ArrowRight, FirstAidKit, GraduationCap, House, Sparkle, type Icon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
@@ -9,12 +10,12 @@ import type { GoalDraft, GoalType } from "@/lib/contracts";
 import { ApiClientError, goalGuardApi } from "@/lib/frontend/api-client";
 import { saveActiveGoalId, storageKeys } from "@/lib/frontend/storage";
 
-const categories: ReadonlyArray<{ label: string; value: GoalType }> = [
-  { label: "Rent", value: "rent" },
-  { label: "Tuition", value: "tuition" },
-  { label: "Travel", value: "travel" },
-  { label: "Emergency fund", value: "emergency" },
-  { label: "Something else", value: "custom" },
+const categories: ReadonlyArray<{ label: string; value: GoalType; icon: Icon }> = [
+  { label: "Rent", value: "rent", icon: House },
+  { label: "Tuition", value: "tuition", icon: GraduationCap },
+  { label: "Travel", value: "travel", icon: AirplaneTilt },
+  { label: "Emergency", value: "emergency", icon: FirstAidKit },
+  { label: "Custom", value: "custom", icon: Sparkle },
 ];
 
 interface SavedDraft {
@@ -96,50 +97,51 @@ export function GoalComposer() {
   return (
     <form onSubmit={submit} className="space-y-6" aria-labelledby="goal-heading" aria-busy={loading}>
       <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Start with what matters</p>
-        <h2 id="goal-heading" className="text-2xl font-semibold tracking-[-0.02em] text-white">What are you protecting?</h2>
-        <p className="mt-2 max-w-xl text-sm leading-6 text-[#a7b6ac]">Speak naturally. GoalGuard will turn your words into editable constraints before checking any option.</p>
+        <p className="section-eyebrow text-[color:var(--foreground-muted)]">Your protection goal</p>
+        <h2 id="goal-heading" className="mt-3 text-[clamp(1.75rem,3vw,2.5rem)] font-semibold leading-[1.05] tracking-[-0.045em] text-[color:var(--foreground)]">What are you protecting?</h2>
+        <p className="mt-3 max-w-xl text-sm leading-6 text-[color:var(--foreground-soft)]">Use plain language. You can review every limit before GoalGuard reads live options.</p>
       </div>
 
-      <div className="flex flex-wrap gap-2" aria-label="Goal category">
-        {categories.map((item) => (
+      <fieldset><legend className="mb-3 text-sm font-semibold text-[color:var(--foreground)]">Choose a purpose</legend><div className="flex flex-wrap gap-2">
+        {categories.map((item) => { const CategoryIcon = item.icon; return (
           <button
             type="button"
             key={item.value}
             aria-pressed={category === item.value}
             onClick={() => { setCategory(item.value); setError(null); }}
-            className={`rounded-full border px-3.5 py-2 text-sm transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${category === item.value ? "border-[#cbff6b]/50 bg-[#cbff6b]/12 text-[#e7ffc3]" : "border-white/10 bg-white/[0.035] text-[#aebcb2] hover:bg-white/[0.07] hover:text-white"}`}
+            className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-semibold transition-[background-color,border-color,color,opacity] duration-[var(--duration-press)] active:opacity-75 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)] ${category === item.value ? "border-[var(--accent)] bg-[var(--accent)] text-[color:var(--accent-foreground)]" : "border-[var(--surface-muted)] bg-[var(--surface-muted)] text-[color:var(--foreground-soft)] hover:border-[var(--border-strong)] hover:text-[color:var(--foreground)]"}`}
           >
-            {item.label}
+            <CategoryIcon className="size-4" weight={category === item.value ? "fill" : "regular"} aria-hidden="true" />{item.label}
           </button>
-        ))}
-      </div>
+        ); })}
+      </div></fieldset>
 
       {clarification ? <Alert title="One detail needed" tone="warning">{clarification}</Alert> : null}
 
-      <label className="block">
-        <span className="sr-only">{clarification ?? "Describe your protection goal"}</span>
+      <label className="block" htmlFor="goal-message">
+        <span className="mb-2 block text-sm font-semibold text-[color:var(--foreground)]">{clarification ?? "Describe your protection goal"}</span>
         <textarea
+          id="goal-message"
           value={message}
           onChange={(event) => { setMessage(event.target.value); setError(null); }}
           maxLength={4000}
           rows={5}
           aria-invalid={Boolean(error?.fieldErrors.message)}
           aria-describedby={error ? "goal-input-error" : undefined}
-          placeholder={clarification ? "Add the missing detail…" : "I have $1,200 in ETH for rent next month, and I can’t afford to lose more than 5%."}
-          className="w-full resize-none rounded-[1.3rem] border border-white/10 bg-[#0d1711]/70 px-5 py-4 text-base leading-7 text-white outline-none placeholder:text-[#617168] focus:border-[#cbff6b]/45 focus:ring-4 focus:ring-[#cbff6b]/5"
+          placeholder={clarification ? "Add the missing detail…" : "I need this ETH for rent next month and want to limit the downside."}
+          className="field-control min-h-36 resize-none bg-[var(--surface-subtle)] px-5 py-4 leading-7"
         />
       </label>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-xs leading-5 text-[#819087]">Creating a goal does not connect your wallet or prepare a trade.</p>
-        <Button type="submit" disabled={loading}>
-          {loading ? "Reading your goal…" : clarification ? "Continue" : "Create protection goal"} <span aria-hidden="true">→</span>
+      <div className="grid gap-3">
+        <Button type="submit" className="min-h-13 w-full" disabled={loading}>
+          {loading ? "Reading your goal…" : clarification ? "Continue" : "Create protection goal"}<ArrowRight aria-hidden="true" />
         </Button>
+        <p className="text-center text-xs leading-5 text-[color:var(--foreground-soft)]">No wallet connection, signature, or transaction is needed to define a goal.</p>
       </div>
       {error ? (
         <Alert id="goal-input-error" title={error.code === "GONKA_UNAVAILABLE" ? "AI review unavailable" : "Goal not created"} tone="error">
-          {error.message}{error.requestId ? <span className="mt-1 block font-mono text-xs">Request {error.requestId}</span> : null}
+          {error.message}{error.requestId ? <span className="mt-1 block text-xs tabular-nums">Request {error.requestId}</span> : null}
         </Alert>
       ) : null}
     </form>
