@@ -2,6 +2,7 @@ import { GenerateCandidatesRequestSchema, GenerateCandidatesResponseSchema, publ
 import { PostgresGoalGuardRepository } from "@/lib/db/repository";
 import { ApiRouteError, apiMeta, jsonSuccess, parseBody, route } from "@/lib/server/http";
 import { assertSameOrigin, getAnonymousOwnerSession } from "@/lib/server/session";
+import { normalizeGoalTiming } from "@/lib/protection/scoring";
 import { generateProtectionCandidates } from "@/lib/thetanuts/strategy";
 export const runtime = "nodejs"; export const dynamic = "force-dynamic";
 export async function POST(request: Request) {
@@ -12,6 +13,9 @@ export async function POST(request: Request) {
     const repository = new PostgresGoalGuardRepository();
     const goal = await repository.getGoal(body.goalId, ownerSessionHash);
     if (!goal) throw new ApiRouteError("NOT_FOUND", "Goal was not found.", 404);
+    if (!goal.timingConfirmed) throw new ApiRouteError("GOAL_TIMING_UNCONFIRMED", "Confirm when protection must end and when Base USDC must be available before searching live options.", 422);
+    try { normalizeGoalTiming(goal, Date.now()); }
+    catch (error) { throw new ApiRouteError("GOAL_TIMING_INFEASIBLE", error instanceof Error ? error.message : "The confirmed goal timing is infeasible.", 422); }
     await repository.updateGoalStatus(goal.id, ownerSessionHash, "searching");
     try {
       const result = await generateProtectionCandidates(goal, { coverageMode: body.coverageMode ?? "full" });

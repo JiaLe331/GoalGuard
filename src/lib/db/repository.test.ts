@@ -11,7 +11,7 @@ import { fixtureCandidate, fixtureDecision, fixtureGoal, fixtureTrade } from "@/
 
 let client: PGlite; let repository: PostgresGoalGuardRepository;
 const owner = "a".repeat(64); const stranger = "b".repeat(64);
-const goal: Goal = { schemaVersion: 1, id: "4b3e798c-e0e8-4ab5-9e37-d4526424eb8f", goalType: "rent", customGoalLabel: null, underlyingAsset: "ETH", protectedValueUsd: "1200", deadline: "2026-09-30", maxLossBps: 500, maxPremiumUsd: null, originalUserMessage: "Protect my rent fund.", status: "draft", createdAt: "2026-08-31T12:00:00.000Z", updatedAt: "2026-08-31T12:00:00.000Z", parseInferenceId: null, selectedCandidateId: null, councilDecisionId: null, tradeId: null };
+const goal: Goal = { schemaVersion: 2, id: "4b3e798c-e0e8-4ab5-9e37-d4526424eb8f", goalType: "rent", customGoalLabel: null, underlyingAsset: "ETH", protectedValueUsd: "1200", protectThroughAt: "2099-09-29T23:59:59.999Z", fundsNeededAt: "2099-09-30T00:00:00.000Z", timezone: "UTC", timingConfirmed: true, maxLossBps: 500, maxPremiumUsd: null, originalUserMessage: "Protect my rent fund.", status: "draft", createdAt: "2026-08-31T12:00:00.000Z", updatedAt: "2026-08-31T12:00:00.000Z", parseInferenceId: null, selectedCandidateId: null, councilDecisionId: null, tradeId: null };
 
 function inferenceFor(review: CouncilReview): GonkaInference {
   const purpose = review.role === "strategist" ? "strategist_review" : review.role === "risk_auditor" ? "risk_auditor_review" : "consumer_advocate_review";
@@ -76,5 +76,31 @@ describe("PostgresGoalGuardRepository", () => {
     const replacement = await repository.createTrade({ ...fixtureTrade, id: "90000000-0000-4000-8000-000000000009", idempotencyKey: "preview-replacement-000000000001", createdAt: "2026-08-31T12:01:00.000Z", updatedAt: "2026-08-31T12:01:00.000Z" }, expectation, owner);
     expect(replacement.status).toBe("previewed");
     await expect(repository.getTrade(first.id, owner)).resolves.toMatchObject({ status: "stale" });
+  });
+  it("invalidates current protection references when a ready goal is edited", async () => {
+    await repository.createGoal(fixtureGoal, owner);
+    await repository.updateGoalStatus(fixtureGoal.id, owner, "searching");
+    await repository.replaceCandidates(fixtureGoal.id, owner, [fixtureCandidate]);
+    for (const review of fixtureDecision.reviews) await repository.saveInference(inferenceFor(review));
+    await repository.saveDecision(fixtureDecision, "6".repeat(64), owner);
+
+    const updated = await repository.updateGoal(fixtureGoal.id, owner, {
+      goalType: fixtureGoal.goalType,
+      customGoalLabel: fixtureGoal.customGoalLabel,
+      underlyingAsset: fixtureGoal.underlyingAsset,
+      protectedValueUsd: fixtureGoal.protectedValueUsd,
+      protectThroughAt: "2099-10-01T23:59:59.999Z",
+      fundsNeededAt: "2099-10-02T00:00:00.000Z",
+      timezone: fixtureGoal.timezone,
+      timingConfirmed: true,
+      maxLossBps: fixtureGoal.maxLossBps,
+      maxPremiumUsd: fixtureGoal.maxPremiumUsd,
+    });
+
+    expect(updated.status).toBe("draft");
+    expect(updated.selectedCandidateId).toBeNull();
+    expect(updated.councilDecisionId).toBeNull();
+    await expect(repository.getCandidate(fixtureCandidate.id, owner)).resolves.toMatchObject({ status: "stale" });
+    await expect(repository.getDecision(fixtureDecision.id, owner)).resolves.toMatchObject({ id: fixtureDecision.id });
   });
 });

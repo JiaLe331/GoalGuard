@@ -21,6 +21,36 @@ export function formatDate(value: string, options: Intl.DateTimeFormatOptions = 
   }).format(date);
 }
 
+function zonedParts(timestamp: number, timeZone: string) {
+  const parts = new Intl.DateTimeFormat("en-US", { timeZone, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" }).formatToParts(new Date(timestamp));
+  return Object.fromEntries(parts.filter(({ type }) => type !== "literal").map(({ type, value }) => [type, value]));
+}
+
+function localCalendarDateToUtc(date: string, timeZone: string, hour: number, minute: number, second: number, millisecond: number) {
+  const [year, month, day] = date.split("-").map(Number);
+  const naive = Date.UTC(year!, month! - 1, day, hour, minute, second, millisecond);
+  const parts = zonedParts(naive, timeZone);
+  const represented = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day), Number(parts.hour), Number(parts.minute), Number(parts.second), millisecond);
+  return new Date(naive - (represented - naive)).toISOString();
+}
+
+export function formatDateInput(value: string, timeZone: string) {
+  const parts = zonedParts(Date.parse(value), timeZone);
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
+export function localCalendarDayStartUtc(date: string, timeZone: string) {
+  return localCalendarDateToUtc(date, timeZone, 0, 0, 0, 0);
+}
+
+export function localCalendarDayEndUtc(date: string, timeZone: string) {
+  return localCalendarDateToUtc(date, timeZone, 23, 59, 59, 999);
+}
+
+export function formatDateTime(value: string, timeZone: string) {
+  return formatDate(value, { timeZone, hour: "numeric", minute: "2-digit", timeZoneName: "short" });
+}
+
 export function shortenAddress(value: string) {
   return `${value.slice(0, 6)}…${value.slice(-4)}`;
 }

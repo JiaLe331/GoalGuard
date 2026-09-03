@@ -33,13 +33,13 @@ function liveOrder(availableAmount = 10_000_000_000_000_000n): ThetanutsOrder {
       isBuyer: false,
       numContracts: 2_500_000_000_000_000n,
       price: 100_000_000n,
-      expiry: 1_800_000_000n,
+      expiry: BigInt(Date.parse("2099-10-01T00:00:00.000Z") / 1000),
       nonce: 1n,
       optionType: 1,
       strikes: [2_800_000_000n],
       collateralToken: settlementToken,
       underlyingToken: "0x5555555555555555555555555555555555555555",
-      deadline: 1_800_000_000n,
+      deadline: BigInt(Date.parse("2099-09-30T00:00:00.000Z") / 1000),
     },
     signature: `0x${"11".repeat(65)}`,
     availableAmount,
@@ -50,7 +50,7 @@ function liveOrder(availableAmount = 10_000_000_000_000_000n): ThetanutsOrder {
       isCall: false,
       isLong: true,
       implementation: "0x6666666666666666666666666666666666666666",
-      orderExpiryTimestamp: "1800000000",
+      orderExpiryTimestamp: String(Date.parse("2099-09-30T00:00:00.000Z") / 1000),
     },
   } as unknown as ThetanutsOrder;
 }
@@ -62,6 +62,10 @@ function candidateFor(order: ThetanutsOrder, overrides: Partial<ProtectionCandid
     protocolRaw: serializeOrder(order),
     marketAsOf: now.toISOString(),
     expiry: new Date(Number(order.order.expiry) * 1000).toISOString(),
+    protectionEndAt: new Date(Number(order.order.expiry) * 1000).toISOString(),
+    expiryOverhangSeconds: Math.max(0, Math.floor(Number(order.order.expiry) - Date.parse(fixtureReadyGoal.protectThroughAt) / 1000)),
+    quantityBaseUnits: "10000000000000000",
+    quantityUnderlying: "10000000000",
     ...overrides,
   };
 }

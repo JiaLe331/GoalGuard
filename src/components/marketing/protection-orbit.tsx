@@ -58,7 +58,7 @@ export function ProtectionOrbit() {
           <PipMark surface="light" />
         </div>
         <div className="mt-5 grid grid-cols-3 gap-2">
-          {["Cost limit", "Loss limit", "Deadline"].map((label) => <div key={label} className="rounded-xl bg-[var(--surface-muted)] px-3 py-2 text-xs font-semibold">{label}</div>)}
+          {["Cost limit", "Loss limit", "Protection cutoff"].map((label) => <div key={label} className="rounded-xl bg-[var(--surface-muted)] px-3 py-2 text-xs font-semibold">{label}</div>)}
         </div>
       </motion.div>
 

@@ -26,6 +26,11 @@ export const TradeStatusSchema = z.enum([
   "cancelled",
   "stale",
 ]);
+export const SettlementTimingStatusSchema = z.enum(["settlement_timing_not_verified", "verified_accessible", "verified_too_late"]);
+export const SettlementTriggerSchema = z.literal("factory_callback");
+export const AccessibilityBasisSchema = z.enum(["unverified_factory_callback", "verified_expiry_settlement"]);
+export const GoalAttainmentSchema = z.enum(["meets_if_executed", "shortfall", "not_accessible_by_goal_date", "settlement_timing_not_verified"]);
+export const ScoreVersionSchema = z.literal("goal-protection-v1");
 
 export type GoalType = z.infer<typeof GoalTypeSchema>;
 export type SupportedAsset = z.infer<typeof SupportedAssetSchema>;
@@ -40,3 +45,8 @@ export type CouncilStatus = z.infer<typeof CouncilStatusSchema>;
 export type InferencePurpose = z.infer<typeof InferencePurposeSchema>;
 export type InferenceStatus = z.infer<typeof InferenceStatusSchema>;
 export type TradeStatus = z.infer<typeof TradeStatusSchema>;
+export type SettlementTimingStatus = z.infer<typeof SettlementTimingStatusSchema>;
+export type SettlementTrigger = z.infer<typeof SettlementTriggerSchema>;
+export type AccessibilityBasis = z.infer<typeof AccessibilityBasisSchema>;
+export type GoalAttainment = z.infer<typeof GoalAttainmentSchema>;
+export type ScoreVersion = z.infer<typeof ScoreVersionSchema>;

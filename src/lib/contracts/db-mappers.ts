@@ -39,13 +39,16 @@ const iso = (value: string | Date) => new Date(value).toISOString();
 
 export function goalFromRow(row: GoalRow, references: GoalReadReferences = {}): Goal {
   return GoalSchema.parse({
-    schemaVersion: row.schemaVersion,
+    schemaVersion: 2,
     id: row.id,
     goalType: row.goalType,
     customGoalLabel: row.customGoalLabel,
     underlyingAsset: row.underlyingAsset,
     protectedValueUsd: row.protectedValueUsd,
-    deadline: row.deadline,
+    protectThroughAt: row.protectThroughAt ? iso(row.protectThroughAt) : `${row.deadline}T00:00:00.000Z`,
+    fundsNeededAt: row.fundsNeededAt ? iso(row.fundsNeededAt) : `${row.deadline}T00:00:00.000Z`,
+    timezone: row.goalTimezone ?? "UTC",
+    timingConfirmed: row.timingConfirmed ?? false,
     maxLossBps: row.maxLossBps,
     maxPremiumUsd: row.maxPremiumUsd,
     originalUserMessage: row.originalUserMessage,
@@ -69,7 +72,11 @@ export function goalToRow(goal: Goal, ownerSessionHash: string): typeof goals.$i
     customGoalLabel: value.customGoalLabel,
     underlyingAsset: value.underlyingAsset,
     protectedValueUsd: value.protectedValueUsd,
-    deadline: value.deadline,
+    deadline: value.protectThroughAt.slice(0, 10),
+    protectThroughAt: value.protectThroughAt,
+    fundsNeededAt: value.fundsNeededAt,
+    goalTimezone: value.timezone,
+    timingConfirmed: value.timingConfirmed,
     maxLossBps: value.maxLossBps,
     maxPremiumUsd: value.maxPremiumUsd,
     originalUserMessage: value.originalUserMessage,
@@ -80,11 +87,17 @@ export function goalToRow(goal: Goal, ownerSessionHash: string): typeof goals.$i
 }
 
 export function candidateFromRow(row: CandidateRow): ProtectionCandidate {
-  const { coverageMode, rejectionReasonsJson, protocolRawJson, scenariosJson, ...columns } = row;
+  if (row.schemaVersion !== 2 || !row.spotPriceUsd || !row.requiredQuantityBaseUnits || !row.requiredFloorUsd || !row.protectedFloorAtExpiryUsd || !row.expiryShortfallUsd || !row.protectionEndAt || !row.settlementTrigger || !row.settlementTimingStatus || !row.accessibilityBasis || !row.goalAttainment || !row.scoreVersion || !row.policyVersion || row.expiryOverhangSeconds === null || row.effectiveBudgetUsd === null) {
+    throw new Error("Legacy protection candidates are historical and cannot be used as a current v2 candidate.");
+  }
+  const { coverageMode, rejectionReasonsJson, protocolRawJson, scenariosJson, scoreBreakdownJson, estimatedFloorUsd, deadlineGapHours, ...columns } = row;
+  void estimatedFloorUsd;
+  void deadlineGapHours;
   return ProtectionCandidateSchema.parse({
     ...columns,
+    scoreBreakdown: scoreBreakdownJson,
     coverageMode,
-    expiry: iso(columns.expiry), marketAsOf: iso(columns.marketAsOf), createdAt: iso(columns.createdAt), updatedAt: iso(columns.updatedAt),
+    expiry: iso(columns.expiry), protectionEndAt: iso(row.protectionEndAt), settlementAvailableAt: row.settlementAvailableAt ? iso(row.settlementAvailableAt) : null, marketAsOf: iso(columns.marketAsOf), createdAt: iso(columns.createdAt), updatedAt: iso(columns.updatedAt),
     rejectionReasons: rejectionReasonsJson,
     protocolRaw: protocolRawJson,
     scenarios: scenariosJson,
@@ -93,9 +106,12 @@ export function candidateFromRow(row: CandidateRow): ProtectionCandidate {
 
 export function candidateToRow(candidate: ProtectionCandidate): typeof protectionCandidates.$inferInsert {
   const value = ProtectionCandidateSchema.parse(candidate);
-  const { coverageMode, rejectionReasons, protocolRaw, scenarios, ...columns } = value;
+  const { coverageMode, rejectionReasons, protocolRaw, scenarios, scoreBreakdown, ...columns } = value;
   return {
     ...columns,
+    estimatedFloorUsd: value.protectedFloorAtExpiryUsd,
+    deadlineGapHours: Math.floor(value.expiryOverhangSeconds / 3600),
+    scoreBreakdownJson: scoreBreakdown,
     coverageMode,
     rejectionReasonsJson: rejectionReasons,
     protocolRawJson: protocolRaw,

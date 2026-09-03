@@ -41,13 +41,16 @@ describe("canonical scalar contracts", () => {
 describe("canonical entity contracts", () => {
   it("rejects unknown goal fields and inconsistent custom labels", () => {
     const baseGoal = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       id: ids.goal,
       goalType: "rent",
       customGoalLabel: null,
       underlyingAsset: "ETH",
       protectedValueUsd: "1200",
-      deadline: "2026-09-30",
+      protectThroughAt: "2099-09-29T23:59:59.999Z",
+      fundsNeededAt: "2099-09-30T00:00:00.000Z",
+      timezone: "UTC",
+      timingConfirmed: true,
       maxLossBps: 500,
       maxPremiumUsd: null,
       originalUserMessage: "Protect my rent fund.",
@@ -122,7 +125,7 @@ describe("API envelopes", () => {
     expect(PreviewTradeResponseSchema.safeParse(malformed).success).toBe(false);
   });
   it("keeps draft goal edits strict and canonical", () => {
-    const request = { goalType: "rent", customGoalLabel: null, underlyingAsset: "ETH", protectedValueUsd: "1200", deadline: "2026-09-30", maxLossBps: 500, maxPremiumUsd: "3" };
+    const request = { goalType: "rent", customGoalLabel: null, underlyingAsset: "ETH", protectedValueUsd: "1200", protectThroughAt: "2099-09-29T23:59:59.999Z", fundsNeededAt: "2099-09-30T00:00:00.000Z", timezone: "UTC", timingConfirmed: true, maxLossBps: 500, maxPremiumUsd: "3" };
     expect(UpdateGoalRequestSchema.parse(request)).toEqual(request);
     expect(UpdateGoalRequestSchema.safeParse({ ...request, databaseGoalId: ids.goal }).success).toBe(false);
   });

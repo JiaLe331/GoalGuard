@@ -13,7 +13,7 @@ import { Field } from "@/components/ui/field";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { CouncilCard, MetricCard, ScenarioComparison, UnsignedTransactionCard } from "@/components/workflow/workflow-primitives";
 import { UpdateGoalRequestSchema, type ApiMeta, type CouncilDecision, type Goal, type GoalType, type JsonValue, type PublicProtectionCandidate, type Trade, type TradePreview, type UpdateGoalRequest } from "@/lib/contracts";
-import { formatBaseUnits, formatCountdown, formatDate, formatPercentFromBps, formatUsd, secondsUntil, shortenAddress } from "@/lib/frontend/format";
+import { formatBaseUnits, formatCountdown, formatDate, formatDateInput, formatDateTime, formatPercentFromBps, formatUsd, localCalendarDayEndUtc, localCalendarDayStartUtc, secondsUntil, shortenAddress } from "@/lib/frontend/format";
 import type { WorkflowError } from "@/lib/frontend/workflow";
 
 const goalLabels: Record<GoalType, string> = {
@@ -49,7 +49,8 @@ export function GoalConfirmationForm({ goal, busy, fieldErrors, onSave, onFind }
     goalType: goal.goalType,
     customGoalLabel: goal.customGoalLabel ?? "",
     protectedValueUsd: goal.protectedValueUsd,
-    deadline: goal.deadline,
+    protectThroughDate: formatDateInput(goal.protectThroughAt, goal.timezone),
+    fundsNeededDate: formatDateInput(goal.fundsNeededAt, goal.timezone),
     maxLossPercent: String(goal.maxLossBps / 100),
     maxPremiumUsd: goal.maxPremiumUsd ?? "",
   });
@@ -68,12 +69,25 @@ export function GoalConfirmationForm({ goal, busy, fieldErrors, onSave, onFind }
 
   function parse(): UpdateGoalRequest | null {
     const immediate: Record<string, string[]> = {};
-    if (Number(values.protectedValueUsd) <= 0) immediate.protectedValueUsd = ["Enter an amount greater than zero."];
+    if (!/^(0|[1-9]\d*)(\.\d+)?$/.test(values.protectedValueUsd.trim()) || Number(values.protectedValueUsd) <= 0) immediate.protectedValueUsd = ["Enter an amount greater than zero."];
     if (!Number.isFinite(Number(values.maxLossPercent)) || Number(values.maxLossPercent) < 0 || Number(values.maxLossPercent) >= 100) {
       immediate.maxLossBps = ["Enter a loss limit from 0 to 99.99%."];
     }
     if (values.maxPremiumUsd.trim() && Number(values.maxPremiumUsd) <= 0) {
       immediate.maxPremiumUsd = ["Enter a protection cost greater than zero, or leave it blank."];
+    }
+    const validDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00.000Z`));
+    if (!validDate(values.protectThroughDate)) immediate.protectThroughAt = ["Choose a valid protection cutoff date."];
+    if (!validDate(values.fundsNeededDate)) immediate.fundsNeededAt = ["Choose a valid funds-needed date."];
+    let protectThroughAt = "";
+    let fundsNeededAt = "";
+    if (validDate(values.protectThroughDate) && validDate(values.fundsNeededDate)) {
+      protectThroughAt = localCalendarDayEndUtc(values.protectThroughDate, goal.timezone);
+      fundsNeededAt = localCalendarDayStartUtc(values.fundsNeededDate, goal.timezone);
+      if (Date.parse(protectThroughAt) >= Date.parse(fundsNeededAt)) {
+        immediate.protectThroughAt = ["The protection cutoff must be before the funds-needed cutoff."];
+        immediate.fundsNeededAt = ["Choose a later funds-needed cutoff or an earlier protection cutoff."];
+      }
     }
     if (Object.keys(immediate).length) {
       setLocalErrors(immediate);
@@ -86,7 +100,10 @@ export function GoalConfirmationForm({ goal, busy, fieldErrors, onSave, onFind }
       customGoalLabel: values.goalType === "custom" ? values.customGoalLabel.trim() || null : null,
       underlyingAsset: "ETH" as const,
       protectedValueUsd: values.protectedValueUsd.trim(),
-      deadline: values.deadline,
+      protectThroughAt,
+      fundsNeededAt,
+      timezone: goal.timezone,
+      timingConfirmed: true as const,
       maxLossBps: Math.round(Number(values.maxLossPercent) * 100),
       maxPremiumUsd: values.maxPremiumUsd.trim() || null,
     });
@@ -117,7 +134,7 @@ export function GoalConfirmationForm({ goal, busy, fieldErrors, onSave, onFind }
         <div className="max-w-2xl">
           <p className="section-eyebrow text-[color:var(--foreground-muted)]">Define the guardrail</p>
           <h1 className="mt-4 text-4xl font-semibold leading-[1.02] tracking-[-0.05em] sm:text-5xl">Make the goal exact.</h1>
-          <p className="mt-4 max-w-xl text-[color:var(--foreground-soft)]">Confirm the amount, deadline, and acceptable downside before GoalGuard checks a live option.</p>
+          <p className="mt-4 max-w-xl text-[color:var(--foreground-soft)]">Confirm the amount, two timing cutoffs, and acceptable downside before GoalGuard checks a live option.</p>
         </div>
 
         {errorEntries.length ? (
@@ -147,8 +164,11 @@ export function GoalConfirmationForm({ goal, busy, fieldErrors, onSave, onFind }
           <Field label="Amount you need to preserve (USD)" htmlFor="protectedValueUsd" error={firstError(errors, "protectedValueUsd")}>
             <input id="protectedValueUsd" inputMode="decimal" className="field-control" value={values.protectedValueUsd} onChange={(event) => update("protectedValueUsd", event.target.value)} aria-invalid={Boolean(firstError(errors, "protectedValueUsd"))} aria-describedby={describedBy("protectedValueUsd")} />
           </Field>
-          <Field label="Purpose deadline" htmlFor="deadline" error={firstError(errors, "deadline")}>
-            <input id="deadline" type="date" className="field-control" value={values.deadline} onChange={(event) => update("deadline", event.target.value)} aria-invalid={Boolean(firstError(errors, "deadline"))} aria-describedby={describedBy("deadline")} />
+          <Field label="Protect against an ETH fall through" htmlFor="protectThroughDate" hint={`Resolves to the end of this day in ${goal.timezone}.`} error={firstError(errors, "protectThroughAt")}>
+            <input id="protectThroughDate" type="date" className="field-control" value={values.protectThroughDate} onChange={(event) => update("protectThroughDate", event.target.value)} aria-invalid={Boolean(firstError(errors, "protectThroughAt"))} aria-describedby={describedBy("protectThroughAt")} />
+          </Field>
+          <Field label="Funds must be available by" htmlFor="fundsNeededDate" hint={`Resolves to the start of this day in ${goal.timezone}.`} error={firstError(errors, "fundsNeededAt")}>
+            <input id="fundsNeededDate" type="date" className="field-control" value={values.fundsNeededDate} onChange={(event) => update("fundsNeededDate", event.target.value)} aria-invalid={Boolean(firstError(errors, "fundsNeededAt"))} aria-describedby={describedBy("fundsNeededAt")} />
           </Field>
           <Field label="Maximum acceptable loss (%)" htmlFor="maxLossBps" error={firstError(errors, "maxLossBps")}>
             <input id="maxLossBps" inputMode="decimal" className="field-control" value={values.maxLossPercent} onChange={(event) => update("maxLossPercent", event.target.value)} aria-invalid={Boolean(firstError(errors, "maxLossBps"))} aria-describedby={describedBy("maxLossBps")} />
@@ -170,7 +190,8 @@ export function GoalConfirmationForm({ goal, busy, fieldErrors, onSave, onFind }
         </Card>
         <MetricCard label="Purpose" value={goalName(goal)} tone="accent" />
         <MetricCard label="Asset" value="ETH on Base" hint="One supported network keeps the preview easy to verify." />
-        <Alert tone="info" title="Unsigned preview only">No transaction will be signed or broadcast from this experience.</Alert>
+        <MetricCard label="Confirmed time zone" value={goal.timezone} hint="These calendar dates resolve to explicit UTC cutoffs before saving." />
+        <Alert tone="error" title="Settlement timing not verified">Expiry protection is not proof that Base USDC will be available by the payment time. GoalGuard does not assume an early sale.</Alert>
       </aside>
     </div>
   );
@@ -228,16 +249,21 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
             <span className="text-xs text-[color:var(--foreground-soft)] tabular-nums">Market {formatDate(candidate.marketAsOf, { hour: "numeric", minute: "2-digit" })}</span>
           </div>
           <h1 className="mt-6 max-w-3xl text-4xl font-semibold leading-[1.02] tracking-[-0.055em] sm:text-6xl">A protection plan for {goalName(goal)}.</h1>
-          <p className="mt-4 max-w-2xl text-[color:var(--foreground-soft)]">A live ETH put limits the selected downside through its displayed expiry. It does not guarantee the full goal after that time.</p>
+          <p className="mt-4 max-w-2xl text-[color:var(--foreground-soft)]">This live ETH put is evaluated for expiry protection only. GoalGuard cannot verify payment-date access while the protocol settlement timing remains unverified.</p>
         </div>
         <div className="border-t border-[var(--border)] bg-[var(--surface-raised)] p-6 sm:p-8">
           <div className="metric-grid grid gap-3">
-            <MetricCard label="Goal amount" value={formatUsd(goal.protectedValueUsd)} />
-            <MetricCard label="Protection cost" value={formatUsd(candidate.premiumUsd)} tone="accent" />
-            <MetricCard label="Estimated floor" value={formatUsd(candidate.estimatedFloorUsd)} tone="accent" />
-            <MetricCard label="Ends" value={formatDate(candidate.expiry)} />
+            <MetricCard label="Payment-date status" value="Settlement timing not verified" tone="accent" hint="No payment-date availability claim is made." />
+            <MetricCard label="Goal-date shortfall" value="Not verifiable" tone="accent" hint="The callback has no verified P0 upper bound." />
+            <MetricCard label="Protection cost" value={formatUsd(candidate.premiumUsd)} />
+            <MetricCard label="Protection ends" value={formatDateTime(candidate.protectionEndAt, goal.timezone)} />
           </div>
-          <Alert className="mt-5" tone={candidate.deadlineGapHours > 24 ? "warning" : "info"} title="Deadline alignment">Protection expires {candidate.deadlineGapHours} hour{candidate.deadlineGapHours === 1 ? "" : "s"} from the goal deadline. Settlement conditions apply at expiry.</Alert>
+          <Alert className="mt-5" tone="error" title="Settlement timing not verified">This option may protect value at expiry, but GoalGuard cannot verify that Base USDC will be available by {formatDateTime(goal.fundsNeededAt, goal.timezone)} and does not assume an early sale.</Alert>
+          <dl className="mt-5 grid gap-4 rounded-[var(--radius-card)] border border-[var(--border)] bg-[var(--surface)] p-5 sm:grid-cols-3">
+            <div><dt className="text-xs text-[color:var(--foreground-soft)]">Protected floor at expiry</dt><dd className="mt-1 font-semibold tabular-nums">{formatUsd(candidate.protectedFloorAtExpiryUsd)}</dd></div>
+            <div><dt className="text-xs text-[color:var(--foreground-soft)]">Funds needed by</dt><dd className="mt-1 font-semibold">{formatDateTime(goal.fundsNeededAt, goal.timezone)}</dd></div>
+            <div><dt className="text-xs text-[color:var(--foreground-soft)]">Settlement trigger</dt><dd className="mt-1 font-semibold">Factory callback</dd><dd className="mt-1 text-xs text-[color:var(--foreground-soft)]">Proceeds are Base USDC.</dd></div>
+          </dl>
           <section className="mt-9 rounded-[var(--radius-card)] bg-[var(--surface-subtle)] p-5 sm:p-7" aria-labelledby="scenario-title">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--foreground-soft)]">Scenario comparison</p><h2 id="scenario-title" className="mt-2 text-3xl font-semibold tracking-[-0.045em]">What the protection changes</h2></div>
@@ -250,11 +276,13 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
               <dl className="grid gap-4 sm:grid-cols-2">
                 <div><dt className="text-xs text-[color:var(--foreground-soft)]">Strike</dt><dd className="mt-1 tabular-nums">{formatUsd(candidate.strikeUsd)}</dd></div>
                 <div><dt className="text-xs text-[color:var(--foreground-soft)]">Quantity</dt><dd className="mt-1 tabular-nums">{candidate.quantityUnderlying} ETH</dd></div>
-                <div><dt className="text-xs text-[color:var(--foreground-soft)]">Settlement asset</dt><dd className="mt-1">{candidate.settlementTokenSymbol}</dd></div>
+                <div><dt className="text-xs text-[color:var(--foreground-soft)]">Settlement asset</dt><dd className="mt-1">{candidate.settlementTokenSymbol} on Base</dd></div>
                 <div><dt className="text-xs text-[color:var(--foreground-soft)]">Goal coverage</dt><dd className="mt-1 tabular-nums">{formatPercentFromBps(candidate.goalCoverageBps)}</dd></div>
+                <div><dt className="text-xs text-[color:var(--foreground-soft)]">Expiry shortfall</dt><dd className="mt-1 tabular-nums">{formatUsd(candidate.expiryShortfallUsd)}</dd></div>
               </dl>
             </Accordion>
-            {alternatives.length ? <Accordion title={alternatives.length + " other viable option" + (alternatives.length === 1 ? "" : "s")}><div>{alternatives.map((item) => <div key={item.id} className="flex min-h-12 items-center justify-between gap-4 border-t border-[var(--border)] py-3"><span>Ends {formatDate(item.expiry)}</span><span className="font-semibold tabular-nums">{formatUsd(item.premiumUsd)}</span></div>)}</div></Accordion> : null}
+            <Accordion title="How GoalGuard evaluated this plan"><div className="space-y-3 text-sm leading-6 text-[color:var(--foreground-soft)]"><p>Hard eligibility rules determine selection. The optional Goal Protection Score is unavailable while settlement timing is unverified.</p><p>GoalGuard compares the normalized expiry floor, coverage, premium, protection end, and live fillable quantity. It does not count an early sale or resale value.</p></div></Accordion>
+            {alternatives.length ? <Accordion title={alternatives.length + " other viable option" + (alternatives.length === 1 ? "" : "s")}><div>{alternatives.map((item) => <div key={item.id} className="grid gap-2 border-t border-[var(--border)] py-3 text-sm sm:grid-cols-5 sm:items-center"><span>{item.goalAttainment === "settlement_timing_not_verified" ? "Settlement timing not verified" : item.goalAttainment}</span><span>Shortfall {item.goalDateShortfallUsd === null ? "Not verifiable" : formatUsd(item.goalDateShortfallUsd)}</span><span>{formatPercentFromBps(item.goalCoverageBps)} covered</span><span>{formatUsd(item.premiumUsd)}</span><span>Ends {formatDateTime(item.protectionEndAt, goal.timezone)}</span></div>)}</div></Accordion> : null}
           </div>
         </div>
       </Card>
@@ -307,17 +335,18 @@ export function PreviewConfirmationPanel({ goal, candidate, walletAddress, ackno
       </div>
       <div className="border-t border-[var(--border)] bg-[var(--surface-raised)] p-6 sm:p-8">
         <div className="metric-grid grid gap-3">
-          <MetricCard label="Purpose" value={goalName(goal)} />
-          <MetricCard label="Exact cost" value={formatUsd(candidate.premiumUsd)} tone="accent" />
-          <MetricCard label="Maximum cost at risk" value={formatUsd(candidate.maxPremiumLossUsd)} />
-          <MetricCard label="Coverage" value={formatPercentFromBps(candidate.goalCoverageBps)} />
-          <MetricCard label="Expiry conditions" value={formatDate(candidate.expiry)} hint={"Expiry is " + candidate.deadlineGapHours + " hours from the goal deadline."} />
+          <MetricCard label="Payment-date status" value="Settlement timing not verified" tone="accent" />
+          <MetricCard label="Goal-date shortfall" value="Not verifiable" tone="accent" />
+          <MetricCard label="Exact cost" value={formatUsd(candidate.premiumUsd)} />
+          <MetricCard label="Protection ends" value={formatDateTime(candidate.protectionEndAt, goal.timezone)} />
+          <MetricCard label="Protected floor at expiry" value={formatUsd(candidate.protectedFloorAtExpiryUsd)} />
+          <MetricCard label="Funds needed by" value={formatDateTime(goal.fundsNeededAt, goal.timezone)} />
           <MetricCard label="Connected wallet" value={<span className="text-base tabular-nums">{shortenAddress(walletAddress)}</span>} hint="Base · chain ID 8453" />
         </div>
-        <Alert className="mt-5" tone="warning" title="Preview, not protection">Generating the preview does not move funds, create an allowance, sign a transaction, or create a protected position.</Alert>
+        <Alert className="mt-5" tone="error" title="Confirm the accessibility limit">Payoff is evaluated at expiry. Settlement is initiated by a factory callback with no verified P0 upper bound. No early sale is assumed, proceeds are Base USDC rather than bank-account cash, and this remains unsigned preview data.</Alert>
         <label className="mt-5 flex min-h-14 cursor-pointer items-start gap-3 rounded-[var(--radius-control)] border-2 border-[var(--foreground)] bg-[var(--accent-soft)] p-4 text-sm leading-6 text-[color:var(--accent-soft-foreground)] focus-within:outline-2 focus-within:outline-offset-3 focus-within:outline-[var(--focus-ring)]">
           <input type="checkbox" checked={acknowledged} onChange={(event) => onAcknowledged(event.target.checked)} className="mt-1 size-5 shrink-0 accent-[var(--foreground)]" />
-          I understand the exact cost, expiry, coverage, connected wallet, and that this produces unsigned transaction data only.
+          I understand the payment-date status, expiry floor, exact cost, protection end, Base USDC settlement, no-early-sale assumption, connected wallet, and that this produces unsigned transaction data only.
         </label>
         <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end"><Button variant="ghost" onClick={onBack} disabled={busy}><ArrowLeft aria-hidden="true" />Back to plan</Button><Button onClick={onGenerate} disabled={!acknowledged || busy}>{busy ? "Generating unsigned preview…" : "Generate unsigned preview"}<ShieldCheck aria-hidden="true" /></Button></div>
       </div>
@@ -365,13 +394,16 @@ export function DemoPreviewReadyPanel({ goal, preview, meta, decision, onStartAn
         </div>
         <div className="p-6 sm:p-8">
           <div className="metric-grid grid gap-3">
-            <MetricCard label="Purpose" value={goalName(goal)} />
-            <MetricCard label="Proposed cost" value={formatUsd(preview.candidate.premiumUsd)} tone="accent" />
-            <MetricCard label="Estimated floor" value={formatUsd(preview.candidate.estimatedFloorUsd)} tone="accent" />
+            <MetricCard label="Payment-date status" value="Settlement timing not verified" tone="accent" />
+            <MetricCard label="Goal-date shortfall" value="Not verifiable" tone="accent" />
+            <MetricCard label="Proposed cost" value={formatUsd(preview.candidate.premiumUsd)} />
+            <MetricCard label="Protection ends" value={formatDateTime(preview.candidate.protectionEndAt, goal.timezone)} />
+            <MetricCard label="Protected floor at expiry" value={formatUsd(preview.candidate.protectedFloorAtExpiryUsd)} />
             {proportional ? <MetricCard label="Goal coverage" value={formatPercentFromBps(preview.candidate.goalCoverageBps)} /> : null}
             <MetricCard label="Expires in" value={<span className={(expired ? "text-[color:var(--accent)] " : "") + "tabular-nums"}>{formatCountdown(seconds)}</span>} />
           </div>
-          {proportional ? <Alert className="mt-5" tone="warning" title="Partial goal coverage">This proportional demo does not fully protect the original amount. It covers {formatPercentFromBps(preview.candidate.goalCoverageBps)} of the stated goal.</Alert> : null}
+          <Alert className="mt-5" tone="error" title="Settlement timing not verified">The displayed floor is evaluated at expiry only. GoalGuard cannot verify Base USDC availability by {formatDateTime(goal.fundsNeededAt, goal.timezone)} and does not assume an early sale.</Alert>
+          {proportional ? <Alert className="mt-3" tone="warning" title="Partial goal coverage">This proportional demo does not fully protect the original amount. It covers {formatPercentFromBps(preview.candidate.goalCoverageBps)} of the stated goal.</Alert> : null}
 
           <section className="mt-8" aria-labelledby="readiness-title">
             <h2 id="readiness-title" className="text-3xl font-semibold tracking-[-0.045em]">Wallet readiness</h2>

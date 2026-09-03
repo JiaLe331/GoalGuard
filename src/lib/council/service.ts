@@ -7,6 +7,7 @@ import { publicCandidate, type CouncilDecision, type CouncilRole, type CouncilRe
 import { PostgresGoalGuardRepository } from "@/lib/db/repository";
 import { hashJson } from "@/lib/domain/hash";
 import { callGonkaJson, GonkaCallError } from "@/lib/gonka/client";
+import { assertSelectableCandidate, normalizeGoalTiming, P0_GOAL_PROTECTION_POLICY, ProtectionInvariantError } from "@/lib/protection/scoring";
 import { ApiRouteError } from "@/lib/server/http";
 import { councilConsensus } from "./rules";
 
@@ -16,18 +17,29 @@ const CouncilOutputSchema = z.object({
 }).strict();
 
 const prompts: Record<CouncilRole, string> = {
-  strategist: "Assess whether this already-calculated ETH put meaningfully serves the normalized goal, including direction, expiry fit, floor, cost, the exact proposed quantity, coverage mode/basis points, and supplied alternatives. Do not recalculate or invent values.",
-  risk_auditor: "Act adversarially. Reject or mark uncertain if any supplied fact violates the goal, is incomplete, misleading, unfillable, over budget, misstates proposed or uncovered coverage, or fails to provide the claimed floor. Do not originate financial values.",
-  consumer_advocate: "Assess whether the plan is understandable and serves a non-professional ETH holder's near-term expense without implying a guarantee or encouraging speculation. Require clear maximum-cost, settlement, and any partial-coverage disclosures.",
+  strategist: "Assess this already-calculated ETH put as expiry protection only. Explain the normalized goal timing, expiry floor, cost, exact quantity, coverage, and alternatives. Payment-date accessibility is not verifiable when settlement timing is unverified. Do not recalculate or invent values.",
+  risk_auditor: "Act adversarially. Reject or mark uncertain if any supplied fact violates the goal, is incomplete, misleading, unfillable, over budget, misstates coverage or the expiry floor, or claims payment-date availability without verified settlement timing. Never assume an early sale, buyer, bid, or market maker. Do not originate financial values.",
+  consumer_advocate: "Assess whether this expiry-protection-only plan is understandable to a non-professional ETH holder. Require clear if-executed, Base USDC, protection-end, factory-callback timing, no-payment-date-guarantee, maximum-cost, and any partial-coverage disclosures. Do not imply that an unsigned preview created protection.",
 };
 const purpose: Record<CouncilRole, "strategist_review" | "risk_auditor_review" | "consumer_advocate_review"> = { strategist: "strategist_review", risk_auditor: "risk_auditor_review", consumer_advocate: "consumer_advocate_review" };
 
 function normalizedGoal(goal: Goal) {
-  return { goalType: goal.goalType, customGoalLabel: goal.customGoalLabel, underlyingAsset: goal.underlyingAsset, protectedValueUsd: goal.protectedValueUsd, deadline: goal.deadline, maxLossBps: goal.maxLossBps, maxPremiumUsd: goal.maxPremiumUsd };
+  return { goalType: goal.goalType, customGoalLabel: goal.customGoalLabel, underlyingAsset: goal.underlyingAsset, protectedValueUsd: goal.protectedValueUsd, protectThroughAt: goal.protectThroughAt, fundsNeededAt: goal.fundsNeededAt, timezone: goal.timezone, timingConfirmed: goal.timingConfirmed, maxLossBps: goal.maxLossBps, maxPremiumUsd: goal.maxPremiumUsd };
 }
 
 export async function reviewCandidate(goal: Goal, candidate: ProtectionCandidate, ownerSessionHash: string, forceNewAttempt = false, repository = new PostgresGoalGuardRepository()) {
-  const baseInput = { goal: normalizedGoal(goal), candidate: publicCandidate(candidate), rulesetVersion: "1" };
+  if (!goal.timingConfirmed) throw new ApiRouteError("GOAL_TIMING_UNCONFIRMED", "Confirm both goal cutoffs before council review.", 422);
+  try { normalizeGoalTiming(goal, Date.now()); }
+  catch (error) { throw new ApiRouteError("GOAL_TIMING_INFEASIBLE", error instanceof Error ? error.message : "The confirmed goal timing is infeasible.", 422); }
+  if (candidate.policyVersion !== P0_GOAL_PROTECTION_POLICY.version || candidate.settlementTrigger !== P0_GOAL_PROTECTION_POLICY.settlementTrigger || candidate.settlementTimingStatus !== "settlement_timing_not_verified") {
+    throw new ApiRouteError("CANDIDATE_STALE", "The candidate evaluation policy is no longer current.", 409, true);
+  }
+  try { assertSelectableCandidate(candidate, goal.protectThroughAt); }
+  catch (error) {
+    if (error instanceof ProtectionInvariantError) throw new ApiRouteError("CANDIDATE_NOT_ACCESSIBLE", error.message, 422);
+    throw error;
+  }
+  const baseInput = { goal: normalizedGoal(goal), candidate: publicCandidate(candidate), reviewSubject: "expiry_protection_only", rulesetVersion: "2" };
   const decisionInputHash = hashJson(baseInput);
   const latestRecord = await repository.getLatestDecisionRecord(candidate.id, ownerSessionHash);
   const latest = latestRecord?.decision ?? null;
@@ -54,6 +66,6 @@ export async function reviewCandidate(goal: Goal, candidate: ProtectionCandidate
     return { schemaVersion: 1, id: randomUUID(), decisionId, inferenceId: value.inferenceId, role: value.role, model: value.result.model, requestId: value.result.requestId, ...value.result.data, createdAt } satisfies CouncilReview;
   }) as [CouncilReview, CouncilReview, CouncilReview];
   const consensus = councilConsensus(reviews);
-  const decision: CouncilDecision = { schemaVersion: 1, id: decisionId, goalId: goal.id, candidateId: candidate.id, attempt: (latest?.attempt ?? 0) + 1, status: consensus.status, rulesetVersion: "1", approvedReviewCount: consensus.approved, rejectedReviewCount: consensus.rejected, uncertainReviewCount: consensus.uncertain, blockedReasons: consensus.blockedReasons, reviews, createdAt };
+  const decision: CouncilDecision = { schemaVersion: 1, id: decisionId, goalId: goal.id, candidateId: candidate.id, attempt: (latest?.attempt ?? 0) + 1, status: consensus.status, rulesetVersion: "2", approvedReviewCount: consensus.approved, rejectedReviewCount: consensus.rejected, uncertainReviewCount: consensus.uncertain, blockedReasons: consensus.blockedReasons, reviews, createdAt };
   return repository.saveDecision(decision, decisionInputHash, ownerSessionHash, !forceNewAttempt);
 }

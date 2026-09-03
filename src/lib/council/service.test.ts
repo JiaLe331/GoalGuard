@@ -39,8 +39,8 @@ describe("Gonka council service", () => {
   });
 
   it("returns a matching cached decision without calling Gonka", async () => {
-    const normalizedGoal = { goalType: fixtureReadyGoal.goalType, customGoalLabel: fixtureReadyGoal.customGoalLabel, underlyingAsset: fixtureReadyGoal.underlyingAsset, protectedValueUsd: fixtureReadyGoal.protectedValueUsd, deadline: fixtureReadyGoal.deadline, maxLossBps: fixtureReadyGoal.maxLossBps, maxPremiumUsd: fixtureReadyGoal.maxPremiumUsd };
-    const inputHash = hashJson({ goal: normalizedGoal, candidate: publicCandidate(fixtureCandidate), rulesetVersion: "1" });
+    const normalizedGoal = { goalType: fixtureReadyGoal.goalType, customGoalLabel: fixtureReadyGoal.customGoalLabel, underlyingAsset: fixtureReadyGoal.underlyingAsset, protectedValueUsd: fixtureReadyGoal.protectedValueUsd, protectThroughAt: fixtureReadyGoal.protectThroughAt, fundsNeededAt: fixtureReadyGoal.fundsNeededAt, timezone: fixtureReadyGoal.timezone, timingConfirmed: fixtureReadyGoal.timingConfirmed, maxLossBps: fixtureReadyGoal.maxLossBps, maxPremiumUsd: fixtureReadyGoal.maxPremiumUsd };
+    const inputHash = hashJson({ goal: normalizedGoal, candidate: publicCandidate(fixtureCandidate), reviewSubject: "expiry_protection_only", rulesetVersion: "2" });
     const repo = repository({ decision: fixtureDecision, inputHash });
     await expect(reviewCandidate(fixtureReadyGoal, fixtureCandidate, "a".repeat(64), false, repo)).resolves.toEqual(fixtureDecision);
     expect(mocks.callGonkaJson).not.toHaveBeenCalled();

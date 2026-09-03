@@ -28,7 +28,7 @@ export interface TradeVerificationRecord {
 export interface GoalGuardRepository {
   createGoal(goal: Goal, ownerSessionHash: string): Promise<Goal>;
   getGoal(id: UUID, ownerSessionHash: string): Promise<Goal | null>;
-  updateGoal(id: UUID, ownerSessionHash: string, values: Pick<Goal, "goalType" | "customGoalLabel" | "underlyingAsset" | "protectedValueUsd" | "deadline" | "maxLossBps" | "maxPremiumUsd">): Promise<Goal>;
+  updateGoal(id: UUID, ownerSessionHash: string, values: Pick<Goal, "goalType" | "customGoalLabel" | "underlyingAsset" | "protectedValueUsd" | "protectThroughAt" | "fundsNeededAt" | "timezone" | "timingConfirmed" | "maxLossBps" | "maxPremiumUsd">): Promise<Goal>;
   updateGoalStatus(id: UUID, ownerSessionHash: string, status: GoalStatus): Promise<Goal>;
   replaceCandidates(goalId: UUID, ownerSessionHash: string, candidates: ProtectionCandidate[]): Promise<void>;
   getCandidate(id: UUID, ownerSessionHash: string): Promise<ProtectionCandidate | null>;
@@ -58,13 +58,16 @@ export class PostgresGoalGuardRepository implements GoalGuardRepository {
   constructor(private readonly db: GoalGuardDatabase = getDatabase().db) {}
 
   private async hydrateGoal(row: typeof goals.$inferSelect) {
-    const [parseInference, selectedCandidate, decision, trade] = await Promise.all([
+    const [parseInference, selectedCandidate] = await Promise.all([
       this.db.select({ id: gonkaInferences.id }).from(gonkaInferences).where(and(eq(gonkaInferences.goalId, row.id), eq(gonkaInferences.purpose, "goal_parse"))).orderBy(desc(gonkaInferences.createdAt)).limit(1),
-      this.db.select({ id: protectionCandidates.id }).from(protectionCandidates).where(and(eq(protectionCandidates.goalId, row.id), eq(protectionCandidates.status, "selected"))).limit(1),
-      this.db.select({ id: councilDecisions.id }).from(councilDecisions).where(eq(councilDecisions.goalId, row.id)).orderBy(desc(councilDecisions.attempt)).limit(1),
-      this.db.select({ id: trades.id }).from(trades).where(eq(trades.goalId, row.id)).orderBy(desc(trades.createdAt)).limit(1),
+      this.db.select({ id: protectionCandidates.id }).from(protectionCandidates).where(and(eq(protectionCandidates.goalId, row.id), eq(protectionCandidates.status, "selected"), eq(protectionCandidates.schemaVersion, 2))).limit(1),
     ]);
-    return goalFromRow(row, { parseInferenceId: parseInference[0]?.id ?? null, selectedCandidateId: selectedCandidate[0]?.id ?? null, councilDecisionId: decision[0]?.id ?? null, tradeId: trade[0]?.id ?? null });
+    const selectedId = selectedCandidate[0]?.id;
+    const [decision, trade] = selectedId ? await Promise.all([
+      this.db.select({ id: councilDecisions.id }).from(councilDecisions).where(and(eq(councilDecisions.goalId, row.id), eq(councilDecisions.candidateId, selectedId))).orderBy(desc(councilDecisions.attempt)).limit(1),
+      this.db.select({ id: trades.id }).from(trades).where(and(eq(trades.goalId, row.id), eq(trades.candidateId, selectedId), inArray(trades.status, ["previewed", "awaiting_signature", "submitted", "confirmed"]))).orderBy(desc(trades.createdAt)).limit(1),
+    ]) : [[], []] as const;
+    return goalFromRow(row, { parseInferenceId: parseInference[0]?.id ?? null, selectedCandidateId: selectedId ?? null, councilDecisionId: decision[0]?.id ?? null, tradeId: trade[0]?.id ?? null });
   }
 
   async createGoal(goal: Goal, ownerSessionHash: string) {
@@ -77,11 +80,15 @@ export class PostgresGoalGuardRepository implements GoalGuardRepository {
     return rows[0] ? this.hydrateGoal(rows[0]) : null;
   }
 
-  async updateGoal(id: UUID, ownerSessionHash: string, values: Pick<Goal, "goalType" | "customGoalLabel" | "underlyingAsset" | "protectedValueUsd" | "deadline" | "maxLossBps" | "maxPremiumUsd">) {
+  async updateGoal(id: UUID, ownerSessionHash: string, values: Pick<Goal, "goalType" | "customGoalLabel" | "underlyingAsset" | "protectedValueUsd" | "protectThroughAt" | "fundsNeededAt" | "timezone" | "timingConfirmed" | "maxLossBps" | "maxPremiumUsd">) {
     const current = await this.getGoal(id, ownerSessionHash);
     if (!current) throw new RepositoryNotFoundError(`Goal ${id} was not found.`);
     if (!["draft", "failed", "ready"].includes(current.status)) throw new RepositoryConflictError("The goal cannot be edited while processing.");
-    await this.db.update(goals).set({ ...values, status: "draft", updatedAt: new Date().toISOString() }).where(and(eq(goals.id, id), eq(goals.ownerSessionHash, ownerSessionHash)));
+    await this.db.transaction(async (transaction) => {
+      const updated = await transaction.update(goals).set({ ...values, deadline: values.protectThroughAt.slice(0, 10), goalTimezone: values.timezone, status: "draft", updatedAt: new Date().toISOString() }).where(and(eq(goals.id, id), eq(goals.ownerSessionHash, ownerSessionHash))).returning({ id: goals.id });
+      if (updated.length !== 1) throw new RepositoryConflictError("The goal changed during the update.");
+      await transaction.update(protectionCandidates).set({ status: "stale", updatedAt: new Date().toISOString() }).where(eq(protectionCandidates.goalId, id));
+    });
     return (await this.getGoal(id, ownerSessionHash))!;
   }
 
@@ -105,7 +112,7 @@ export class PostgresGoalGuardRepository implements GoalGuardRepository {
   }
 
   async getCandidate(id: UUID, ownerSessionHash: string) {
-    const rows = await this.db.select({ candidate: protectionCandidates }).from(protectionCandidates).innerJoin(goals, eq(protectionCandidates.goalId, goals.id)).where(and(eq(protectionCandidates.id, id), eq(goals.ownerSessionHash, ownerSessionHash))).limit(1);
+    const rows = await this.db.select({ candidate: protectionCandidates }).from(protectionCandidates).innerJoin(goals, eq(protectionCandidates.goalId, goals.id)).where(and(eq(protectionCandidates.id, id), eq(protectionCandidates.schemaVersion, 2), eq(goals.ownerSessionHash, ownerSessionHash))).limit(1);
     return rows[0] ? candidateFromRow(rows[0].candidate) : null;
   }
 

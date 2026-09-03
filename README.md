@@ -8,7 +8,8 @@ The normative product and data-contract specification is [goalguard_prd.md](./go
 
 - Next.js 16 App Router UI and same-origin API routes for goal parsing/editing, candidate generation, council review, unsigned trade preview, and canonical hydration.
 - Strict shared Zod contracts; public candidates omit server-only `protocolRaw` data.
-- Deterministic vanilla ETH-put filtering, payoff scenarios, deadline/cost/coverage/liquidity checks, ranking, and explicit no-suitable-candidate refusal.
+- Deterministic vanilla ETH-put filtering, payoff scenarios, protection-cutoff/cost/coverage/liquidity checks, expiry-floor evaluation, ranking, and explicit no-suitable-candidate refusal.
+- Separate protection and funds-needed cutoffs with UTC contracts, local-timezone date entry, and an explicit “Settlement timing not verified” P0 state.
 - Strategist, Risk Auditor, and Consumer Advocate Gonka calls run independently and require at least two configured models. Any reject, uncertainty, malformed response, or failed call blocks the unsigned preview.
 - Exact Thetanuts SDK approval/fill encoding, wallet exposure/readiness checks, quote fingerprints, premium cap, referral disclosure, and a terminal unsigned-preview flow.
 - Supabase PostgreSQL through Drizzle and `postgres.js`, with anonymous HttpOnly session ownership and PGlite repository tests.
@@ -66,7 +67,7 @@ The lab is deliberately local-only: it does not call backend routes, request a w
 | `THETANUTS_REFERRER_ADDRESS` | Optional disclosed referrer for the unsigned fill preview. |
 | `ENABLE_LIVE_THETANUTS_EXECUTION` | Fixed at `false` for the submitted and demonstrated build; it is not an approval switch. |
 | `MAX_LIVE_TRADE_PREMIUM_USD` | Proposed preview cap; default `3`. |
-| `MAX_DEADLINE_GAP_HOURS` | Maximum goal deadline-to-expiry gap; default `168`. |
+| `MAX_DEADLINE_GAP_HOURS` | Maximum protection-cutoff-to-option-expiry overhang; default `168` hours. |
 | `NEXT_PUBLIC_APP_URL` | Exact allowed origin and deployed app URL. |
 | `GOALGUARD_SMOKE_APP_URL`, `GOALGUARD_SMOKE_WALLET_ADDRESS`, `GOALGUARD_SMOKE_GOAL_MESSAGE` | Optional local real-integration workflow smoke configuration; the wallet value is a public address only. |
 | `DATABASE_URL` | Supabase transaction-pooler URL for Vercel and Render. |

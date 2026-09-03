@@ -1,7 +1,7 @@
 export type StatusTone = "ready" | "info" | "warning" | "error" | "neutral";
 
 const toneClasses: Record<StatusTone, string> = {
-  ready: "border-[var(--positive-surface)] bg-[var(--positive-surface)] text-[color:var(--positive)] [&>span]:bg-[var(--positive)]",
+  ready: "border-[var(--positive-surface)] bg-[var(--positive-surface)] text-[color:var(--foreground)] [&>span]:bg-[var(--positive)]",
   info: "border-[var(--accent-soft)] bg-[var(--accent-soft)] text-[color:var(--foreground)] [&>span]:bg-[var(--foreground)]",
   warning: "border-[var(--warning-surface)] bg-[var(--warning-surface)] text-[color:var(--warning)] [&>span]:bg-[var(--warning)]",
   error: "border-[var(--negative-surface)] bg-[var(--negative-surface)] text-[color:var(--negative)] [&>span]:bg-[var(--negative)]",

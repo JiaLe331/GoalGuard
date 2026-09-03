@@ -12,7 +12,7 @@ const maker = "0x3333333333333333333333333333333333333333";
 const expiry = BigInt(Date.parse("2026-10-01T00:00:00.000Z") / 1000);
 const deadline = BigInt(Date.parse("2026-09-02T00:00:00.000Z") / 1000);
 
-const goal: Goal = { schemaVersion: 1, id: "1b3e798c-e0e8-4ab5-9e37-d4526424eb8f", goalType: "rent", customGoalLabel: null, underlyingAsset: "ETH", protectedValueUsd: "1200", deadline: "2026-09-30", maxLossBps: 500, maxPremiumUsd: "3", originalUserMessage: "Protect rent.", status: "searching", createdAt: now.toISOString(), updatedAt: now.toISOString(), parseInferenceId: null, selectedCandidateId: null, councilDecisionId: null, tradeId: null };
+const goal: Goal = { schemaVersion: 2, id: "1b3e798c-e0e8-4ab5-9e37-d4526424eb8f", goalType: "rent", customGoalLabel: null, underlyingAsset: "ETH", protectedValueUsd: "1200", protectThroughAt: "2026-09-30T23:59:59.999Z", fundsNeededAt: "2026-10-02T00:00:00.000Z", timezone: "UTC", timingConfirmed: true, maxLossBps: 500, maxPremiumUsd: "3", originalUserMessage: "Protect rent.", status: "searching", createdAt: now.toISOString(), updatedAt: now.toISOString(), parseInferenceId: null, selectedCandidateId: null, councilDecisionId: null, tradeId: null };
 
 function order(nonce: bigint, changes: Partial<OrderWithSignature["order"]> = {}): OrderWithSignature {
   return { order: { maker, taker: "0x0000000000000000000000000000000000000000", option: "0x0000000000000000000000000000000000000000", isBuyer: false, numContracts: 400_000n, price: 750_000_000n, expiry, nonce, optionType: 1, strikes: [300_000_000_000n], collateralToken: usdc, underlyingToken: "0x4444444444444444444444444444444444444444", deadline, ...changes }, signature: `0x${"11".repeat(65)}`, availableAmount: 10_000_000n, makerAddress: maker, rawApiData: { collateral: usdc, priceFeed: "0x5555555555555555555555555555555555555555", implementation: put, strikes: ["300000000000"], isCall: false, isLong: true, orderExpiryTimestamp: Number(deadline), extraOptionData: "0x", maxCollateralUsable: "10000000" } };
@@ -26,7 +26,7 @@ describe("deterministic Thetanuts strategy", () => {
   it("creates a fully covered vanilla ETH put with exact decimal calculations", async () => {
     const result = await generateProtectionCandidates(goal, { client: client([order(1n)]), now, maxDeadlineGapHours: 168 });
     expect(result.candidates).toHaveLength(1);
-    expect(result.candidates[0]).toMatchObject({ status: "selected", premiumUsd: "3", quantityUnderlying: "0.4", goalCoverageBps: 10000, coverageMode: "full", estimatedFloorUsd: "1197" });
+    expect(result.candidates[0]).toMatchObject({ status: "selected", premiumUsd: "3", quantityUnderlying: "0.4", goalCoverageBps: 10000, coverageMode: "full", protectedFloorAtExpiryUsd: "1197", expiryShortfallUsd: "0", accessibleFloorByGoalDateUsd: null, goalDateShortfallUsd: null, settlementTimingStatus: "settlement_timing_not_verified", protectionScore: null });
     expect(result.candidates[0]!.scenarios.map(({ key }) => key)).toEqual(["down", "flat", "up"]);
   });
 

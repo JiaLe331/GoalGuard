@@ -13,15 +13,15 @@ const optionBook = "0x3333333333333333333333333333333333333333";
 
 function order(): ThetanutsOrder {
   return {
-    order: { maker: "0x2222222222222222222222222222222222222222", taker: "0x0000000000000000000000000000000000000000", option: "0x4444444444444444444444444444444444444444", isBuyer: false, numContracts: 2_500_000_000_000_000n, price: 100_000_000n, expiry: 1_800_000_000n, nonce: 1n, optionType: 1, strikes: [2_800_000_000n], collateralToken: fixtureCandidate.settlementTokenAddress, underlyingToken: "0x5555555555555555555555555555555555555555", deadline: 1_800_000_000n },
+    order: { maker: "0x2222222222222222222222222222222222222222", taker: "0x0000000000000000000000000000000000000000", option: "0x4444444444444444444444444444444444444444", isBuyer: false, numContracts: 2_500_000_000_000_000n, price: 100_000_000n, expiry: BigInt(Date.parse("2099-10-01T00:00:00.000Z") / 1000), nonce: 1n, optionType: 1, strikes: [2_800_000_000n], collateralToken: fixtureCandidate.settlementTokenAddress, underlyingToken: "0x5555555555555555555555555555555555555555", deadline: BigInt(Date.parse("2099-09-30T00:00:00.000Z") / 1000) },
     signature: `0x${"11".repeat(65)}`, availableAmount: 10_000_000_000_000_000n, makerAddress: "0x2222222222222222222222222222222222222222",
-    rawApiData: { collateral: fixtureCandidate.settlementTokenAddress, priceFeed: "0x5555555555555555555555555555555555555555", isCall: false, orderExpiryTimestamp: "1800000000" },
+    rawApiData: { collateral: fixtureCandidate.settlementTokenAddress, priceFeed: "0x5555555555555555555555555555555555555555", isCall: false, orderExpiryTimestamp: String(Date.parse("2099-09-30T00:00:00.000Z") / 1000) },
   } as unknown as ThetanutsOrder;
 }
 
 function setup(changed = false) {
   const live = order();
-  const candidate = { ...fixtureCandidate, protocolOrderId: "0x2222222222222222222222222222222222222222:1", protocolRaw: serializeOrder(changed ? { ...live, availableAmount: 1n } : live), marketAsOf: now.toISOString(), expiry: new Date(1_800_000_000_000).toISOString() };
+  const candidate = { ...fixtureCandidate, protocolOrderId: "0x2222222222222222222222222222222222222222:1", protocolRaw: serializeOrder(changed ? { ...live, availableAmount: 1n } : live), marketAsOf: now.toISOString(), expiry: new Date(Date.parse("2099-10-01T00:00:00.000Z")).toISOString(), protectionEndAt: new Date(Date.parse("2099-10-01T00:00:00.000Z")).toISOString(), expiryOverhangSeconds: 86400, quantityBaseUnits: "10000000000000000", quantityUnderlying: "10000000000" };
   const createTrade = vi.fn(async (trade) => trade);
   const repository = {
     getGoal: vi.fn(async () => fixtureReadyGoal), getCandidate: vi.fn(async () => candidate), getDecision: vi.fn(async () => fixtureDecision), getLatestDecision: vi.fn(async () => fixtureDecision), createTrade,

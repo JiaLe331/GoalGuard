@@ -43,7 +43,7 @@ const errors: Record<"no-candidate" | "stale-candidate" | "preview-failure", Wor
       rejected: [
         "Premium exceeded the maximum protection cost.",
         "Available quantity could not cover the full goal.",
-        "Expiry fell outside the allowed deadline gap.",
+        "Expiry fell outside the allowed protection-cutoff overhang.",
       ],
     },
     returnStage: "confirming_goal",

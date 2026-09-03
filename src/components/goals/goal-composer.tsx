@@ -75,7 +75,7 @@ export function GoalComposer() {
     event.preventDefault();
     const trimmed = message.trim();
     if (!trimmed) {
-      setError(new ApiClientError("Describe the money and deadline you want to protect first.", "VALIDATION_ERROR", false, { message: ["Enter a protection goal."] }));
+      setError(new ApiClientError("Describe the money and protection cutoffs you want to protect first.", "VALIDATION_ERROR", false, { message: ["Enter a protection goal."] }));
       return;
     }
     abortRef.current?.abort();

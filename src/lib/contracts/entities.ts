@@ -13,15 +13,20 @@ import {
   InferencePurposeSchema,
   InferenceStatusSchema,
   OptionTypeSchema,
+  AccessibilityBasisSchema,
   SupportedAssetSchema,
+  GoalAttainmentSchema,
+  ScoreVersionSchema,
+  SettlementTimingStatusSchema,
+  SettlementTriggerSchema,
   TradeStatusSchema,
 } from "./enums";
 import {
   BaseUnitStringSchema,
   DecimalStringSchema,
   EvmAddressSchema,
-  ISODateSchema,
   ISODateTimeSchema,
+  IanaTimezoneSchema,
   JsonValueSchema,
   Sha256Schema,
   SignedDecimalStringSchema,
@@ -32,14 +37,24 @@ import {
 const positiveDecimal = DecimalStringSchema.refine((value) => new Decimal(value).greaterThan(0), "Expected a value greater than zero.");
 const nonEmptyShortString = z.string().trim().min(1).max(500);
 
+export const ScoreBreakdownSchema = z.object({
+  floorAttainmentBps: z.number().int().min(0).max(10000),
+  coverageBps: z.number().int().min(0).max(10000),
+  deadlineFitBps: z.number().int().min(0).max(10000),
+  budgetFitBps: z.number().int().min(0).max(10000),
+}).strict();
+
 export const GoalSchema = z.object({
-  schemaVersion: z.literal(1),
+  schemaVersion: z.literal(2),
   id: UUIDSchema,
   goalType: GoalTypeSchema,
   customGoalLabel: z.string().trim().min(1).max(80).nullable(),
   underlyingAsset: SupportedAssetSchema,
   protectedValueUsd: positiveDecimal,
-  deadline: ISODateSchema,
+  protectThroughAt: ISODateTimeSchema,
+  fundsNeededAt: ISODateTimeSchema,
+  timezone: IanaTimezoneSchema,
+  timingConfirmed: z.boolean(),
   maxLossBps: z.number().int().min(0).max(9999),
   maxPremiumUsd: positiveDecimal.nullable(),
   originalUserMessage: z.string().trim().min(1).max(4000),
@@ -57,6 +72,9 @@ export const GoalSchema = z.object({
   if (goal.goalType !== "custom" && goal.customGoalLabel !== null) {
     context.addIssue({ code: "custom", path: ["customGoalLabel"], message: "Only custom goals may have a custom label." });
   }
+  if (goal.timingConfirmed && Date.parse(goal.protectThroughAt) >= Date.parse(goal.fundsNeededAt)) {
+    context.addIssue({ code: "custom", path: ["protectThroughAt"], message: "Protection must end before funds are needed." });
+  }
 });
 
 export const ScenarioResultSchema = z.object({
@@ -69,7 +87,7 @@ export const ScenarioResultSchema = z.object({
 }).strict();
 
 export const ProtectionCandidateSchema = z.object({
-  schemaVersion: z.literal(1),
+  schemaVersion: z.literal(2),
   id: UUIDSchema,
   goalId: UUIDSchema,
   source: CandidateSourceSchema,
@@ -86,8 +104,28 @@ export const ProtectionCandidateSchema = z.object({
   quantityBaseUnits: BaseUnitStringSchema.refine((value) => value !== "0", "Quantity must be greater than zero."),
   quantityUnderlying: positiveDecimal,
   maxPremiumLossUsd: positiveDecimal,
-  estimatedFloorUsd: DecimalStringSchema,
-  deadlineGapHours: z.number().int().nonnegative(),
+  spotPriceUsd: positiveDecimal,
+  requiredQuantityBaseUnits: BaseUnitStringSchema.refine((value) => value !== "0", "Required quantity must be greater than zero."),
+  effectiveBudgetUsd: positiveDecimal,
+  requiredFloorUsd: DecimalStringSchema,
+  protectedFloorAtExpiryUsd: DecimalStringSchema,
+  accessibleFloorByGoalDateUsd: DecimalStringSchema.nullable(),
+  expiryShortfallUsd: DecimalStringSchema,
+  goalDateShortfallUsd: DecimalStringSchema.nullable(),
+  protectionEndAt: ISODateTimeSchema,
+  settlementAvailableAt: ISODateTimeSchema.nullable(),
+  settlementConfirmationAllowanceSeconds: z.number().int().nonnegative().nullable(),
+  settlementTrigger: SettlementTriggerSchema,
+  settlementTimingStatus: SettlementTimingStatusSchema,
+  accessibilityBasis: AccessibilityBasisSchema,
+  timingAccessible: z.boolean().nullable(),
+  goalAttainment: GoalAttainmentSchema,
+  scoreVersion: ScoreVersionSchema,
+  protectionScore: z.number().int().min(0).max(100).nullable(),
+  scoreBreakdown: ScoreBreakdownSchema.nullable(),
+  policyVersion: z.string().trim().min(1).max(64),
+  expiryOverhangSeconds: z.number().int().nonnegative(),
+  settlementLeadSeconds: z.number().int().nonnegative().nullable(),
   goalCoverageBps: z.number().int().min(0).max(10000),
   coverageMode: CoverageModeSchema,
   availableQuantityBaseUnits: BaseUnitStringSchema.nullable(),
@@ -111,6 +149,29 @@ export const ProtectionCandidateSchema = z.object({
   }
   if (candidate.coverageMode === "proportional_demo" && (candidate.goalCoverageBps <= 0 || candidate.goalCoverageBps >= 10000)) {
     context.addIssue({ code: "custom", path: ["goalCoverageBps"], message: "A proportional demo requires partial positive coverage." });
+  }
+  if (candidate.protectionEndAt !== candidate.expiry) {
+    context.addIssue({ code: "custom", path: ["protectionEndAt"], message: "Protection end must match option expiry for P0 puts." });
+  }
+  if (candidate.settlementTimingStatus === "settlement_timing_not_verified") {
+    if (candidate.settlementAvailableAt !== null || candidate.goalDateShortfallUsd !== null || candidate.accessibleFloorByGoalDateUsd !== null || candidate.timingAccessible !== null || candidate.protectionScore !== null || candidate.scoreBreakdown !== null || candidate.settlementConfirmationAllowanceSeconds !== null || candidate.settlementLeadSeconds !== null || candidate.goalAttainment !== "settlement_timing_not_verified" || candidate.accessibilityBasis !== "unverified_factory_callback") {
+      context.addIssue({ code: "custom", path: ["settlementTimingStatus"], message: "Unverified settlement timing cannot publish payment-date or score facts." });
+    }
+  }
+  if (candidate.settlementTimingStatus !== "settlement_timing_not_verified" && (candidate.settlementAvailableAt === null || candidate.goalDateShortfallUsd === null || candidate.accessibleFloorByGoalDateUsd === null || candidate.timingAccessible === null || candidate.settlementConfirmationAllowanceSeconds === null || candidate.settlementLeadSeconds === null || candidate.accessibilityBasis !== "verified_expiry_settlement")) {
+    context.addIssue({ code: "custom", path: ["settlementTimingStatus"], message: "Verified settlement timing requires complete accessibility facts." });
+  }
+  if (candidate.protectionScore === null && candidate.scoreBreakdown !== null) {
+    context.addIssue({ code: "custom", path: ["scoreBreakdown"], message: "A null score requires a null score breakdown." });
+  }
+  if (candidate.protectionScore !== null && (candidate.scoreBreakdown === null || candidate.settlementTimingStatus !== "verified_accessible" || candidate.timingAccessible !== true)) {
+    context.addIssue({ code: "custom", path: ["protectionScore"], message: "Scores are only valid for verified accessible candidates." });
+  }
+  if (candidate.goalAttainment === "meets_if_executed" && (candidate.settlementTimingStatus !== "verified_accessible" || candidate.timingAccessible !== true || candidate.goalDateShortfallUsd !== "0" || candidate.goalCoverageBps !== 10000)) {
+    context.addIssue({ code: "custom", path: ["goalAttainment"], message: "A successful attainment requires verified access, no payment-date shortfall, and full coverage." });
+  }
+  if (candidate.coverageMode === "proportional_demo" && candidate.goalAttainment === "meets_if_executed") {
+    context.addIssue({ code: "custom", path: ["goalAttainment"], message: "Proportional demos cannot meet the full goal." });
   }
   for (const requiredKey of ["down", "flat", "up"] as const) {
     if (candidate.scenarios.filter(({ key }) => key === requiredKey).length !== 1) {
@@ -252,3 +313,4 @@ export type GonkaInference = z.infer<typeof GonkaInferenceSchema>;
 export type CouncilReview = z.infer<typeof CouncilReviewSchema>;
 export type CouncilDecision = z.infer<typeof CouncilDecisionSchema>;
 export type Trade = z.infer<typeof TradeSchema>;
+export type ScoreBreakdown = z.infer<typeof ScoreBreakdownSchema>;

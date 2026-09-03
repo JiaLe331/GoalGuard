@@ -34,8 +34,8 @@ describe("goal parsing service", () => {
   });
 
   it("persists only a complete validated goal", async () => {
-    const repo = repository(); mocks.callGonkaJson.mockResolvedValue(gonkaResult({ goalType: "rent", underlyingAsset: "ETH", protectedValueUsd: "100", deadline: "2099-09-30", maxLossBps: 500, maxPremiumUsd: "3" }));
-    const result = await parseGoal({ message: "Protect $100 for rent by 2099-09-30 with 5% maximum loss." }, "a".repeat(64), repo);
+    const repo = repository(); mocks.callGonkaJson.mockResolvedValue(gonkaResult({ goalType: "rent", underlyingAsset: "ETH", protectedValueUsd: "100", protectThroughAt: "2099-09-29T23:59:59.999Z", fundsNeededAt: "2099-09-30T00:00:00.000Z", timezone: "UTC", timingConfirmed: true, maxLossBps: 500, maxPremiumUsd: "3" }));
+    const result = await parseGoal({ message: "Protect $100 for rent through 2099-09-29 and make Base USDC available on 2099-09-30 with 5% maximum loss." }, "a".repeat(64), repo);
     expect(result.missingFields).toEqual([]);
     expect(result.goal).toMatchObject({ goalType: "rent", underlyingAsset: "ETH", protectedValueUsd: "100", maxLossBps: 500 });
     expect(repo.createGoal).toHaveBeenCalledOnce();

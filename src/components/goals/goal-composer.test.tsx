@@ -44,12 +44,12 @@ describe("GoalComposer", () => {
   });
 
   it("preserves an incomplete draft and asks one clarification", async () => {
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ data: { draft: { goalType: "rent", underlyingAsset: "ETH" }, missingFields: ["deadline"], clarificationQuestion: "When do you need the rent money?", goal: null, inference: { id: "6b3e798c-e0e8-4ab5-9e37-d4526424eb8f", purpose: "goal_parse", model: "gonka-model-a", requestId: "gonka-parse-1", status: "succeeded" } }, meta: fixtureMeta }), { status: 200 }));
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ data: { draft: { goalType: "rent", underlyingAsset: "ETH" }, missingFields: ["protectThroughAt", "fundsNeededAt", "timingConfirmed"], clarificationQuestion: "Until when must the ETH remain protected, and by what time must Base USDC be available?", goal: null, inference: { id: "6b3e798c-e0e8-4ab5-9e37-d4526424eb8f", purpose: "goal_parse", model: "gonka-model-a", requestId: "gonka-parse-1", status: "succeeded" } }, meta: fixtureMeta }), { status: 200 }));
     const user = userEvent.setup();
     render(<GoalComposer />);
     await user.type(screen.getByRole("textbox"), "Protect my rent fund.");
     await user.click(screen.getByRole("button", { name: /create protection goal/i }));
-    expect(await screen.findByRole("status")).toHaveTextContent("When do you need the rent money?");
+    expect(await screen.findByRole("status")).toHaveTextContent("Until when must the ETH remain protected");
     expect(screen.getByRole("button", { name: /continue/i })).toBeVisible();
     expect(push).not.toHaveBeenCalled();
   });

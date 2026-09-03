@@ -13,7 +13,7 @@ import {
   DecimalStringSchema,
   EvmAddressSchema,
   HexDataSchema,
-  ISODateSchema,
+  IanaTimezoneSchema,
   ISODateTimeSchema,
   TxHashSchema,
   UUIDSchema,
@@ -24,7 +24,10 @@ export const GoalDraftFieldSchema = z.enum([
   "customGoalLabel",
   "underlyingAsset",
   "protectedValueUsd",
-  "deadline",
+  "protectThroughAt",
+  "fundsNeededAt",
+  "timezone",
+  "timingConfirmed",
   "maxLossBps",
   "maxPremiumUsd",
 ]);
@@ -34,7 +37,10 @@ export const GoalDraftSchema = z.object({
   customGoalLabel: z.string().trim().min(1).max(80).nullable().optional(),
   underlyingAsset: SupportedAssetSchema.optional(),
   protectedValueUsd: DecimalStringSchema.optional(),
-  deadline: ISODateSchema.optional(),
+  protectThroughAt: ISODateTimeSchema.optional(),
+  fundsNeededAt: ISODateTimeSchema.optional(),
+  timezone: IanaTimezoneSchema.optional(),
+  timingConfirmed: z.boolean().optional(),
   maxLossBps: z.number().int().min(0).max(9999).optional(),
   maxPremiumUsd: DecimalStringSchema.nullable().optional(),
 }).strict();
@@ -51,7 +57,7 @@ export const ParseGoalRequestSchema = z.object({
   message: z.string().trim().min(1).max(4000),
   draft: GoalDraftSchema.optional(),
   locale: z.string().trim().min(2).optional(),
-  timezone: z.string().trim().min(1).optional(),
+  timezone: IanaTimezoneSchema.optional(),
 }).strict();
 
 export const ParseGoalResponseSchema = z.object({
@@ -70,7 +76,10 @@ export const UpdateGoalRequestSchema = z.object({
   customGoalLabel: z.string().trim().min(1).max(80).nullable(),
   underlyingAsset: SupportedAssetSchema,
   protectedValueUsd: DecimalStringSchema,
-  deadline: ISODateSchema,
+  protectThroughAt: ISODateTimeSchema,
+  fundsNeededAt: ISODateTimeSchema,
+  timezone: IanaTimezoneSchema,
+  timingConfirmed: z.literal(true),
   maxLossBps: z.number().int().min(0).max(9999),
   maxPremiumUsd: DecimalStringSchema.nullable(),
 }).strict().superRefine((goal, context) => {

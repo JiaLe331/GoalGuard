@@ -26,7 +26,7 @@ Most retail users do not think in strikes, expiries, premiums, or option Greeks.
 - “This is my tuition fund.”
 - “I need at least $1,000 for my trip in October.”
 
-GoalGuard converts a natural-language life goal into a transparent downside-protection plan. The user sees the goal, deadline, protection cost, downside outcome, council decision, and final trade — not a trading terminal.
+GoalGuard converts a natural-language life goal into a transparent downside-protection plan. The user sees the goal, separate protection and funds-needed cutoffs, protection cost, expiry outcome, council decision, and unsigned preview — not a trading terminal.
 
 ### 1.5 Primary value proposition
 **Protect the purpose of the money, not just the asset.**
@@ -181,7 +181,9 @@ GoalGuard extracts:
 - goal type;
 - underlying asset;
 - protected value;
-- deadline;
+- protection cutoff (`protectThroughAt`);
+- funds-needed cutoff (`fundsNeededAt`);
+- IANA timezone used for local date entry;
 - maximum acceptable loss;
 - optional maximum premium budget if provided.
 
@@ -193,7 +195,8 @@ Before fetching a strategy, show a simple goal card:
 - Goal: Rent
 - Asset: ETH
 - Value to protect: $1,200
-- Needed by: 30 Sep 2026
+- Protect through: 30 Sep 2026 (end of local day)
+- Funds needed by: 1 Oct 2026 (start of local day)
 - Maximum acceptable loss: 5%
 
 User can edit any field.
@@ -212,8 +215,8 @@ For every candidate, code calculates:
 - notional/contract exposure;
 - relevant payoff scenarios;
 - maximum premium at risk;
-- estimated protected value/floor at expiry;
-- gap between requested deadline and actual expiry;
+- deterministic protected floor and shortfall at expiry;
+- settlement timing status by the funds-needed cutoff;
 - whether candidate satisfies hard user constraints.
 
 Reject impossible candidates before sending anything to GoalGuard.
@@ -354,7 +357,7 @@ Purpose: decide whether the candidate is a sensible way to satisfy the goal.
 Must answer:
 
 - Does the option direction make sense for the stated goal?
-- Does the expiry reasonably match the deadline?
+- Does the expiry reasonably match the protection cutoff, and is the funds-needed timing explicitly disclosed?
 - Does the protection structure match the user’s requested downside tolerance?
 - Is there a clearly better candidate among the supplied alternatives?
 
@@ -455,17 +458,21 @@ The parse inference and its Gonka Request ID are stored as a related `GonkaInfer
 
 - underlying asset;
 - protected value in USD;
-- deadline;
+- protection cutoff;
+- funds-needed cutoff;
+- IANA timezone;
 - max acceptable loss percentage.
 
 ### 9.3 Validation rules
 
 - `protectedValueUsd > 0`
 - `0 <= maxLossBps < 10000` (`500` means 5.00%)
-- deadline must be in the future;
+- protection cutoff must be before the funds-needed cutoff and both must be future timestamps when the goal starts searching;
 - asset must be supported by P0;
 - if premium budget exists, `maxPremiumUsd > 0`;
 - money fields use canonical decimal strings, not JavaScript numbers.
+
+The UI accepts local calendar dates but sends UTC timestamps. A protection date resolves to the end of that local day; a funds-needed date resolves to the start of that local day. `timingConfirmed` must be explicitly true before live candidate generation.
 
 ### 9.4 Missing data behavior
 Ask only for missing information. Do not re-ask information already extracted confidently.
@@ -496,7 +503,7 @@ Do not invent contract addresses or protocol schemas.
 
 1. Fetch live ETH put opportunities.
 2. Discard invalid/expired/unfillable orders.
-3. Filter expiries close enough to the user deadline.
+3. Filter expiries on or shortly after `protectThroughAt`, subject to the configured expiry overhang.
 4. Calculate trade cost and payoff scenarios deterministically.
 5. Reject candidates that violate hard user limits.
 6. Rank remaining candidates.
@@ -552,7 +559,7 @@ Start with an explainable deterministic scoring function.
 Suggested priorities:
 
 1. Satisfies hard constraints.
-2. Expiry is on or shortly after the deadline.
+2. Expiry is on or shortly after the protection cutoff.
 3. Better downside floor relative to the goal.
 4. Lower premium.
 5. Higher available liquidity/fillability.
@@ -663,10 +670,11 @@ Show only the most important values first:
 
 - goal;
 - amount;
-- deadline;
+- payment-date status: “Settlement timing not verified” in P0;
+- goal-date shortfall: “Not verifiable” in P0;
 - protection cost;
-- estimated protected floor;
-- expiry;
+- protected floor at option expiry;
+- protection end;
 - council status.
 
 #### E. GoalGuard Drawer
@@ -689,9 +697,9 @@ Must display:
 
 - exact premium/cost;
 - maximum premium loss;
-- option expiry;
+- protection end and expiry;
 - what the option protects;
-- clear limitation that protection is evaluated at the option settlement/expiry conditions;
+- clear limitation that P0 protection is evaluated at expiry and does not verify Base USDC availability by the funds-needed cutoff or assume an early sale;
 - wallet/network;
 - final CTA labelled as generating an unsigned preview, not executing a trade.
 
@@ -701,6 +709,7 @@ Display:
 - “Protection Plan Ready (Demo)” status;
 - goal card;
 - proposed trade and unsigned transaction summary;
+- expiry floor and the “Settlement timing not verified” disclosure;
 - “No funds moved; no protected position was created” disclosure;
 - council approval reference.
 
@@ -723,7 +732,7 @@ Do not use copy such as:
 Prefer:
 
 - “This option provides downside protection under the displayed payoff conditions.”
-- “Estimated protected value at expiry.”
+- “Protected floor at expiry.”
 - “Protection depends on the executed position and settlement conditions.”
 
 ---
@@ -876,7 +885,7 @@ The exact request/response schemas and status behavior are normative in Section 
 ### 15.4 No suitable live options
 - Do not fabricate.
 - Explain why no candidate meets the goal.
-- Allow user to loosen deadline/loss/premium constraints.
+- Allow user to loosen protection-cutoff, loss, or premium constraints.
 
 ### 15.5 Live order changes before final preview
 - Re-fetch/revalidate before producing the final unsigned transaction.
@@ -896,8 +905,8 @@ The exact request/response schemas and status behavior are normative in Section 
 - Show a failed preview state and a safe retry action.
 - Do not mark the goal protected.
 
-### 15.10 Deadline has no matching expiry
-- Prefer the nearest valid expiry on or after the deadline when reasonable.
+### 15.10 Protection cutoff has no matching expiry
+- Prefer the nearest valid expiry on or after the protection cutoff when reasonable.
 - Show the mismatch clearly.
 - If gap exceeds the configured threshold, reject the candidate.
 
@@ -943,6 +952,8 @@ These decisions are normative and override older abbreviated examples in this PR
 - Supabase PostgreSQL is authoritative. Vercel uses the transaction pooler with prepared statements disabled; migrations use `DATABASE_DIRECT_URL`; PGlite is the credential-free repository-test adapter.
 - Vercel hosts the UI and API routes. One Render worker writes a 15-second heartbeat and verifies submitted Base transactions and Thetanuts buyer positions. Signing preparation stops with `503 TRADE_MONITOR_UNAVAILABLE` when the heartbeat is older than 45 seconds.
 - Primary approved-state UI wording is “Council checks passed.” A confirmed result is “Protection position active,” not a guarantee that the real-world goal cannot lose value.
+- P0 goal timing has two distinct UTC timestamps: `protectThroughAt` and `fundsNeededAt`, plus an IANA `timezone` and explicit `timingConfirmed`. The UI resolves local protection dates to end-of-day and funds-needed dates to start-of-day.
+- Base r12 / SDK 0.3.0 settlement is a `factory_callback`; P0 has no verified settlement timing bound. Every P0 candidate therefore uses `settlement_timing_not_verified`, `settlementAvailableAt: null`, null payment-date floor/shortfall, and a null protection score. The UI must say “Settlement timing not verified,” “Not verifiable,” and must not assume an early sale.
 
 ### 17.1 Contract ownership and naming rules
 
@@ -968,7 +979,7 @@ Rules:
 7. Percentages used for rules are integer basis points: `500` means 5.00%; `10000` means 100.00%.
 8. Raw blockchain quantities use base-unit integer strings. Display quantities use decimal strings and must include token decimals/address metadata.
 9. Entity response fields that may be absent are present with `null`. Arrays are present as `[]`, never `null`. Request-only optional properties may be omitted.
-10. Unknown extra properties are rejected at API boundaries. Persistence records carry `schemaVersion: 1`.
+10. Unknown extra properties are rejected at API boundaries. New goal and protection-candidate records use `schemaVersion: 2`; legacy v1 goal rows are mechanically mapped to equal UTC timing cutoffs with `timingConfirmed: false`, and legacy candidates remain historical/stale rather than becoming current v2 candidates.
 11. Raw Gonka responses and protocol payloads may be stored for debugging, but public API responses return only the allowlisted summaries defined here.
 
 ### 17.2 Canonical scalar types
@@ -977,6 +988,7 @@ Rules:
 export type UUID = string;              // UUID v4
 export type ISODate = string;           // YYYY-MM-DD
 export type ISODateTime = string;       // UTC ISO 8601
+export type IanaTimezone = string;      // validated by Intl.DateTimeFormat
 export type DecimalString = string;     // /^(0|[1-9]\d*)(\.\d+)?$/
 export type BaseUnitString = string;    // /^(0|[1-9]\d*)$/
 export type EvmAddress = `0x${string}`; // 20-byte address; validate checksum/length
@@ -1057,13 +1069,16 @@ P0 deliberately has no `User` entity or custodial account model. Goal ownership 
 
 ```ts
 export interface Goal {
-  schemaVersion: 1;
+  schemaVersion: 2;
   id: UUID;
   goalType: GoalType;
   customGoalLabel: string | null;
   underlyingAsset: SupportedAsset;
   protectedValueUsd: DecimalString;
-  deadline: ISODate;
+  protectThroughAt: ISODateTime;
+  fundsNeededAt: ISODateTime;
+  timezone: IanaTimezone;
+  timingConfirmed: boolean;
   maxLossBps: number;
   maxPremiumUsd: DecimalString | null;
   originalUserMessage: string;
@@ -1083,7 +1098,8 @@ Constraints:
 
 - `protectedValueUsd > 0`.
 - `maxLossBps` is an integer from `0` through `9999`.
-- `deadline` must be later than the goal creation date when the goal becomes `searching`.
+- `protectThroughAt` must be before `fundsNeededAt`; both must be future timestamps when the goal becomes `searching`.
+- `timezone` must be a valid IANA timezone and `timingConfirmed` must be `true` before live candidate generation.
 - `customGoalLabel` is required and 1–80 characters only when `goalType = "custom"`; otherwise it is `null`.
 - `maxPremiumUsd` is `null` or greater than `0`.
 - `originalUserMessage` is 1–4000 characters.
@@ -1102,7 +1118,7 @@ export interface ScenarioResult {
 }
 
 export interface ProtectionCandidate {
-  schemaVersion: 1;
+  schemaVersion: 2;
   id: UUID;
   goalId: UUID;
   source: CandidateSource;
@@ -1119,8 +1135,33 @@ export interface ProtectionCandidate {
   quantityBaseUnits: BaseUnitString;
   quantityUnderlying: DecimalString;
   maxPremiumLossUsd: DecimalString;
-  estimatedFloorUsd: DecimalString;
-  deadlineGapHours: number;
+  spotPriceUsd: DecimalString;
+  requiredQuantityBaseUnits: BaseUnitString;
+  effectiveBudgetUsd: DecimalString;
+  requiredFloorUsd: DecimalString;
+  protectedFloorAtExpiryUsd: DecimalString;
+  accessibleFloorByGoalDateUsd: DecimalString | null;
+  expiryShortfallUsd: DecimalString;
+  goalDateShortfallUsd: DecimalString | null;
+  protectionEndAt: ISODateTime;
+  settlementAvailableAt: ISODateTime | null;
+  settlementConfirmationAllowanceSeconds: number | null;
+  settlementTrigger: "factory_callback";
+  settlementTimingStatus: "settlement_timing_not_verified" | "verified_accessible" | "verified_too_late";
+  accessibilityBasis: "unverified_factory_callback" | "verified_expiry_settlement";
+  timingAccessible: boolean | null;
+  goalAttainment: "meets_if_executed" | "shortfall" | "not_accessible_by_goal_date" | "settlement_timing_not_verified";
+  scoreVersion: "goal-protection-v1";
+  protectionScore: number | null;
+  scoreBreakdown: {
+    floorAttainmentBps: number;
+    coverageBps: number;
+    deadlineFitBps: number;
+    budgetFitBps: number;
+  } | null;
+  policyVersion: string;
+  expiryOverhangSeconds: number;
+  settlementLeadSeconds: number | null;
   goalCoverageBps: number;
   coverageMode: "full" | "proportional_demo";
   availableQuantityBaseUnits: BaseUnitString | null;
@@ -1136,9 +1177,11 @@ export interface ProtectionCandidate {
 
 Constraints:
 
-- Positive decimal values are required for strike, premium, quantity, and estimated floor.
+- Positive decimal values are required for strike, premium, quantity, spot price, effective budget, and required floor.
 - `settlementTokenDecimals` is an integer from `0` through `255`.
-- `deadlineGapHours` is a non-negative integer; candidate expiry must be on or after the goal deadline in P0.
+- `expiryOverhangSeconds` is non-negative; candidate expiry must be on or after `protectThroughAt` and within the configured P0 overhang.
+- P0 requires `settlementTrigger = "factory_callback"`, `settlementTimingStatus = "settlement_timing_not_verified"`, `settlementAvailableAt = null`, null accessible floor/goal-date shortfall/timing fields, and `protectionScore = null`.
+- `protectedFloorAtExpiryUsd = max(0, coveredQuantity * strikeUsd - premiumUsd)` and `expiryShortfallUsd = max(0, requiredFloorUsd - protectedFloorAtExpiryUsd)`; these are expiry-only facts, not payment-date guarantees.
 - `goalCoverageBps` is an integer from `0` through `10000`, calculated from the
   proposed and required ETH-underlying quantities using the formula in Section
   10.3 and rounded down.
@@ -1301,12 +1344,15 @@ Use these exact logical tables whether the implementation uses PostgreSQL, SQLit
 | Column | Type | Null | Constraints |
 |---|---|---:|---|
 | `id` | UUID/TEXT | No | Primary key |
-| `schema_version` | INTEGER | No | Default `1`, check `= 1` |
+| `schema_version` | INTEGER | No | New rows `2`; v1 legacy rows are migrated/read-only |
 | `goal_type` | ENUM/TEXT | No | `GoalType` |
 | `custom_goal_label` | VARCHAR(80) | Yes | Required only for `custom` |
 | `underlying_asset` | ENUM/TEXT | No | `ETH` |
 | `protected_value_usd` | DECIMAL/TEXT | No | `> 0` |
-| `deadline` | DATE/TEXT | No | ISO date |
+| `protect_through_at` | TIMESTAMP/TEXT | No | UTC; protection cutoff |
+| `funds_needed_at` | TIMESTAMP/TEXT | No | UTC; funds-needed cutoff |
+| `goal_timezone` | TEXT | No | Valid IANA timezone |
+| `timing_confirmed` | BOOLEAN | No | Must be true before live candidate generation |
 | `max_loss_bps` | INTEGER | No | `0..9999` |
 | `max_premium_usd` | DECIMAL/TEXT | Yes | `> 0` when present |
 | `original_user_message` | VARCHAR(4000) | No | Non-empty |
@@ -1314,7 +1360,7 @@ Use these exact logical tables whether the implementation uses PostgreSQL, SQLit
 | `created_at` | TIMESTAMP/TEXT | No | UTC |
 | `updated_at` | TIMESTAMP/TEXT | No | UTC |
 
-Indexes: `(status, updated_at)` and `(deadline)`.
+Indexes: `(status, updated_at)` and `(protect_through_at)`.
 
 #### `protection_candidates`
 
@@ -1322,7 +1368,7 @@ Indexes: `(status, updated_at)` and `(deadline)`.
 |---|---|---:|---|
 | `id` | UUID/TEXT | No | Primary key |
 | `goal_id` | UUID/TEXT | No | FK `goals.id` on delete cascade |
-| `schema_version` | INTEGER | No | Default `1` |
+| `schema_version` | INTEGER | No | New rows `2`; v1 legacy rows remain historical/stale |
 | `source` | ENUM/TEXT | No | `CandidateSource` |
 | `protocol_order_id` | TEXT | Yes | Required for OptionBook |
 | `underlying_asset` | ENUM/TEXT | No | `ETH` |
@@ -1337,8 +1383,28 @@ Indexes: `(status, updated_at)` and `(deadline)`.
 | `quantity_base_units` | NUMERIC(78,0)/TEXT | No | `> 0` |
 | `quantity_underlying` | DECIMAL/TEXT | No | `> 0` |
 | `max_premium_loss_usd` | DECIMAL/TEXT | No | `> 0` |
-| `estimated_floor_usd` | DECIMAL/TEXT | No | `>= 0` |
-| `deadline_gap_hours` | INTEGER | No | `>= 0` |
+| `spot_price_usd` | DECIMAL/TEXT | No | `> 0` |
+| `required_quantity_base_units` | NUMERIC(78,0)/TEXT | No | Required goal quantity |
+| `effective_budget_usd` | DECIMAL/TEXT | No | Min of loss, user, and global caps |
+| `required_floor_usd` | DECIMAL/TEXT | No | Required value floor |
+| `protected_floor_at_expiry_usd` | DECIMAL/TEXT | No | Expiry-only deterministic floor |
+| `accessible_floor_by_goal_date_usd` | DECIMAL/TEXT | Yes | Null while timing is unverified |
+| `expiry_shortfall_usd` | DECIMAL/TEXT | No | Required floor minus expiry floor, clamped at zero |
+| `goal_date_shortfall_usd` | DECIMAL/TEXT | Yes | Null while timing is unverified |
+| `protection_end_at` | TIMESTAMP/TEXT | No | Must equal `expiry` |
+| `settlement_available_at` | TIMESTAMP/TEXT | Yes | Null while timing is unverified |
+| `settlement_confirmation_allowance_seconds` | INTEGER | Yes | Null while timing is unverified |
+| `settlement_trigger` | TEXT | No | P0: `factory_callback` |
+| `settlement_timing_status` | TEXT | No | P0: `settlement_timing_not_verified` |
+| `accessibility_basis` | TEXT | No | P0: `unverified_factory_callback` |
+| `timing_accessible` | BOOLEAN | Yes | Null while timing is unverified |
+| `goal_attainment` | TEXT | No | P0: `settlement_timing_not_verified` |
+| `score_version` | TEXT | No | P0: `goal-protection-v1` |
+| `protection_score` | INTEGER | Yes | Always null in P0 |
+| `score_breakdown_json` | JSON/JSONB | Yes | Always null in P0 |
+| `policy_version` | TEXT | No | Evaluation policy version |
+| `expiry_overhang_seconds` | INTEGER | No | Non-negative |
+| `settlement_lead_seconds` | INTEGER | Yes | Null while timing is unverified |
 | `goal_coverage_bps` | INTEGER | No | `0..10000` |
 | `available_quantity_base_units` | NUMERIC(78,0)/TEXT | Yes | `>= 0` |
 | `status` | ENUM/TEXT | No | `CandidateStatus` |
@@ -1474,7 +1540,10 @@ export interface ApiErrorResponse {
       | "CONFLICT"
       | "IDEMPOTENCY_CONFLICT"
       | "GOAL_INCOMPLETE"
+      | "GOAL_TIMING_UNCONFIRMED"
+      | "GOAL_TIMING_INFEASIBLE"
       | "NO_SUITABLE_CANDIDATE"
+      | "CANDIDATE_NOT_ACCESSIBLE"
       | "COUNCIL_NOT_APPROVED"
       | "CANDIDATE_STALE"
       | "QUOTE_EXPIRED"
@@ -1509,7 +1578,10 @@ export type GoalDraftField =
   | "customGoalLabel"
   | "underlyingAsset"
   | "protectedValueUsd"
-  | "deadline"
+  | "protectThroughAt"
+  | "fundsNeededAt"
+  | "timezone"
+  | "timingConfirmed"
   | "maxLossBps"
   | "maxPremiumUsd";
 
@@ -1518,7 +1590,10 @@ export interface GoalDraft {
   customGoalLabel?: string | null;
   underlyingAsset?: SupportedAsset;
   protectedValueUsd?: DecimalString;
-  deadline?: ISODate;
+  protectThroughAt?: ISODateTime;
+  fundsNeededAt?: ISODateTime;
+  timezone?: IanaTimezone;
+  timingConfirmed?: boolean;
   maxLossBps?: number;
   maxPremiumUsd?: DecimalString | null;
 }
@@ -1527,7 +1602,7 @@ export interface ParseGoalRequest {
   message: string;                  // 1..4000 characters
   draft?: GoalDraft;               // previously confirmed/extracted values
   locale?: string;                 // BCP 47; default "en"
-  timezone?: string;               // IANA name; required for relative dates
+  timezone?: IanaTimezone;          // IANA name; required for relative dates
 }
 
 export interface InferenceSummary {
@@ -1551,6 +1626,9 @@ export interface ParseGoalResponse {
 ```
 
 Behavior:
+
+- Unconfirmed or infeasible timing fails closed before live market reads.
+- P0 candidates are expiry-only: `settlementTimingStatus` is `settlement_timing_not_verified`, payment-date accessibility and shortfall are `null`, and `protectionScore` is `null`.
 
 - Complete, valid parse: `goal` is non-null, `missingFields` is `[]`, and `clarificationQuestion` is `null`.
 - Incomplete parse: HTTP `200`, `goal` is `null`, and exactly one concise `clarificationQuestion` is returned.
@@ -2062,7 +2140,7 @@ Never place a server-side Gonka key or private signing key in a `NEXT_PUBLIC_*` 
 3. Which ETH put markets currently have enough live Thetanuts liquidity for the demo?
 4. What is the exact current SDK flow for preview + fill, based on the repository version used during the hackathon?
 5. Which settlement token(s) are required for the chosen live option?
-6. What deadline-to-expiry gap should be considered acceptable? Start with a configurable threshold.
+6. What protection-cutoff-to-expiry overhang should be considered acceptable? Start with a configurable threshold.
 7. Which exact official Base-mainnet Thetanuts contract address should be listed in the submission field that is labelled for a testnet address?
 8. If OptionBook has no suitable order, is OptionFactory/RFQ reliable enough to promote from P2 to P0?
 9. Which Section 17.10 persistence adapter should P0 use? Default: lightweight SQLite for local/deployed single-instance use; use PostgreSQL when the deployment platform requires concurrent multi-instance access.

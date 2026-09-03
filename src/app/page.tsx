@@ -21,7 +21,7 @@ const advantages = [
   {
     icon: Eye,
     title: "See the trade-off before the transaction",
-    copy: "Cost, estimated floor, coverage, expiry, and deadline gap are presented together before an unsigned preview is generated.",
+    copy: "Payment-date status, expiry floor, coverage, cost, and protection end are presented together before an unsigned preview is generated.",
   },
   {
     icon: Brain,
@@ -100,7 +100,7 @@ export default function Home() {
               <div className="flex flex-col">
                 <p className="text-xs font-bold uppercase tracking-[0.1em] text-[color:var(--foreground-muted)]">01 · Define</p>
                 <h3 className="mt-4 text-2xl font-semibold tracking-[-0.04em]">Make the purpose measurable</h3>
-                <p className="mt-4 max-w-md text-[color:var(--foreground-soft)]">Confirm the amount, deadline, acceptable loss, and maximum cost. Nothing reaches the market until those guardrails are clear.</p>
+                <p className="mt-4 max-w-md text-[color:var(--foreground-soft)]">Confirm the amount, protection cutoff, funds-needed cutoff, acceptable loss, and maximum cost. Nothing reaches the market until those guardrails are clear.</p>
                 <a href="#goal-composer" className="mt-auto inline-flex min-h-11 w-fit items-center gap-2 pt-6 text-sm font-semibold underline-offset-4 hover:underline">Start with your goal<ArrowRight className="size-4" aria-hidden="true" /></a>
               </div>
               <HowItWorksIllustration variant="goal" />
@@ -163,7 +163,7 @@ export default function Home() {
               <div className="absolute -bottom-20 -right-16 size-[26rem] rounded-full bg-[var(--accent)]" aria-hidden="true" />
               <div className="absolute left-7 top-9 rounded-2xl bg-[var(--surface-raised)] px-5 py-4 shadow-[var(--shadow-float)] sm:left-12 sm:top-14">
                 <p className="text-xs font-bold uppercase tracking-[0.1em] text-[color:var(--foreground-muted)]">Purpose</p>
-                <p className="mt-1 font-semibold">Your real-world deadline</p>
+                <p className="mt-1 font-semibold">Protection cutoff · funds-needed cutoff</p>
               </div>
               <div className="absolute right-5 top-[38%] w-[72%] rounded-2xl bg-[var(--surface-raised)] px-5 py-4 shadow-[var(--shadow-float)] sm:right-9 sm:w-[64%]">
                 <p className="text-xs font-bold uppercase tracking-[0.1em] text-[color:var(--foreground-muted)]">Live option</p>

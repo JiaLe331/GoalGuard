@@ -40,15 +40,15 @@ test("renders the honest GoalGuard P0 entry shell", async ({ page }) => {
 });
 
 test("keeps an incomplete Gonka draft and asks exactly one clarification", async ({ page }) => {
-  await page.route("**/api/goals/parse", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ data: { draft: { goalType: "rent", underlyingAsset: "ETH", protectedValueUsd: "1200" }, missingFields: ["deadline", "maxLossBps"], clarificationQuestion: "By what date do you need this money?", goal: null, inference: { id: "6b3e798c-e0e8-4ab5-9e37-d4526424eb8f", purpose: "goal_parse", model: "gonka-model-a", requestId: "gonka-clarification-1", status: "succeeded" } }, meta: fixtureMeta }) }));
+  await page.route("**/api/goals/parse", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ data: { draft: { goalType: "rent", underlyingAsset: "ETH", protectedValueUsd: "1200" }, missingFields: ["protectThroughAt", "fundsNeededAt", "timingConfirmed", "maxLossBps"], clarificationQuestion: "Until when must the ETH remain protected, and by what time must Base USDC be available?", goal: null, inference: { id: "6b3e798c-e0e8-4ab5-9e37-d4526424eb8f", purpose: "goal_parse", model: "gonka-model-a", requestId: "gonka-clarification-1", status: "succeeded" } }, meta: fixtureMeta }) }));
   await page.goto("/");
   await page.getByRole("textbox", { name: /describe your protection goal/i }).fill("Protect my $1,200 rent fund.");
   await page.getByRole("button", { name: /create protection goal/i }).click();
   await expect(page.getByText("One detail needed")).toBeVisible();
   await expect(
-    page.getByRole("status").getByText("By what date do you need this money?"),
+    page.getByRole("status").getByText("Until when must the ETH remain protected, and by what time must Base USDC be available?"),
   ).toBeVisible();
-  await expect(page.getByRole("textbox", { name: /by what date/i })).toHaveValue("");
+  await expect(page.getByRole("textbox", { name: /until when must the eth remain protected/i })).toHaveValue("");
   await expect(page.getByRole("button", { name: "Continue" })).toBeVisible();
 });
 

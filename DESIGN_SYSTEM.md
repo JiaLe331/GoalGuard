@@ -373,7 +373,7 @@ White page canvas
 
 Use layered HTML/CSS and simple inline SVG as a GoalGuard protection orbit:
 
-- one raised “purpose attached” panel linked visually to the user's cost, loss, and deadline guardrails;
+- one raised “purpose attached” panel linked visually to the user's cost, loss, protection-cutoff, and funds-needed guardrails;
 - one near-black independent-review panel overlapping it;
 - optional floating chips for floor, expiry, coverage, or council result only when backed by canonical data;
 - large lime-black-white abstract arcs or rounded shapes behind the panels;
@@ -497,6 +497,7 @@ The product workflow uses the same visual system without becoming a marketing pa
 - **Live options/searching:** abstract protection arcs and truthful activity messaging; no fake percentage.
 - **Council review:** three spacious role rows/cards with verdict icon and text, not three visually identical glowing tiles.
 - **Approved plan:** open goal summary plus light-gray scenario module; directly label down/flat/up outcomes and provide semantic text.
+- **P0 timing disclosure:** lead with payment-date status “Settlement timing not verified,” goal-date shortfall “Not verifiable,” and the deterministic floor at option expiry. Never imply a payment-date guarantee or early sale.
 - **Confirming preview:** large exact-facts layout, with the maximum cost at risk and unsigned-only statement adjacent to the acknowledgment.
 - **Generating preview:** retain the confirmation context and show what source is active and what happens next.
 - **Demo ready:** a major near-black “Protection Plan Ready (Demo)” section paired with light factual cards. State “No funds moved; no protected position was created” prominently.

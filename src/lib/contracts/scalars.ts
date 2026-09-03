@@ -8,6 +8,15 @@ const DECIMAL_PATTERN = /^(0|[1-9]\d*)(\.\d+)?$/;
 const SIGNED_DECIMAL_PATTERN = /^-?(0|[1-9]\d*)(\.\d+)?$/;
 const BASE_UNIT_PATTERN = /^(0|[1-9]\d*)$/;
 
+function isIanaTimezone(value: string) {
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: value }).format();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export const UUIDSchema = z.string().regex(UUID_V4_PATTERN, "Expected a UUID v4 string.");
 export const ISODateSchema = z.string().regex(ISO_DATE_PATTERN, "Expected YYYY-MM-DD.").refine((value) => {
   const date = new Date(`${value}T00:00:00.000Z`);
@@ -17,6 +26,7 @@ export const ISODateTimeSchema = z.string().regex(ISO_DATETIME_PATTERN, "Expecte
   (value) => !Number.isNaN(Date.parse(value)),
   "Expected a valid timestamp.",
 );
+export const IanaTimezoneSchema = z.string().trim().min(1).max(64).refine(isIanaTimezone, "Expected a valid IANA time-zone identifier.");
 export const DecimalStringSchema = z.string().regex(DECIMAL_PATTERN, "Expected a normalized non-negative decimal string.");
 export const SignedDecimalStringSchema = z.string().regex(
   SIGNED_DECIMAL_PATTERN,
@@ -32,6 +42,7 @@ export const JsonValueSchema = z.json();
 export type UUID = z.infer<typeof UUIDSchema>;
 export type ISODate = z.infer<typeof ISODateSchema>;
 export type ISODateTime = z.infer<typeof ISODateTimeSchema>;
+export type IanaTimezone = z.infer<typeof IanaTimezoneSchema>;
 export type DecimalString = z.infer<typeof DecimalStringSchema>;
 export type SignedDecimalString = z.infer<typeof SignedDecimalStringSchema>;
 export type BaseUnitString = z.infer<typeof BaseUnitStringSchema>;
