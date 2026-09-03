@@ -3,6 +3,18 @@ import { fixtureMeta } from "../src/test/fixtures/goalguard";
 import { expectNoSeriousAccessibilityViolations } from "./accessibility";
 
 test("renders the honest GoalGuard P0 entry shell", async ({ page }) => {
+  await page.route("**/api/integrations/status", (route) => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({
+      data: {
+        database: { status: "ready" },
+        gonka: { status: "unconfigured", model: null, requestId: null },
+        thetanuts: { status: "unconfigured", chainId: 8453, activeEthPutCount: null, marketAsOf: null },
+      },
+      meta: fixtureMeta,
+    }),
+  }));
   await page.goto("/");
   await expect(page.getByRole("heading", { name: /protect the purpose behind your money/i })).toBeVisible();
   await expect(page.getByRole("heading", { name: /what are you protecting/i })).toBeVisible();
@@ -42,12 +54,22 @@ test("keeps an incomplete Gonka draft and asks exactly one clarification", async
 
 test("keeps the landing interface usable without horizontal overflow at target widths", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  for (const width of [375, 768, 1024, 1440]) {
+  for (const width of [375, 768, 1024, 1280, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/");
     await expect(page.getByRole("heading", { name: /protect the purpose behind your money/i })).toBeVisible();
     const dimensions = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }));
     expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.client);
+    if (width === 1280) {
+      const desktopAction = page.getByRole("navigation", { name: "Primary navigation" }).getByRole("link", { name: "Start a goal" }).first();
+      await expect(desktopAction).toBeVisible();
+      const actionLayout = await desktopAction.evaluate((element) => ({
+        height: element.getBoundingClientRect().height,
+        whiteSpace: getComputedStyle(element).whiteSpace,
+      }));
+      expect(actionLayout.whiteSpace).toBe("nowrap");
+      expect(actionLayout.height).toBeLessThanOrEqual(50);
+    }
     await page.screenshot({ animations: "disabled" });
   }
 });

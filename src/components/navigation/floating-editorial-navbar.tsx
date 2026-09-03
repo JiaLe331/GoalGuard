@@ -99,7 +99,7 @@ export function FloatingEditorialNavbar({
       data-scrolled={scrolled}
       className="sticky top-0 z-50 w-full border-b border-[var(--navbar-border)] bg-[var(--navbar-bg)] transition-shadow duration-[var(--duration-enter)] data-[scrolled=true]:shadow-[var(--shadow-header)]"
     >
-      <nav aria-label="Primary navigation" className="page-shell grid min-h-16 grid-cols-[1fr_auto] items-center gap-4 min-[1120px]:min-h-20 min-[1120px]:grid-cols-[1fr_auto_1fr] min-[1120px]:gap-8">
+      <nav aria-label="Primary navigation" className="page-shell grid min-h-16 grid-cols-[1fr_auto] items-center gap-4 min-[1120px]:min-h-20 min-[1120px]:grid-cols-[minmax(0,1fr)_auto_minmax(max-content,1fr)] min-[1120px]:gap-6 xl:gap-8">
         {brand ?? <Brand />}
 
         <div className="hidden items-center gap-7 min-[1120px]:flex">
@@ -115,10 +115,10 @@ export function FloatingEditorialNavbar({
           ))}
         </div>
 
-        <div className="hidden items-center justify-end gap-2 min-[1120px]:flex">
+        <div className="hidden min-w-max shrink-0 items-center justify-end gap-2 min-[1120px]:flex">
           <StatusLabel label={statusLabel} />
           {walletSlot ?? <WalletControl compact />}
-          <a href={primaryAction.href} className="inline-flex min-h-12 items-center justify-center rounded-full bg-[var(--button-primary-bg)] px-6 text-sm font-semibold text-[color:var(--button-primary-fg)] transition-colors hover:bg-[var(--button-primary-hover)] active:opacity-85">
+          <a href={primaryAction.href} className="inline-flex min-h-12 shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-[var(--button-primary-bg)] px-5 text-sm font-semibold text-[color:var(--button-primary-fg)] transition-colors hover:bg-[var(--button-primary-hover)] active:opacity-85 xl:px-6">
             {primaryAction.label}
           </a>
         </div>
