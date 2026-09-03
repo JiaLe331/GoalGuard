@@ -13,4 +13,7 @@ describe("P0 environment safety", () => {
     expect(getThetanutsConfiguration(env({ THETANUTS_RPC_URL: "https://alchemy.example/key" }))).toBeNull();
     expect(() => readServerEnvironment(env({ THETANUTS_RPC_URL: "https://alchemy.example/key", THETANUTS_RPC_FALLBACK_URL: "not-a-url" }))).toThrow();
   });
+  it("treats blank optional environment placeholders as absent", () => {
+    expect(getThetanutsConfiguration(env({ GONKA_API_KEY: "", GONKA_BASE_URL: "", THETANUTS_RPC_URL: "https://alchemy.example/key", THETANUTS_RPC_FALLBACK_URL: "https://infura.example/key", THETANUTS_REFERRER_ADDRESS: "" }))).toMatchObject({ chainId: 8453 });
+  });
 });
