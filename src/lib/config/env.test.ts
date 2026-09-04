@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getGonkaConfiguration, getGonkaCouncilConfiguration, getThetanutsConfiguration, readServerEnvironment } from "./env";
+import { getActiveAiConfiguration, getActiveAiCouncilConfiguration, getGonkaConfiguration, getGonkaCouncilConfiguration, getThetanutsConfiguration, readServerEnvironment } from "./env";
 
 const base = { GONKA_API_KEY: "key", GONKA_BASE_URL: "https://gonka.example", GONKA_STRATEGIST_MODEL: "model-a", GONKA_RISK_AUDITOR_MODEL: "model-b", GONKA_CONSUMER_ADVOCATE_MODEL: "model-a" };
 const env = (value: Record<string, string> = {}): NodeJS.ProcessEnv => ({ NODE_ENV: "test", ...value });
@@ -14,6 +14,16 @@ describe("P0 environment safety", () => {
     expect(getThetanutsConfiguration(placeholders)).toBeNull();
   });
   it("requires at least two distinct council models", () => { expect(getGonkaCouncilConfiguration(env(base))?.models.risk_auditor).toBe("model-b"); expect(getGonkaCouncilConfiguration(env({ ...base, GONKA_RISK_AUDITOR_MODEL: "model-a" }))).toBeNull(); });
+  it("selects DeepSeek directly when it is the active provider", () => {
+    const deepSeek = env({ AI_PROVIDER: "deepseek", DEEPSEEK_API_KEY: "key", DEEPSEEK_MODEL: "model" });
+    expect(getActiveAiConfiguration(deepSeek)).toMatchObject({ provider: "deepseek", baseUrl: "https://api.deepseek.com", model: "model" });
+    expect(getActiveAiCouncilConfiguration(deepSeek)?.models).toEqual({ strategist: "model", risk_auditor: "model", consumer_advocate: "model" });
+  });
+  it("keeps Gonka selectable without falling back to DeepSeek", () => {
+    const gonka = env({ AI_PROVIDER: "gonka", ...base });
+    expect(getActiveAiConfiguration(gonka)).toMatchObject({ provider: "gonka", model: "model-a" });
+    expect(getActiveAiConfiguration(env({ AI_PROVIDER: "gonka", DEEPSEEK_API_KEY: "key", DEEPSEEK_MODEL: "model" }))).toBeNull();
+  });
   it("rejects the former SQLite URL at the environment boundary", () => { expect(() => readServerEnvironment(env({ DATABASE_URL: "file:./data/goalguard.db" }))).toThrow(); });
   it("requires validated primary and fallback Base RPC URLs", () => {
     expect(getThetanutsConfiguration(env({ THETANUTS_RPC_URL: "https://alchemy.example/key", THETANUTS_RPC_FALLBACK_URL: "https://infura.example/key" }))).toMatchObject({ chainId: 8453, fallbackRpcUrl: "https://infura.example/key" });

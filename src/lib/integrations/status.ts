@@ -2,14 +2,14 @@ import { sql } from "drizzle-orm";
 
 import type { IntegrationStatusResponse } from "@/lib/contracts";
 import { getDatabase } from "@/lib/db/client";
-import { runGonkaSmokeTest, type GonkaSmokeResult } from "@/lib/gonka/client";
+import { runAiSmokeTest, type AiSmokeResult } from "@/lib/gonka/client";
 import { runThetanutsSmokeTest, type ThetanutsSmokeResult } from "@/lib/thetanuts/client";
 
 type StatusData = IntegrationStatusResponse["data"];
 
 export interface IntegrationChecks {
   database: () => Promise<StatusData["database"]>;
-  gonka: () => Promise<GonkaSmokeResult>;
+  gonka: () => Promise<AiSmokeResult>;
   thetanuts: () => Promise<ThetanutsSmokeResult>;
 }
 
@@ -21,7 +21,7 @@ async function checkDatabase(): Promise<StatusData["database"]> {
 
 const defaultChecks: IntegrationChecks = {
   database: checkDatabase,
-  gonka: () => runGonkaSmokeTest(),
+  gonka: () => runAiSmokeTest(),
   thetanuts: () => runThetanutsSmokeTest(),
 };
 
@@ -50,7 +50,7 @@ export async function collectIntegrationStatus(checks: IntegrationChecks = defau
     database: database.status === "fulfilled" ? database.value : { status: "error" },
     gonka: gonka.status === "fulfilled"
       ? gonka.value
-      : { status: "error", model: null, requestId: null },
+      : { provider: "deepseek", status: "error", model: null, requestId: null },
     thetanuts: thetanuts.status === "fulfilled"
       ? thetanuts.value
       : { status: "error", chainId: 8453, activeEthPutCount: null, marketAsOf: null },

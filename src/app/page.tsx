@@ -106,7 +106,7 @@ export default function Home() {
               <div className="flex flex-col">
                 <p className="text-xs font-bold uppercase tracking-[0.1em] text-[color:var(--foreground-muted)]">02–03 · Compare and review</p>
                 <h3 className="mt-4 text-2xl font-semibold tracking-[-0.04em]">Live facts, challenged three ways</h3>
-                <p className="mt-4 max-w-md text-[color:var(--foreground-soft)]">GoalGuard compares live options, then Gonka reviewers challenge suitability, risk, and consumer clarity without altering the calculations.</p>
+                <p className="mt-4 max-w-md text-[color:var(--foreground-soft)]">GoalGuard compares live options, then independent AI reviewers challenge suitability, risk, and consumer clarity without altering the calculations.</p>
                 <a href="#trust-safety" className="mt-auto inline-flex min-h-11 w-fit items-center gap-2 pt-6 text-sm font-semibold underline-offset-4 hover:underline">Why the review matters<ArrowRight className="size-4" aria-hidden="true" /></a>
               </div>
               <HowItWorksIllustration variant="review" />
@@ -141,7 +141,7 @@ export default function Home() {
           <div className="mx-auto max-w-2xl">
             <p className="section-eyebrow justify-center"><CirclesThree className="size-4" aria-hidden="true" />Live foundations</p>
             <h2 tabIndex={-1} className="section-heading mt-5 outline-none">Real services. Honest availability.</h2>
-            <p className="mt-5 text-lg leading-8 text-[color:var(--foreground-soft)]">Gonka, Thetanuts, Base, and GoalGuard’s data layer are checked directly. Missing configuration never becomes invented data.</p>
+            <p className="mt-5 text-lg leading-8 text-[color:var(--foreground-soft)]">The configured AI provider, Thetanuts, Base, and GoalGuard’s data layer are checked directly. Missing configuration never becomes invented data.</p>
           </div>
           <div className="mx-auto mt-12 max-w-4xl rounded-[var(--radius-feature)] bg-[var(--surface-subtle)] p-6 text-left sm:p-9"><IntegrationStatus /></div>
         </section>

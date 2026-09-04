@@ -4,8 +4,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Goal } from "@/lib/contracts";
 import type { PostgresGoalGuardRepository } from "@/lib/db/repository";
 
-const mocks = vi.hoisted(() => ({ callGonkaJson: vi.fn() }));
-vi.mock("@/lib/gonka/client", async (importOriginal) => ({ ...(await importOriginal<typeof import("@/lib/gonka/client")>()), callGonkaJson: mocks.callGonkaJson }));
+const mocks = vi.hoisted(() => ({ callAiJson: vi.fn() }));
+vi.mock("@/lib/gonka/client", async (importOriginal) => ({ ...(await importOriginal<typeof import("@/lib/gonka/client")>()), callAiJson: mocks.callAiJson }));
 
 import { GonkaCallError } from "@/lib/gonka/client";
 import { parseGoal } from "./service";
@@ -19,12 +19,12 @@ const gonkaResult = (draft: object) => ({ data: { draft }, requestId: "gonka-par
 
 describe("goal parsing service", () => {
   beforeEach(() => {
-    mocks.callGonkaJson.mockReset();
-    vi.stubEnv("GONKA_API_KEY", "test-key"); vi.stubEnv("GONKA_BASE_URL", "https://gonka.example"); vi.stubEnv("GONKA_STRATEGIST_MODEL", "gonka-model-a");
+    mocks.callAiJson.mockReset();
+    vi.stubEnv("AI_PROVIDER", "deepseek"); vi.stubEnv("DEEPSEEK_API_KEY", "test-key"); vi.stubEnv("DEEPSEEK_MODEL", "deepseek-model");
   });
 
   it("returns one clarification without creating an incomplete goal", async () => {
-    const repo = repository(); mocks.callGonkaJson.mockResolvedValue(gonkaResult({ goalType: "rent" }));
+    const repo = repository(); mocks.callAiJson.mockResolvedValue(gonkaResult({ goalType: "rent" }));
     const result = await parseGoal({ message: "Protect my rent." }, "a".repeat(64), repo);
     expect(result.goal).toBeNull();
     expect(result.missingFields).toContain("underlyingAsset");
@@ -34,16 +34,16 @@ describe("goal parsing service", () => {
   });
 
   it("persists only a complete validated goal", async () => {
-    const repo = repository(); mocks.callGonkaJson.mockResolvedValue(gonkaResult({ goalType: "rent", underlyingAsset: "ETH", protectedValueUsd: "100", deadline: "2099-09-30", maxLossBps: 500, maxPremiumUsd: "3" }));
+    const repo = repository(); mocks.callAiJson.mockResolvedValue(gonkaResult({ goalType: "rent", underlyingAsset: "ETH", protectedValueUsd: "100", deadline: "2099-09-30", maxLossBps: 500, maxPremiumUsd: "3" }));
     const result = await parseGoal({ message: "Protect $100 for rent by 2099-09-30 with 5% maximum loss." }, "a".repeat(64), repo);
     expect(result.missingFields).toEqual([]);
     expect(result.goal).toMatchObject({ goalType: "rent", underlyingAsset: "ETH", protectedValueUsd: "100", maxLossBps: 500 });
     expect(repo.createGoal).toHaveBeenCalledOnce();
   });
 
-  it("records a failed inference and fails closed on Gonka errors", async () => {
-    const repo = repository(); mocks.callGonkaJson.mockRejectedValue(new GonkaCallError("Gonka failed.", "gonka-failed-1"));
-    await expect(parseGoal({ message: "Protect rent." }, "a".repeat(64), repo)).rejects.toMatchObject({ code: "GONKA_UNAVAILABLE", status: 502 });
-    expect(repo.saveInference).toHaveBeenCalledWith(expect.objectContaining({ status: "failed", requestId: "gonka-failed-1" }));
+  it("records a failed inference and fails closed on AI errors", async () => {
+    const repo = repository(); mocks.callAiJson.mockRejectedValue(new GonkaCallError("DeepSeek failed.", "deepseek-failed-1"));
+    await expect(parseGoal({ message: "Protect rent." }, "a".repeat(64), repo)).rejects.toMatchObject({ code: "AI_UNAVAILABLE", status: 502 });
+    expect(repo.saveInference).toHaveBeenCalledWith(expect.objectContaining({ status: "failed", requestId: "deepseek-failed-1", provider: "deepseek" }));
   });
 });

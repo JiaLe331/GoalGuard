@@ -48,7 +48,7 @@ export function IntegrationStatus() {
 
   const items = data ? [
     { name: "Supabase data", description: "PostgreSQL audit records", ...data.database },
-    { name: "Gonka", description: data.gonka.model ?? "AI router", ...data.gonka },
+    { name: data.gonka.provider === "deepseek" ? "DeepSeek" : "Gonka", description: data.gonka.model ?? "AI router", ...data.gonka },
     {
       name: "Thetanuts",
       description: data.thetanuts.activeEthPutCount === null

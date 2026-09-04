@@ -2,14 +2,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
-const mocks = vi.hoisted(() => ({ responses: [] as Array<{ content: string | null; requestId?: string; model?: string }> }));
+const mocks = vi.hoisted(() => ({ responses: [] as Array<{ content: string | null; requestId?: string; completionId?: string; model?: string }> }));
 
 vi.mock("openai", () => ({
   default: class {
     chat = { completions: { create: () => ({ withResponse: async () => {
       const next = mocks.responses.shift();
       if (!next) throw new Error("Missing mocked Gonka response.");
-      return { response: { headers: new Headers(next.requestId ? { "x-request-id": next.requestId } : {}) }, data: { model: next.model ?? "gonka-model-a", choices: [{ message: { content: next.content } }] } };
+      return { response: { headers: new Headers(next.requestId ? { "x-request-id": next.requestId } : {}) }, data: { id: next.completionId, model: next.model ?? "gonka-model-a", choices: [{ message: { content: next.content } }] } };
     } }) } };
   },
 }));
@@ -36,6 +36,11 @@ describe("Gonka structured client", () => {
   it("fails closed when the request ID is absent", async () => {
     mocks.responses.push({ content: JSON.stringify({ value: "unsafe" }) });
     await expect(callGonkaJson(request)).rejects.toBeInstanceOf(GonkaCallError);
+  });
+
+  it("uses the DeepSeek completion ID when its response omits a request-id header", async () => {
+    mocks.responses.push({ content: JSON.stringify({ value: "ready" }), completionId: "deepseek-completion-1" });
+    await expect(callGonkaJson({ ...request, provider: "deepseek" })).resolves.toMatchObject({ requestId: "deepseek-completion-1" });
   });
 
   it("fails after a second malformed response", async () => {

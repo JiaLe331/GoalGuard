@@ -59,7 +59,9 @@ The lab is deliberately local-only: it does not call backend routes, request a w
 
 | Variable | Purpose |
 |---|---|
-| `GONKA_API_KEY`, `GONKA_BASE_URL` | Server-only Gonka Router configuration. |
+| `AI_PROVIDER` | `deepseek` for the current direct DeepSeek test, or `gonka` to restore the sponsor router. |
+| `DEEPSEEK_API_KEY`, `DEEPSEEK_BASE_URL`, `DEEPSEEK_MODEL` | Server-only direct DeepSeek configuration. |
+| `GONKA_API_KEY`, `GONKA_BASE_URL` | Retained server-only Gonka Router configuration. |
 | `GONKA_STRATEGIST_MODEL`, `GONKA_RISK_AUDITOR_MODEL`, `GONKA_CONSUMER_ADVOCATE_MODEL` | Role models; at least two IDs must be distinct. |
 | `GONKA_REQUEST_ID_HEADER` | Gonka audit request-ID header. |
 | `THETANUTS_RPC_URL`, `THETANUTS_RPC_FALLBACK_URL` | Primary and fallback Base mainnet RPC endpoints. |
@@ -90,6 +92,7 @@ pnpm check
 pnpm db:generate
 pnpm db:migrate
 pnpm db:studio
+pnpm smoke:ai
 pnpm smoke:gonka
 pnpm smoke:thetanuts
 pnpm smoke:workflow

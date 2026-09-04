@@ -243,6 +243,7 @@ export const IntegrationStatusResponseSchema = z.object({
   data: z.object({
     database: z.object({ status: z.enum(["ready", "error"]) }).strict(),
     gonka: z.object({
+      provider: z.enum(["gonka", "deepseek"]),
       status: z.enum(["ready", "unconfigured", "degraded", "error"]),
       model: z.string().nullable(),
       requestId: z.string().nullable(),

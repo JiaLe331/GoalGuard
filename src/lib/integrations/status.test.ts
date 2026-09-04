@@ -8,7 +8,7 @@ describe("collectIntegrationStatus", () => {
   it("reports configured services independently", async () => {
     const status = await collectIntegrationStatus({
       database: async () => ({ status: "ready" }),
-      gonka: async () => ({ status: "degraded", model: "model-a", requestId: null }),
+      gonka: async () => ({ provider: "deepseek", status: "degraded", model: "model-a", requestId: null }),
       thetanuts: async () => ({ status: "ready", chainId: 8453, activeEthPutCount: 7, marketAsOf: "2026-08-31T12:00:00.000Z" }),
     });
     expect(status.gonka.status).toBe("degraded");

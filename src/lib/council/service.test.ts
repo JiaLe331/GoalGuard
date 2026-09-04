@@ -6,8 +6,8 @@ import type { PostgresGoalGuardRepository } from "@/lib/db/repository";
 import { hashJson } from "@/lib/domain/hash";
 import { fixtureCandidate, fixtureDecision, fixturePhysicalCandidate, fixtureReadyGoal } from "@/test/fixtures/goalguard";
 
-const mocks = vi.hoisted(() => ({ callGonkaJson: vi.fn() }));
-vi.mock("@/lib/gonka/client", async (importOriginal) => ({ ...(await importOriginal<typeof import("@/lib/gonka/client")>()), callGonkaJson: mocks.callGonkaJson }));
+const mocks = vi.hoisted(() => ({ callAiJson: vi.fn() }));
+vi.mock("@/lib/gonka/client", async (importOriginal) => ({ ...(await importOriginal<typeof import("@/lib/gonka/client")>()), callAiJson: mocks.callAiJson }));
 
 import { GonkaCallError } from "@/lib/gonka/client";
 import { reviewCandidate } from "./service";
@@ -22,25 +22,28 @@ function approve(role: string, model: string) {
 
 describe("Gonka council service", () => {
   beforeEach(() => {
-    mocks.callGonkaJson.mockReset();
-    vi.stubEnv("GONKA_API_KEY", "test-key"); vi.stubEnv("GONKA_BASE_URL", "https://gonka.example");
-    vi.stubEnv("GONKA_STRATEGIST_MODEL", "model-a"); vi.stubEnv("GONKA_RISK_AUDITOR_MODEL", "model-b"); vi.stubEnv("GONKA_CONSUMER_ADVOCATE_MODEL", "model-a");
+    mocks.callAiJson.mockReset();
+    vi.stubEnv("AI_PROVIDER", "deepseek"); vi.stubEnv("DEEPSEEK_API_KEY", "test-key"); vi.stubEnv("DEEPSEEK_MODEL", "model-a");
   });
 
   it("runs exactly three independent roles and persists deterministic approval", async () => {
     const repo = repository();
-    mocks.callGonkaJson.mockImplementation(async ({ input, model }) => approve((input as { role: string }).role, model));
+    mocks.callAiJson.mockImplementation(async ({ input, model }) => approve((input as { role: string }).role, model));
     const result = await reviewCandidate(fixtureReadyGoal, fixtureCandidate, "a".repeat(64), false, repo);
     expect(result).toMatchObject({ status: "approved", approvedReviewCount: 3, rejectedReviewCount: 0, uncertainReviewCount: 0 });
     expect(result.reviews.map(({ role }) => role).sort()).toEqual(["consumer_advocate", "risk_auditor", "strategist"]);
-    expect(new Set(result.reviews.map(({ model }) => model)).size).toBe(2);
+    expect(new Set(result.reviews.map(({ model }) => model)).size).toBe(1);
+    expect(mocks.callAiJson).toHaveBeenCalledTimes(3);
+    expect(mocks.callAiJson).toHaveBeenNthCalledWith(1, expect.objectContaining({ provider: "deepseek", model: "model-a" }));
+    expect(mocks.callAiJson).toHaveBeenNthCalledWith(2, expect.objectContaining({ provider: "deepseek", model: "model-a" }));
+    expect(mocks.callAiJson).toHaveBeenNthCalledWith(3, expect.objectContaining({ provider: "deepseek", model: "model-a" }));
     expect(repo.saveInference).toHaveBeenCalledTimes(3);
     expect(repo.saveDecision).toHaveBeenCalledOnce();
   });
 
   it("deterministically appends a physical-settlement disclosure to every review, even when the model omits one", async () => {
     const repo = repository();
-    mocks.callGonkaJson.mockImplementation(async ({ input, model }) => approve((input as { role: string }).role, model));
+    mocks.callAiJson.mockImplementation(async ({ input, model }) => approve((input as { role: string }).role, model));
     const physicalCandidateForGoal = { ...fixturePhysicalCandidate, goalId: fixtureReadyGoal.id };
     const result = await reviewCandidate(fixtureReadyGoal, physicalCandidateForGoal, "a".repeat(64), false, repo);
     const expectedDisclosure = `This candidate settles physically: your covered ETH may be delivered/exchanged for ${physicalCandidateForGoal.settlementTokenSymbol} rather than a cash payment.`;
@@ -50,7 +53,7 @@ describe("Gonka council service", () => {
 
   it("never adds a physical-settlement disclosure to a cash-settled candidate's reviews", async () => {
     const repo = repository();
-    mocks.callGonkaJson.mockImplementation(async ({ input, model }) => approve((input as { role: string }).role, model));
+    mocks.callAiJson.mockImplementation(async ({ input, model }) => approve((input as { role: string }).role, model));
     const result = await reviewCandidate(fixtureReadyGoal, fixtureCandidate, "a".repeat(64), false, repo);
     expect(result.reviews.every((review) => review.requiredDisclosures.every((disclosure) => !disclosure.startsWith("This candidate settles physically")))).toBe(true);
   });
@@ -60,17 +63,17 @@ describe("Gonka council service", () => {
     const inputHash = hashJson({ goal: normalizedGoal, candidate: publicCandidate(fixtureCandidate), rulesetVersion: "1" });
     const repo = repository({ decision: fixtureDecision, inputHash });
     await expect(reviewCandidate(fixtureReadyGoal, fixtureCandidate, "a".repeat(64), false, repo)).resolves.toEqual(fixtureDecision);
-    expect(mocks.callGonkaJson).not.toHaveBeenCalled();
+    expect(mocks.callAiJson).not.toHaveBeenCalled();
   });
 
   it("blocks persistence when any independent role fails", async () => {
     const repo = repository();
-    mocks.callGonkaJson.mockImplementation(async ({ input, model }) => {
+    mocks.callAiJson.mockImplementation(async ({ input, model }) => {
       const role = (input as { role: string }).role;
       if (role === "risk_auditor") throw new GonkaCallError("Risk review unavailable.", "gonka-risk-failed");
       return approve(role, model);
     });
-    await expect(reviewCandidate(fixtureReadyGoal, fixtureCandidate, "a".repeat(64), false, repo)).rejects.toMatchObject({ code: "GONKA_UNAVAILABLE", status: 502 });
+    await expect(reviewCandidate(fixtureReadyGoal, fixtureCandidate, "a".repeat(64), false, repo)).rejects.toMatchObject({ code: "AI_UNAVAILABLE", status: 502 });
     expect(repo.saveInference).toHaveBeenCalledTimes(3);
     expect(repo.saveDecision).not.toHaveBeenCalled();
   });

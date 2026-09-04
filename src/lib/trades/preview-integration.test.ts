@@ -9,10 +9,10 @@ import type { ThetanutsOrder, ThetanutsReadClient } from "@/lib/thetanuts/client
 import { orderId, serializeOrder } from "@/lib/thetanuts/strategy";
 import { fixtureCandidate, fixtureDecision, fixtureIds, fixtureReadyGoal } from "@/test/fixtures/goalguard";
 
-const mocks = vi.hoisted(() => ({ callGonkaJson: vi.fn() }));
+const mocks = vi.hoisted(() => ({ callAiJson: vi.fn() }));
 vi.mock("@/lib/gonka/client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/gonka/client")>()),
-  callGonkaJson: mocks.callGonkaJson,
+  callAiJson: mocks.callAiJson,
 }));
 
 import { reviewCandidate } from "@/lib/council/service";
@@ -122,16 +122,14 @@ function repository(candidate: ProtectionCandidate, initialDecision: CouncilDeci
 }
 
 function configureCouncil() {
-  vi.stubEnv("GONKA_API_KEY", "test-key");
-  vi.stubEnv("GONKA_BASE_URL", "https://gonka.example");
-  vi.stubEnv("GONKA_STRATEGIST_MODEL", "model-a");
-  vi.stubEnv("GONKA_RISK_AUDITOR_MODEL", "model-b");
-  vi.stubEnv("GONKA_CONSUMER_ADVOCATE_MODEL", "model-a");
+  vi.stubEnv("AI_PROVIDER", "deepseek");
+  vi.stubEnv("DEEPSEEK_API_KEY", "test-key");
+  vi.stubEnv("DEEPSEEK_MODEL", "deepseek-model");
   vi.stubEnv("MAX_LIVE_TRADE_PREMIUM_USD", "3");
 }
 
 function configureCouncilResponses(verdicts: Partial<Record<"strategist" | "risk_auditor" | "consumer_advocate", "approve" | "reject" | "uncertain">> = {}) {
-  mocks.callGonkaJson.mockImplementation(async ({ input, model }: { input: { role: "strategist" | "risk_auditor" | "consumer_advocate" }; model: string }) => {
+  mocks.callAiJson.mockImplementation(async ({ input, model }: { input: { role: "strategist" | "risk_auditor" | "consumer_advocate" }; model: string }) => {
     const role = input.role;
     const verdict = verdicts[role] ?? "approve";
     return {
@@ -161,7 +159,7 @@ async function reviewWith(verdicts: Partial<Record<"strategist" | "risk_auditor"
 
 describe("B6 unsigned preview integration", () => {
   beforeEach(() => {
-    mocks.callGonkaJson.mockReset();
+    mocks.callAiJson.mockReset();
     configureCouncil();
     vi.stubEnv("THETANUTS_RPC_URL", "");
     vi.stubEnv("THETANUTS_RPC_FALLBACK_URL", "");

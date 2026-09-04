@@ -1,0 +1,1 @@
+ALTER TABLE "gonka_inferences" DROP CONSTRAINT "inferences_provider_check", ADD CONSTRAINT "inferences_provider_check" CHECK ("provider" IN ('gonka', 'deepseek'));

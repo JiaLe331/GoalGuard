@@ -23,6 +23,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:studio": "drizzle-kit studio",
+    "smoke:ai": "tsx --conditions=react-server scripts/smoke-ai.ts",
     "smoke:gonka": "tsx --conditions=react-server scripts/smoke-gonka.ts",
     "smoke:thetanuts": "tsx scripts/smoke-thetanuts.ts",
     "smoke:workflow": "tsx scripts/smoke-workflow.ts",

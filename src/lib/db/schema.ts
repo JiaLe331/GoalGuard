@@ -67,7 +67,7 @@ export const gonkaInferences = pgTable.withRLS("gonka_inferences", {
   latencyMs: integer("latency_ms"), errorCode: text("error_code"), errorMessage: text("error_message"), rawResponseJson: jsonb("raw_response_json").$type<unknown>(),
   createdAt: utcTimestamp("created_at").notNull(), completedAt: utcTimestamp("completed_at"),
 }, (table) => [
-  check("inferences_schema_version_check", sql`${table.schemaVersion} = 1`), check("inferences_provider_check", sql`${table.provider} = 'gonka'`),
+  check("inferences_schema_version_check", sql`${table.schemaVersion} = 1`), check("inferences_provider_check", sql`${table.provider} IN ('gonka', 'deepseek')`),
   check("inferences_latency_check", sql`${table.latencyMs} IS NULL OR ${table.latencyMs} >= 0`),
   index("inferences_goal_purpose_created_idx").on(table.goalId, table.purpose, table.createdAt), index("inferences_candidate_purpose_idx").on(table.candidateId, table.purpose),
   uniqueIndex("inferences_request_id_idx").on(table.requestId).where(sql`${table.requestId} IS NOT NULL`),

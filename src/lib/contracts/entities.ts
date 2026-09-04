@@ -131,7 +131,7 @@ export const GonkaInferenceSchema = z.object({
   goalId: UUIDSchema.nullable(),
   candidateId: UUIDSchema.nullable(),
   purpose: InferencePurposeSchema,
-  provider: z.literal("gonka"),
+  provider: z.enum(["gonka", "deepseek"]),
   model: z.string().trim().min(1),
   requestId: z.string().trim().min(1).nullable(),
   status: InferenceStatusSchema,

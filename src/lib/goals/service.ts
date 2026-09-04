@@ -2,11 +2,11 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import Decimal from "decimal.js";
 import { z } from "zod";
-import { getGonkaConfiguration } from "@/lib/config/env";
+import { getActiveAiConfiguration } from "@/lib/config/env";
 import { GoalDraftSchema, type Goal, type GoalDraft, type GoalDraftField, type ParseGoalRequest } from "@/lib/contracts";
 import { PostgresGoalGuardRepository } from "@/lib/db/repository";
 import { hashJson } from "@/lib/domain/hash";
-import { callGonkaJson, GonkaCallError } from "@/lib/gonka/client";
+import { callAiJson, AiCallError } from "@/lib/gonka/client";
 import { ApiRouteError } from "@/lib/server/http";
 
 const ParsedDraftSchema = z.object({ draft: GoalDraftSchema }).strict();
@@ -34,12 +34,12 @@ const GOAL_PARSE_SYSTEM_PROMPT = [
 ].join("\n");
 
 export async function parseGoal(request: ParseGoalRequest, ownerSessionHash: string, repository = new PostgresGoalGuardRepository()) {
-  const config = getGonkaConfiguration();
-  if (!config) throw new ApiRouteError("GONKA_UNAVAILABLE", "Gonka goal parsing is not configured.", 503, true);
+  const config = getActiveAiConfiguration();
+  if (!config) throw new ApiRouteError("AI_UNAVAILABLE", "The configured AI provider is not available for goal parsing.", 503, true);
   const input = { message: request.message, confirmedDraft: request.draft ?? {}, locale: request.locale ?? "en", timezone: request.timezone ?? null, currentDate: new Date().toISOString().slice(0, 10) };
   const inputHash = hashJson(input); const inferenceId = randomUUID(); const createdAt = new Date().toISOString();
   try {
-    const result = await callGonkaJson({ ...config, system: GOAL_PARSE_SYSTEM_PROMPT, input, schema: ParsedDraftSchema });
+    const result = await callAiJson({ ...config, system: GOAL_PARSE_SYSTEM_PROMPT, input, schema: ParsedDraftSchema });
     const draft = GoalDraftSchema.parse({ ...(request.draft ?? {}), ...result.data.draft }); validateCompleteDraft(draft); const missing = missingFields(draft);
     let goal: Goal | null = null;
     if (missing.length === 0) {
@@ -48,13 +48,13 @@ export async function parseGoal(request: ParseGoalRequest, ownerSessionHash: str
       await repository.createGoal(goal, ownerSessionHash);
     }
     const completedAt = new Date().toISOString();
-    await repository.saveInference({ schemaVersion: 1, id: inferenceId, goalId: goal?.id ?? null, candidateId: null, purpose: "goal_parse", provider: "gonka", model: result.model, requestId: result.requestId, status: "succeeded", inputHash, latencyMs: result.latencyMs, errorCode: null, errorMessage: null, createdAt, completedAt }, result.raw);
+    await repository.saveInference({ schemaVersion: 1, id: inferenceId, goalId: goal?.id ?? null, candidateId: null, purpose: "goal_parse", provider: config.provider, model: result.model, requestId: result.requestId, status: "succeeded", inputHash, latencyMs: result.latencyMs, errorCode: null, errorMessage: null, createdAt, completedAt }, result.raw);
     if (goal) goal = await repository.getGoal(goal.id, ownerSessionHash);
     return { draft, missingFields: missing, clarificationQuestion: missing[0] ? questions[missing[0]] : null, goal, inference: { id: inferenceId, purpose: "goal_parse" as const, model: result.model, requestId: result.requestId, status: "succeeded" as const } };
   } catch (error) {
     if (error instanceof ApiRouteError) throw error;
-    const callError = error instanceof GonkaCallError ? error : new GonkaCallError("Gonka goal parsing failed.", null, error);
-    await repository.saveInference({ schemaVersion: 1, id: inferenceId, goalId: null, candidateId: null, purpose: "goal_parse", provider: "gonka", model: config.model, requestId: callError.requestId, status: "failed", inputHash, latencyMs: Date.now() - Date.parse(createdAt), errorCode: "GONKA_UNAVAILABLE", errorMessage: callError.message, createdAt, completedAt: null });
-    throw new ApiRouteError("GONKA_UNAVAILABLE", "Gonka could not safely parse this goal.", 502, true);
+    const callError = error instanceof AiCallError ? error : new AiCallError("AI goal parsing failed.", null, error);
+    await repository.saveInference({ schemaVersion: 1, id: inferenceId, goalId: null, candidateId: null, purpose: "goal_parse", provider: config.provider, model: config.model, requestId: callError.requestId, status: "failed", inputHash, latencyMs: Date.now() - Date.parse(createdAt), errorCode: "AI_UNAVAILABLE", errorMessage: callError.message, createdAt, completedAt: null });
+    throw new ApiRouteError("AI_UNAVAILABLE", "The configured AI provider could not safely parse this goal.", 502, true);
   }
 }

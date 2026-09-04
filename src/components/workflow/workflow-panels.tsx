@@ -180,7 +180,7 @@ export function ActiveProtectionPanel({ stage }: { stage: "searching_candidates"
   const content = stage === "searching_candidates"
     ? ["Checking live protection", "GoalGuard is reading active ETH put options from Thetanuts and applying your exact limits."]
     : stage === "reviewing_candidate"
-      ? ["Three independent checks", "The Gonka council is reviewing fit, downside risk, and clarity. Deterministic values cannot be changed by the reviewers."]
+      ? ["Three independent checks", "The AI council is reviewing fit, downside risk, and clarity. Deterministic values cannot be changed by the reviewers."]
       : ["Generating unsigned preview", "GoalGuard is revalidating the approved option, wallet readiness, allowance, and exact Base calldata."];
   const niulaiPose: NiulaiPose = stage === "searching_candidates" ? "checking" : stage === "reviewing_candidate" ? "explaining" : "attentive";
 
@@ -288,7 +288,7 @@ export function CouncilDrawer({ decision, open, onClose }: { decision: CouncilDe
     <Drawer open={open} title="GoalGuard council review" onClose={onClose}>
       <div className="mb-5 flex min-w-0 items-center gap-3">
         <NiulaiMascot pose="explaining" size="sm" />
-        <p className="min-w-0 text-sm leading-6 text-[color:var(--foreground-soft)]">Three Gonka roles independently check plan fit, risk, and clarity. Their request IDs make the review traceable.</p>
+        <p className="min-w-0 text-sm leading-6 text-[color:var(--foreground-soft)]">Three AI roles independently check plan fit, risk, and clarity. Their request IDs make the review traceable.</p>
       </div>
       <div className="grid gap-4">{decision.reviews.map((review) => <CouncilCard key={review.id} review={review} label={roleLabels[review.role]} />)}</div>
       <div className="mt-5"><Alert tone={decision.status === "approved" ? "success" : decision.status === "disputed" ? "warning" : "error"} title={"Council result: " + decision.status}>{decision.blockedReasons.length ? decision.blockedReasons.join(" ") : "All " + decision.approvedReviewCount + " checks approved this plan."}</Alert></div>
@@ -443,7 +443,7 @@ export function DemoPreviewReadyPanel({ goal, preview, meta, decision, onStartAn
             <div><dt className="text-xs text-[color:var(--foreground-soft)]">Preview request</dt><dd className="overflow-anywhere mt-1 text-xs tabular-nums">{meta.requestId}</dd></div>
             <div><dt className="text-xs text-[color:var(--foreground-soft)]">Council decision</dt><dd className="overflow-anywhere mt-1 text-xs tabular-nums">{decision.id}</dd></div>
           </dl>
-          <Accordion title="All Gonka Request IDs">{decision.reviews.map((review) => <p key={review.id} className="overflow-anywhere mt-2 text-xs text-[color:var(--foreground-soft)] tabular-nums">{roleLabels[review.role]} · {review.requestId}</p>)}</Accordion>
+          <Accordion title="All AI Request IDs">{decision.reviews.map((review) => <p key={review.id} className="overflow-anywhere mt-2 text-xs text-[color:var(--foreground-soft)] tabular-nums">{roleLabels[review.role]} · {review.requestId}</p>)}</Accordion>
         </Card>
         <Alert tone={expired ? "warning" : "success"} title={expired ? "Fresh facts required" : "Safe demo boundary"}>{expired ? "This snapshot expired. Return to the approved plan and generate a new one after reconfirming." : "There is no signing action on this screen and no transaction was sent."}</Alert>
         <Button className="w-full" onClick={expired ? onFreshPreview : onStartAnother}>{expired ? "Review and generate a fresh preview" : "Start another goal"}<ArrowRight aria-hidden="true" /></Button>

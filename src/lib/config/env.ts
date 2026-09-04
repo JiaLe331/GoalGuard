@@ -9,6 +9,10 @@ const optionalNonEmpty = optional(z.string().trim().min(1));
 const optionalUrl = optional(z.string().url());
 
 export const ServerEnvironmentSchema = z.object({
+  AI_PROVIDER: z.enum(["deepseek", "gonka"]).default("deepseek"),
+  DEEPSEEK_API_KEY: optionalNonEmpty,
+  DEEPSEEK_BASE_URL: z.string().url().default("https://api.deepseek.com"),
+  DEEPSEEK_MODEL: optionalNonEmpty,
   GONKA_API_KEY: optionalNonEmpty,
   GONKA_BASE_URL: optionalUrl,
   GONKA_STRATEGIST_MODEL: optionalNonEmpty,
@@ -54,6 +58,32 @@ export function getGonkaCouncilConfiguration(environment: NodeJS.ProcessEnv = pr
   if (!env.GONKA_API_KEY || !env.GONKA_BASE_URL || Object.values(models).some((model) => !model)) return null;
   if (new Set(Object.values(models)).size < 2) return null;
   return { apiKey: env.GONKA_API_KEY, baseUrl: env.GONKA_BASE_URL, models: models as Record<keyof typeof models, string>, requestIdHeader: env.GONKA_REQUEST_ID_HEADER };
+}
+
+export function getDeepSeekConfiguration(environment: NodeJS.ProcessEnv = process.env) {
+  const env = readServerEnvironment(environment);
+  if (!env.DEEPSEEK_API_KEY || !env.DEEPSEEK_MODEL) return null;
+  return { provider: "deepseek" as const, apiKey: env.DEEPSEEK_API_KEY, baseUrl: env.DEEPSEEK_BASE_URL, model: env.DEEPSEEK_MODEL, requestIdHeader: "x-request-id" };
+}
+
+export function getDeepSeekCouncilConfiguration(environment: NodeJS.ProcessEnv = process.env) {
+  const config = getDeepSeekConfiguration(environment);
+  if (!config) return null;
+  return { ...config, models: { strategist: config.model, risk_auditor: config.model, consumer_advocate: config.model } };
+}
+
+export function getActiveAiConfiguration(environment: NodeJS.ProcessEnv = process.env) {
+  const env = readServerEnvironment(environment);
+  if (env.AI_PROVIDER === "deepseek") return getDeepSeekConfiguration(environment);
+  const config = getGonkaConfiguration(environment);
+  return config ? { provider: "gonka" as const, ...config } : null;
+}
+
+export function getActiveAiCouncilConfiguration(environment: NodeJS.ProcessEnv = process.env) {
+  const env = readServerEnvironment(environment);
+  if (env.AI_PROVIDER === "deepseek") return getDeepSeekCouncilConfiguration(environment);
+  const config = getGonkaCouncilConfiguration(environment);
+  return config ? { provider: "gonka" as const, ...config } : null;
 }
 
 export function getThetanutsConfiguration(environment: NodeJS.ProcessEnv = process.env) {

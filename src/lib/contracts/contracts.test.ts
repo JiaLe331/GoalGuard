@@ -137,7 +137,7 @@ describe("API envelopes", () => {
     const response = {
       data: {
         database: { status: "ready" },
-        gonka: { status: "unconfigured", model: null, requestId: null },
+        gonka: { provider: "deepseek", status: "unconfigured", model: null, requestId: null },
         thetanuts: { status: "unconfigured", chainId: 8453, activeEthPutCount: null, marketAsOf: null },
       },
       meta: { requestId: ids.goal, timestamp: now },
