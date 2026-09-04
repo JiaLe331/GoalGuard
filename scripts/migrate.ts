@@ -1,6 +1,8 @@
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { createDatabase } from "../src/lib/db/client";
 
+process.loadEnvFile(".env");
+
 const databaseUrl = process.env.DATABASE_DIRECT_URL ?? process.env.DATABASE_URL;
 const { db, client } = createDatabase(databaseUrl);
 try {
