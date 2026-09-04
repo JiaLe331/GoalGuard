@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
   <title id="title">Pip front-left view</title>
   <desc id="desc">Pip the Pangolin, a borderless electric-lime two-dimensional GoalGuard mascot with restrained cel shading.</desc>
-  
+
   <defs>
     <filter id="contact-shadow" x="-30%" y="-80%" width="160%" height="260%">
       <feGaussianBlur stdDeviation="12" />

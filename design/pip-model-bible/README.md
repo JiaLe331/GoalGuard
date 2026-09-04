@@ -1,8 +1,8 @@
 # Pip the Pangolin — canonical model bible
 
-Version: pip-v1.2  
-Status: preferred visual reference with approved expressive pose set  
-Canonical turnaround: masters/pip-v1-preferred-turnaround.png
+- Version: pip-v1.2
+- Status: preferred visual reference with approved expressive pose set
+- Canonical turnaround: masters/pip-v1-preferred-turnaround.png
 
 ## Authority
 
