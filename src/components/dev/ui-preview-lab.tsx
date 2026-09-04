@@ -204,7 +204,7 @@ export function UiPreviewLab({ initialState, samples }: { initialState: UiPrevie
 
       <main id="preview-content" tabIndex={-1} className="min-h-screen outline-none">
         <div className="reading-shell pt-6 sm:pt-8">
-          <Alert tone="warning" title="Development UI preview — sample data">
+          <Alert tone="warning" title="Development UI preview: sample data">
             Production panels are running with canonical local fixtures. Controls stay in this tab: no API, wallet, storage, signature, or broadcast request is made.
           </Alert>
           <div className="mt-4 grid gap-3 rounded-[var(--radius-card)] border border-[var(--border)] bg-[var(--surface-raised)] p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">

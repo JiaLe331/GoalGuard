@@ -5,7 +5,7 @@ import { UiPreviewLab } from "@/components/dev/ui-preview-lab";
 import { isDevelopmentUiPreview, parseUiPreviewState } from "@/lib/frontend/ui-preview";
 
 export const metadata: Metadata = {
-  title: "Development UI preview — GoalGuard",
+  title: "GoalGuard",
   robots: { index: false, follow: false, nocache: true },
 };
 

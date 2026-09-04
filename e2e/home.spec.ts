@@ -16,6 +16,7 @@ test("renders the honest GoalGuard P0 entry shell", async ({ page }) => {
     }),
   }));
   await page.goto("/");
+  await expect(page).toHaveTitle("GoalGuard");
   await expect(page.getByRole("heading", { name: /protect the purpose behind your money/i })).toBeVisible();
   await expect(page.getByRole("heading", { name: /what are you protecting/i })).toBeVisible();
   await expect(page.getByRole("heading", { name: /from your goal to a plan you can actually inspect/i })).toBeVisible();
@@ -25,7 +26,10 @@ test("renders the honest GoalGuard P0 entry shell", async ({ page }) => {
   await expect(page.getByText(/unsigned preview only/i).first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Refresh" })).toBeVisible();
   await expect(page.getByText("Needs setup")).toHaveCount(2);
-  await expect(page.locator("img")).toHaveCount(0);
+  const posePipImages = page.locator("[data-pip-pose-source] img");
+  await expect(page.locator("img")).toHaveCount(2);
+  await expect(posePipImages).toHaveCount(2);
+  await expect(posePipImages.first()).toHaveAttribute("alt", "");
   const visualSystem = await page.evaluate(() => {
     const hero = document.querySelector<HTMLElement>("#top > div");
     const header = document.querySelector<HTMLElement>("header[data-scrolled]");

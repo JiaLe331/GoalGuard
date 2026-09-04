@@ -22,7 +22,8 @@ test("previews every post-goal interface state without backend or wallet traffic
   });
 
   await page.goto("/dev/ui-preview");
-  await expect(page.getByText("Development UI preview — sample data")).toBeVisible();
+  await expect(page).toHaveTitle("GoalGuard");
+  await expect(page.getByText("Development UI preview: sample data")).toBeVisible();
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/i);
 
   const selector = page.getByLabel("Interface state");
@@ -62,20 +63,19 @@ test("keeps representative workflow states within every target viewport", async 
   }
 });
 
-test("limits Pip activity points to active requests and honors reduced motion", async ({ page }) => {
-  await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.goto("/dev/ui-preview?state=searching");
-  const activityPoint = page.locator('[data-pip-activity-point="true"]').first();
-  await activityPoint.waitFor();
-  await page.waitForTimeout(500);
-  expect(await activityPoint.evaluate((element) => element.getAnimations().some((animation) => animation.playState === "running"))).toBe(true);
-
+test("keeps Pip unframed, free of supplemental graphics, and reduced-motion safe", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.reload();
-  await activityPoint.waitFor();
+  await page.goto("/dev/ui-preview?state=searching");
+  const mascot = page.locator('[data-pip-pose="checking"]');
+  await mascot.waitFor();
+  await expect(mascot.locator('[data-pip-accessory], [data-pip-activity-point]')).toHaveCount(0);
+  await expect(mascot.locator('[data-pip-artwork-layer="true"]')).not.toHaveClass(/bg-white|rounded-full|ring-1/);
+  await expect(mascot.locator('[data-pip-ground-shadow="true"]')).toBeVisible();
   await page.waitForTimeout(500);
-  expect(await activityPoint.evaluate((element) => element.getAnimations().some((animation) => animation.playState === "running"))).toBe(false);
+  expect(await mascot.evaluate((element) => element.getAnimations({ subtree: true }).some((animation) => animation.playState === "running"))).toBe(false);
 
-  await page.getByRole("combobox", { name: "Interface state" }).selectOption("plan-approved");
-  await expect(activityPoint).toHaveCount(0);
+  await page.getByRole("combobox", { name: "Interface state" }).selectOption("preview-confirmation");
+  const croppedMascot = page.locator('[data-pip-pose="attentive"][data-pip-artwork="compact"]');
+  await croppedMascot.waitFor();
+  await expect(croppedMascot.locator('[data-pip-ground-shadow="true"]')).toHaveCount(0);
 });
