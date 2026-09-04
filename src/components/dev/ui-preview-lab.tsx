@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, ShieldCheck } from "@phosphor-icons/react";
+import { ArrowLeft, ArrowRight, CaretDown, ShieldCheck } from "@phosphor-icons/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Alert } from "@/components/ui/alert";
@@ -41,9 +41,14 @@ const errors: Record<"no-candidate" | "stale-candidate" | "preview-failure", Wor
     fieldErrors: {},
     details: {
       rejected: [
-        "Premium exceeded the maximum protection cost.",
-        "Available quantity could not cover the full goal.",
-        "Expiry fell outside the allowed deadline gap.",
+        {
+          protocolOrderId: "0x21e7aff4100edbae538fbe715b9565808a6f5130e651d2187f8b019a0cbbbde935355665a679c703a6cf057ba9",
+          reasons: ["The order does not let the user buy protection.", "The option expires before the goal deadline."],
+        },
+        {
+          protocolOrderId: "0x9a7e28b45382eaa4a96e26aa936cfe3db2bfb6d3a856b326b867f988767109921537e396c610181d2088b5",
+          reasons: ["Premium exceeded the maximum protection cost."],
+        },
       ],
     },
     returnStage: "confirming_goal",
@@ -208,20 +213,23 @@ export function UiPreviewLab({ initialState, samples }: { initialState: UiPrevie
 
       <main id="preview-content" tabIndex={-1} className="min-h-screen outline-none">
         <div className="reading-shell pt-6 sm:pt-8">
-          <Alert tone="warning" title="Development UI preview — sample data">
+          <Alert tone="warning" title="Development UI preview: sample data">
             Production panels are running with canonical local fixtures. Controls stay in this tab: no API, wallet, storage, signature, or broadcast request is made.
           </Alert>
           <div className="mt-4 grid gap-3 rounded-[var(--radius-card)] border border-[var(--border)] bg-[var(--surface-raised)] p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-            <label htmlFor="preview-state" className="grid gap-2 text-sm font-semibold">
+            <label htmlFor="preview-state" className="grid min-w-0 gap-2 text-sm font-semibold">
               Interface state
-              <select
-                id="preview-state"
-                className="field-control"
-                value={state}
-                onChange={(event) => selectState(event.target.value as UiPreviewState)}
-              >
-                {uiPreviewStates.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
-              </select>
+              <span className="relative block min-w-0">
+                <select
+                  id="preview-state"
+                  className="field-control w-full appearance-none pr-14"
+                  value={state}
+                  onChange={(event) => selectState(event.target.value as UiPreviewState)}
+                >
+                  {uiPreviewStates.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+                </select>
+                <CaretDown className="pointer-events-none absolute right-5 top-1/2 size-4 -translate-y-1/2 text-[color:var(--foreground-muted)]" aria-hidden="true" />
+              </span>
             </label>
             <div className="flex flex-wrap gap-2" aria-label="Preview state navigation">
               <Button variant="secondary" className="px-4" disabled={stateIndex === 0} onClick={() => selectState(uiPreviewStates[stateIndex - 1]?.value ?? state)}><ArrowLeft aria-hidden="true" />Previous</Button>

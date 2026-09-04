@@ -22,7 +22,7 @@ test("previews every post-goal interface state without backend or wallet traffic
   });
 
   await page.goto("/dev/ui-preview");
-  await expect(page.getByText("Development UI preview — sample data")).toBeVisible();
+  await expect(page.getByText("Development UI preview: sample data")).toBeVisible();
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/i);
 
   const selector = page.getByLabel("Interface state");
@@ -42,8 +42,8 @@ test("previews every post-goal interface state without backend or wallet traffic
 test("keeps representative workflow states within every target viewport", async ({ page }) => {
   test.setTimeout(90_000);
   await page.emulateMedia({ reducedMotion: "reduce" });
-  const states = ["goal-confirmation", "plan-approved", "council-drawer", "preview-confirmation", "demo-ready", "preview-failure"];
-  for (const { width, height } of [{ width: 320, height: 700 }, { width: 375, height: 812 }, { width: 640, height: 900 }, { width: 667, height: 375 }, { width: 768, height: 1024 }, { width: 1024, height: 768 }, { width: 1280, height: 800 }, { width: 1440, height: 900 }]) {
+  const states = ["goal-confirmation", "no-candidate", "plan-approved", "council-drawer", "preview-confirmation", "demo-ready", "preview-failure"];
+  for (const { width, height } of [{ width: 320, height: 700 }, { width: 375, height: 812 }, { width: 547, height: 698 }, { width: 640, height: 900 }, { width: 667, height: 375 }, { width: 768, height: 1024 }, { width: 1024, height: 768 }, { width: 1280, height: 800 }, { width: 1440, height: 900 }]) {
     await page.setViewportSize({ width, height });
     for (const state of states) {
       await page.goto(`/dev/ui-preview?state=${state}`);
@@ -62,20 +62,41 @@ test("keeps representative workflow states within every target viewport", async 
   }
 });
 
-test("limits Pip activity points to active requests and honors reduced motion", async ({ page }) => {
+test("limits Niu Lai motion to active requests and honors reduced motion", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/dev/ui-preview?state=searching");
-  const activityPoint = page.locator('[data-pip-activity-point="true"]').first();
-  await activityPoint.waitFor();
+  const mascotMotion = page.locator('[data-niulai-pose="checking"] [data-niulai-artwork-layer="true"]').first();
+  await mascotMotion.waitFor();
   await page.waitForTimeout(500);
-  expect(await activityPoint.evaluate((element) => element.getAnimations().some((animation) => animation.playState === "running"))).toBe(true);
+  expect(await mascotMotion.evaluate((element) => element.getAnimations().some((animation) => animation.playState === "running"))).toBe(true);
 
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.reload();
-  await activityPoint.waitFor();
+  await mascotMotion.waitFor();
   await page.waitForTimeout(500);
-  expect(await activityPoint.evaluate((element) => element.getAnimations().some((animation) => animation.playState === "running"))).toBe(false);
+  expect(await mascotMotion.evaluate((element) => element.getAnimations().some((animation) => animation.playState === "running"))).toBe(false);
 
   await page.getByRole("combobox", { name: "Interface state" }).selectOption("plan-approved");
-  await expect(activityPoint).toHaveCount(0);
+  await expect(mascotMotion).toHaveCount(0);
+});
+
+test("keeps Niu Lai clear of copy and provenance at the 547px review width", async ({ page }) => {
+  await page.setViewportSize({ width: 547, height: 698 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+
+  await page.goto("/dev/ui-preview?state=generating-preview");
+  const provenance = page.getByRole("list", { name: "Live request provenance" });
+  const activeMascot = page.locator('[data-niulai-placement="active-request"]');
+  await expect(provenance).toBeVisible();
+  await expect(activeMascot).toBeVisible();
+  const [provenanceBox, activeMascotBox] = await Promise.all([provenance.boundingBox(), activeMascot.boundingBox()]);
+  expect(activeMascotBox?.y ?? 0).toBeGreaterThanOrEqual((provenanceBox?.y ?? 0) + (provenanceBox?.height ?? 0) + 16);
+
+  await page.goto("/dev/ui-preview?state=demo-ready");
+  const readyCopy = page.locator('[data-niulai-copy="demo-ready"]');
+  const readyMascot = page.locator('[data-niulai-placement="demo-ready"]');
+  await expect(readyCopy).toBeVisible();
+  await expect(readyMascot).toBeVisible();
+  const [readyCopyBox, readyMascotBox] = await Promise.all([readyCopy.boundingBox(), readyMascot.boundingBox()]);
+  expect(readyMascotBox?.y ?? 0).toBeGreaterThanOrEqual((readyCopyBox?.y ?? 0) + (readyCopyBox?.height ?? 0) + 16);
 });

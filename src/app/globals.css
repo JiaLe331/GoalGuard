@@ -214,6 +214,20 @@ pre,
   text-wrap: balance;
 }
 
+@keyframes niulai-checking {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+[data-niulai-pose="checking"][data-niulai-active="true"] [data-niulai-artwork-layer="true"] {
+  animation: niulai-checking 1.1s ease-in-out infinite;
+}
+
 .pretty-text {
   text-wrap: pretty;
 }

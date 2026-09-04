@@ -1,0 +1,21 @@
+{
+  "model": "niulai-v1-pose-set",
+  "palette": {
+    "fur": "#C9F52B",
+    "furShadow": "#A6D31E",
+    "muzzle": "#B8A3C8",
+    "muzzleShadow": "#7E6A90",
+    "features": "#1B1D19",
+    "purposeRing": "#FFFFFF"
+  },
+  "purposeRingSide": "character-left",
+  "assets": {
+    "neutral": { "file": "poses/niulai-v1-pose-neutral.png", "width": 640, "height": 800, "alpha": true, "sha256": "05548633fa40a537b1a3c37ad479e5acb934fa41e761e752668796148d378bc2" },
+    "listening": { "file": "poses/niulai-v1-pose-listening.png", "width": 653, "height": 800, "alpha": true, "sha256": "c89681705e4e22423557826be54a6ac8060f3bf298b141775547bde97ebd2e57" },
+    "checking": { "file": "poses/niulai-v1-pose-checking.png", "width": 680, "height": 800, "alpha": true, "sha256": "86a5387bf3250343e7512513f4e41a75feebf892150eed70e308b0534104a4e7" },
+    "explaining": { "file": "poses/niulai-v1-pose-explaining.png", "width": 751, "height": 800, "alpha": true, "sha256": "b912a9483fcdfd59e43d7db76ff5ee4d9a3d2b8824c4f8cb4f29833ef1055854" },
+    "attentive": { "file": "poses/niulai-v1-pose-attentive.png", "width": 706, "height": 800, "alpha": true, "sha256": "79ad5ffe7fee332bf30c54bfe2cb1d6390f988f077171b04bcd066c7e3aac58a" },
+    "safe-stop": { "file": "poses/niulai-v1-pose-safe-stop.png", "width": 640, "height": 800, "alpha": true, "sha256": "5eb383b09ebc70937fe88929b351c856d03f980ffe11d62526564c4572a416e7" },
+    "ready": { "file": "poses/niulai-v1-pose-ready.png", "width": 608, "height": 800, "alpha": true, "sha256": "58c106293b3bf7a3d3cb91b1cd92609eb84c984f5c1eaaec70f8be672b2c1cad" }
+  }
+}

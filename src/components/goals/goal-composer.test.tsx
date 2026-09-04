@@ -21,24 +21,24 @@ describe("GoalComposer", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("moves Pip from neutral to listening with accessible form focus", () => {
+  it("moves Niu Lai from neutral to listening with accessible form focus", () => {
     const { container } = render(<GoalComposer />);
     const textbox = screen.getByRole("textbox");
-    expect(container.querySelector('[data-pip-pose="neutral"][data-pip-artwork="full"]')).toBeInTheDocument();
+    expect(container.querySelector('[data-niulai-pose="neutral"][data-niulai-artwork="compact"]')).toBeInTheDocument();
     fireEvent.focus(textbox);
-    expect(container.querySelector('[data-pip-pose="listening"]')).toBeInTheDocument();
+    expect(container.querySelector('[data-niulai-pose="listening"]')).toBeInTheDocument();
     fireEvent.blur(textbox);
-    expect(container.querySelector('[data-pip-pose="neutral"]')).toBeInTheDocument();
+    expect(container.querySelector('[data-niulai-pose="neutral"]')).toBeInTheDocument();
   });
 
-  it("shows checking Pip only while goal parsing is active", async () => {
+  it("shows checking Niu Lai only while goal parsing is active", async () => {
     let resolveRequest!: (response: Response) => void;
     vi.spyOn(globalThis, "fetch").mockImplementation(() => new Promise<Response>((resolve) => { resolveRequest = resolve; }));
     const { container } = render(<GoalComposer />);
     const textbox = screen.getByRole("textbox");
     fireEvent.change(textbox, { target: { value: "Protect my rent fund." } });
     fireEvent.submit(textbox.closest("form")!);
-    expect(container.querySelector('[data-pip-pose="checking"][data-pip-active="true"]')).toBeInTheDocument();
+    expect(container.querySelector('[data-niulai-pose="checking"][data-niulai-active="true"]')).toBeInTheDocument();
     resolveRequest(new Response(JSON.stringify(parseGoalResponse), { status: 200 }));
     await waitFor(() => expect(push).toHaveBeenCalled());
   });

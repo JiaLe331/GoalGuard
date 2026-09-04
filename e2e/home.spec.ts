@@ -25,7 +25,7 @@ test("renders the honest GoalGuard P0 entry shell", async ({ page }) => {
   await expect(page.getByText(/unsigned preview only/i).first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Refresh" })).toBeVisible();
   await expect(page.getByText("Needs setup")).toHaveCount(2);
-  await expect(page.locator("img")).toHaveCount(0);
+  await expect(page.locator('[data-niulai-pose] img[alt=""]')).toHaveCount(2);
   const visualSystem = await page.evaluate(() => {
     const hero = document.querySelector<HTMLElement>("#top > div");
     const header = document.querySelector<HTMLElement>("header[data-scrolled]");
@@ -56,7 +56,7 @@ test("keeps the landing interface usable without horizontal overflow across the 
   test.setTimeout(90_000);
   await page.emulateMedia({ reducedMotion: "reduce" });
   const sizes = [
-    { width: 320, height: 700 }, { width: 360, height: 780 }, { width: 375, height: 812 }, { width: 430, height: 932 },
+    { width: 320, height: 700 }, { width: 360, height: 780 }, { width: 375, height: 812 }, { width: 430, height: 932 }, { width: 547, height: 698 },
     { width: 640, height: 900 }, { width: 667, height: 375 }, { width: 768, height: 1024 }, { width: 844, height: 390 },
     { width: 912, height: 1368 }, { width: 1024, height: 768 }, { width: 1280, height: 800 }, { width: 1440, height: 900 }, { width: 1920, height: 1080 },
   ];
@@ -73,6 +73,16 @@ test("keeps the landing interface usable without horizontal overflow across the 
       const composer = page.locator("#goal-composer");
       const orbit = page.locator(".protection-orbit");
       expect((await composer.boundingBox())?.y ?? 0).toBeLessThan((await orbit.boundingBox())?.y ?? 0);
+    }
+    if (width === 375) {
+      await page.getByRole("button", { name: /menu/i }).click();
+      const menu = page.getByRole("dialog", { name: "Explore GoalGuard" });
+      await expect(menu.getByRole("button", { name: "Close panel" })).toBeVisible();
+      const wallet = menu.getByRole("button", { name: "Connect wallet" });
+      const [walletBox, menuBox] = await Promise.all([wallet.boundingBox(), menu.boundingBox()]);
+      expect(walletBox?.width ?? 0).toBeGreaterThan((menuBox?.width ?? 0) * 0.8);
+      await menu.getByRole("button", { name: "Close panel" }).click();
+      await expect(menu).not.toBeVisible();
     }
     if (width === 1280) {
       const orbit = page.locator(".protection-orbit");

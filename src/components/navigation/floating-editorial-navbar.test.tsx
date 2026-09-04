@@ -30,6 +30,7 @@ describe("FloatingEditorialNavbar", () => {
     const menu = screen.getByRole("button", { name: /menu/i });
     await user.click(menu);
     expect(screen.getByRole("dialog", { name: "Explore GoalGuard" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Close panel" })).toBeVisible();
     expect(document.body.style.overflow).toBe("hidden");
     await user.keyboard("{Escape}");
     await waitFor(() => expect(screen.queryByRole("dialog", { name: "Explore GoalGuard" })).not.toBeInTheDocument());

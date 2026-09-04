@@ -3,7 +3,7 @@
 import { ArrowLeft, ArrowRight, CheckCircle, Copy, HourglassHigh, PencilSimple, Receipt, ShieldCheck, Warning } from "@phosphor-icons/react";
 import { useEffect, useMemo, useState } from "react";
 
-import { PipMascot, type PipPose } from "@/components/brand/pip-mascot";
+import { NiulaiMascot, type NiulaiPose } from "@/components/brand/niulai-mascot";
 import { Accordion } from "@/components/ui/accordion";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -164,8 +164,8 @@ export function GoalConfirmationForm({ goal, busy, fieldErrors, onSave, onFind }
         </div>
       </Card>
       <aside className="space-y-3">
-        <Card tone="white" className="flex items-center gap-3 p-4">
-          <PipMascot pose="listening" size="sm" />
+        <Card tone="white" className="flex items-center gap-4 p-4">
+          <NiulaiMascot pose="listening" size="sm" className="h-24 w-28" />
           <p className="text-sm leading-6 text-[color:var(--foreground-soft)]">Set the purpose, amount, and limits at your pace. Nothing moves while you edit.</p>
         </Card>
         <MetricCard label="Purpose" value={goalName(goal)} tone="accent" />
@@ -182,7 +182,7 @@ export function ActiveProtectionPanel({ stage }: { stage: "searching_candidates"
     : stage === "reviewing_candidate"
       ? ["Three independent checks", "The Gonka council is reviewing fit, downside risk, and clarity. Deterministic values cannot be changed by the reviewers."]
       : ["Generating unsigned preview", "GoalGuard is revalidating the approved option, wallet readiness, allowance, and exact Base calldata."];
-  const pipPose: PipPose = stage === "searching_candidates" ? "checking" : stage === "reviewing_candidate" ? "explaining" : "attentive";
+  const niulaiPose: NiulaiPose = stage === "searching_candidates" ? "checking" : stage === "reviewing_candidate" ? "explaining" : "attentive";
 
   return (
     <div className="relative isolate mx-auto grid min-h-[34rem] max-w-5xl overflow-hidden rounded-[var(--radius-section)] bg-[var(--surface-dark)] text-[color:var(--text-on-dark)] lg:grid-cols-[1fr_20rem]">
@@ -191,15 +191,17 @@ export function ActiveProtectionPanel({ stage }: { stage: "searching_candidates"
         <div><StatusBadge tone="info" label="Live request active" /></div>
         <h1 className="mt-7 max-w-2xl text-5xl font-semibold leading-[0.98] tracking-[-0.05em] sm:text-6xl">{content[0]}</h1>
         <p className="mt-6 max-w-xl text-base leading-7 text-[color:var(--text-on-dark-muted)]">{content[1]}</p>
-        <div className="mt-9 flex items-center gap-3 text-sm" role="status"><HourglassHigh className="size-5 animate-pulse motion-reduce:animate-none" aria-hidden="true" />Waiting for a truthful backend result—no simulated percentage.</div>
+        <div className="mt-9 flex items-center gap-3 text-sm" role="status"><HourglassHigh className="size-5 animate-pulse motion-reduce:animate-none" aria-hidden="true" />Waiting for a truthful backend result. No simulated percentage.</div>
       </div>
-      <div className="relative border-t border-[var(--dark-border)] lg:border-l lg:border-t-0">
-        <div className="grid place-items-center px-7 pt-6 lg:px-8 lg:pt-8"><div className="grid size-40 place-items-center rounded-full bg-[var(--white)]"><PipMascot pose={pipPose} surface="light" active size="md" /></div></div>
-        <ol className="p-7 pt-2 text-sm text-[color:var(--foreground-on-strong-muted)] lg:p-8 lg:pt-2" aria-label="Live request provenance">
+      <div className="relative overflow-hidden border-t border-[var(--dark-border)] px-7 py-7 lg:min-h-0 lg:border-l lg:border-t-0 lg:px-8 lg:py-8">
+        <ol className="relative z-10 text-sm text-[color:var(--foreground-on-strong-muted)]" aria-label="Live request provenance">
           <li className="border-t border-[var(--dark-border)] py-4">01 · Read authoritative inputs</li>
           <li className="border-t border-[var(--dark-border)] py-4">02 · Apply deterministic checks</li>
           <li className="border-y border-[var(--dark-border)] py-4">03 · Return an auditable result</li>
         </ol>
+        <div data-niulai-placement="active-request" className="relative z-10 ml-auto mt-5 h-56 w-64 lg:absolute lg:bottom-0 lg:right-1 lg:mt-0 lg:h-64 lg:w-72">
+          <NiulaiMascot pose={niulaiPose} surface="dark" active size="lg" className="h-full w-full" />
+        </div>
       </div>
     </div>
   );
@@ -274,7 +276,7 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
           <p className="mt-2 text-sm leading-6 text-[color:var(--foreground-soft)]">Council attempt {decision.attempt}. Reviewers explain and challenge; deterministic financial values stay fixed.</p>
           <Button className="mt-5 w-full" variant="secondary" onClick={onOpenCouncil}>Open council review</Button>
         </Card>
-        {!approved ? <div className={`grid items-center gap-2 ${suppressMascot ? "grid-cols-1" : "grid-cols-[auto_minmax(0,1fr)]"}`}>{suppressMascot ? null : <PipMascot pose="safe-stop" size="sm" />}<Alert tone={decision.status === "disputed" ? "warning" : "error"} title={decision.status === "disputed" ? "Council needs another look" : "This plan cannot proceed"}>{decision.blockedReasons[0] ?? "Open the council review to see the concern before refreshing live options."}</Alert></div> : null}
+        {!approved ? <div className={`grid items-center gap-2 ${suppressMascot ? "grid-cols-1" : "grid-cols-[auto_minmax(0,1fr)]"}`}>{suppressMascot ? null : <NiulaiMascot pose="safe-stop" size="sm" />}<Alert tone={decision.status === "disputed" ? "warning" : "error"} title={decision.status === "disputed" ? "Council needs another look" : "This plan cannot proceed"}>{decision.blockedReasons[0] ?? "Open the council review to see the concern before refreshing live options."}</Alert></div> : null}
         <div className="grid gap-3"><Button onClick={onContinue} disabled={!approved || busy}>{cta}<ArrowRight aria-hidden="true" /></Button><Button variant="ghost" onClick={onRefresh} disabled={busy}>Refresh live options</Button></div>
       </aside>
     </div>
@@ -284,9 +286,9 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
 export function CouncilDrawer({ decision, open, onClose }: { decision: CouncilDecision; open: boolean; onClose: () => void }) {
   return (
     <Drawer open={open} title="GoalGuard council review" onClose={onClose}>
-      <div className="mb-5 flex items-center gap-3">
-        <PipMascot pose="explaining" size="sm" />
-        <p className="text-sm leading-6 text-[color:var(--foreground-soft)]">Three Gonka roles independently check plan fit, risk, and clarity. Their request IDs make the review traceable.</p>
+      <div className="mb-5 flex min-w-0 items-center gap-3">
+        <NiulaiMascot pose="explaining" size="sm" />
+        <p className="min-w-0 text-sm leading-6 text-[color:var(--foreground-soft)]">Three Gonka roles independently check plan fit, risk, and clarity. Their request IDs make the review traceable.</p>
       </div>
       <div className="grid gap-4">{decision.reviews.map((review) => <CouncilCard key={review.id} review={review} label={roleLabels[review.role]} />)}</div>
       <div className="mt-5"><Alert tone={decision.status === "approved" ? "success" : decision.status === "disputed" ? "warning" : "error"} title={"Council result: " + decision.status}>{decision.blockedReasons.length ? decision.blockedReasons.join(" ") : "All " + decision.approvedReviewCount + " checks approved this plan."}</Alert></div>
@@ -319,7 +321,7 @@ export function PreviewConfirmationPanel({ goal, candidate, walletAddress, ackno
           <h1 className="mt-5 text-4xl font-semibold leading-[1.02] tracking-[-0.05em] sm:text-5xl">Confirm the facts before generating an unsigned preview.</h1>
           <p className="mt-3 max-w-3xl text-[color:var(--foreground-soft)]">Back makes no API change. Generate calls the preview endpoint once and returns transaction data for inspection only.</p>
         </div>
-        <PipMascot key={acknowledged ? "acknowledged" : "unacknowledged"} pose="attentive" active={acknowledged} size="sm" className="-mr-2 sm:mr-0" />
+        <NiulaiMascot key={acknowledged ? "acknowledged" : "unacknowledged"} pose="attentive" active={acknowledged} size="sm" className="-mr-2 sm:mr-0" />
       </div>
       <div className="border-t border-[var(--border)] bg-[var(--surface-raised)] p-6 sm:p-8">
         <div className="metric-grid grid gap-3">
@@ -374,8 +376,8 @@ export function DemoPreviewReadyPanel({ goal, preview, meta, decision, onStartAn
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
       <Card tone="white" className="overflow-hidden">
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 bg-[var(--surface-strong)] p-6 text-[color:var(--foreground-on-strong)] sm:gap-6 sm:p-10">
-          <div>
+        <div className="relative min-h-[22rem] overflow-hidden bg-[var(--surface-strong)] p-6 text-[color:var(--foreground-on-strong)] sm:p-10 min-[700px]:min-h-[24rem]">
+          <div data-niulai-copy="demo-ready" className="relative z-10 min-[700px]:max-w-[calc(100%_-_13rem)]">
             <div className="flex flex-wrap gap-2">
               <StatusBadge label={expired ? "Preview expired" : "Demo preview ready"} tone={expired ? "warning" : "ready"} />
               {proportional ? <StatusBadge label="Proportional micro-hedge demo" tone="warning" /> : null}
@@ -384,8 +386,8 @@ export function DemoPreviewReadyPanel({ goal, preview, meta, decision, onStartAn
             <p className="mt-4 text-lg font-semibold">No funds moved; no protected position was created</p>
             <p className="mt-2 max-w-3xl text-[color:var(--foreground-on-strong-muted)]">This is a time-limited, unsigned snapshot of the approved plan and wallet requirements.</p>
           </div>
-          <div className="grid size-24 place-items-center rounded-full bg-[var(--white)] sm:size-36">
-            <PipMascot pose={expired ? "safe-stop" : "ready"} surface="light" size="sm" form="full" className="h-24 w-24 sm:h-32 sm:w-36" />
+          <div data-niulai-placement="demo-ready" className="relative z-10 ml-auto mt-5 h-48 w-52 min-[700px]:absolute min-[700px]:bottom-0 min-[700px]:right-2 min-[700px]:mt-0 min-[700px]:h-64 min-[700px]:w-72">
+            <NiulaiMascot pose={expired ? "safe-stop" : "ready"} surface="dark" size="lg" form="full" className="h-full w-full" />
           </div>
         </div>
         <div className="p-6 sm:p-8">
@@ -462,11 +464,11 @@ export function WorkflowErrorPanel({ error, onRetry, onEdit }: { error: Workflow
   const editFirst = ["NO_SUITABLE_CANDIDATE", "GOAL_INCOMPLETE"].includes(error.code);
   return (
     <Card className="mx-auto max-w-3xl p-6 sm:p-10">
-      <div className="flex items-start justify-between gap-4"><span className="grid size-14 shrink-0 place-items-center rounded-full bg-[var(--negative-surface)] text-[color:var(--negative)]"><Warning className="size-7" aria-hidden="true" /></span><PipMascot pose="safe-stop" size="sm" /></div>
+      <div className="flex items-start justify-between gap-4"><span className="grid size-14 shrink-0 place-items-center rounded-full bg-[var(--negative-surface)] text-[color:var(--negative)]"><Warning className="size-7" aria-hidden="true" /></span><NiulaiMascot pose="safe-stop" size="sm" className="h-24 w-28" /></div>
       <p className="mt-5 text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--foreground-soft)]">{error.code.replaceAll("_", " ")}</p>
       <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-[-0.05em]">The protection flow stopped safely.</h1>
       <p className="mt-4 text-[color:var(--foreground-soft)]">{error.message}</p>
-      {details.length ? <div className="mt-5 border-y border-[var(--border)] py-4"><p className="text-sm font-semibold">What the live check found</p><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[color:var(--foreground-soft)]">{details.map((line, index) => <li key={`${index}:${line}`}>{line}</li>)}</ul></div> : null}
+      {details.length ? <div className="mt-5 min-w-0 overflow-hidden border-y border-[var(--border)] py-4"><p className="text-sm font-semibold">What the live check found</p><ul className="mt-2 min-w-0 list-disc space-y-1 pl-5 text-sm text-[color:var(--foreground-soft)]">{details.map((line, index) => <li className="min-w-0 overflow-anywhere" key={`${index}:${line}`}>{line}</li>)}</ul></div> : null}
       {error.requestId ? <p className="overflow-anywhere mt-5 text-xs tabular-nums">Request {error.requestId}</p> : null}
       <div className="mt-7 flex flex-col gap-3 sm:flex-row">{error.retryable && !editFirst ? <Button onClick={onRetry}>Try this step again</Button> : null}<Button variant={editFirst ? "primary" : "secondary"} onClick={onEdit}><PencilSimple aria-hidden="true" />Edit goal constraints</Button></div>
     </Card>

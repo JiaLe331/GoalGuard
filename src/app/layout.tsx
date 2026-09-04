@@ -11,7 +11,7 @@ import "./globals.css";
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "GoalGuard — Protect the purpose behind your ETH",
+  title: "GoalGuard | Protect the purpose behind your ETH",
   description: "Goal-first ETH downside protection with live options, independent review, and a transparent unsigned Base preview.",
 };
 
