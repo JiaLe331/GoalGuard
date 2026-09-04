@@ -6,7 +6,7 @@ import { NiulaiMark, NiulaiMascot, niulaiPoseSources, type NiulaiPose } from "./
 const poses: NiulaiPose[] = ["neutral", "listening", "checking", "explaining", "attentive", "safe-stop", "ready"];
 
 describe("Niu Lai brand artwork", () => {
-  it("routes every approved pose to its own transparent runtime asset", () => {
+  it("routes every approved pose to its full-resolution transparent runtime asset", () => {
     const { container, rerender } = render(<NiulaiMascot pose="neutral" />);
     for (const pose of poses) {
       rerender(<NiulaiMascot pose={pose} />);
@@ -15,7 +15,8 @@ describe("Niu Lai brand artwork", () => {
       expect(mascot).toHaveAttribute("data-niulai-expression");
       expect(mascot).toHaveAttribute("data-niulai-model", "niulai-v1-pose-set");
       expect(mascot?.querySelector("img")).toHaveAttribute("loading", "lazy");
-      expect(mascot?.querySelector("img")?.getAttribute("src")).toContain(encodeURIComponent(niulaiPoseSources[pose]));
+      expect(mascot?.querySelector("img")).toHaveAttribute("src", niulaiPoseSources[pose]);
+      expect(mascot?.querySelector("img")).not.toHaveAttribute("srcset");
       expect(container.querySelector("button, a, [tabindex]")).not.toBeInTheDocument();
     }
   });

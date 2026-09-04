@@ -34,12 +34,6 @@ const mascotSizes: Record<NiulaiSize, string> = {
   lg: "h-44 w-52",
 };
 
-const imageSizes: Record<NiulaiSize, string> = {
-  sm: "96px",
-  md: "144px",
-  lg: "208px",
-};
-
 const markSizes = { sm: "size-5", md: "size-7" } as const;
 const subscribeToHydration = () => () => undefined;
 
@@ -118,7 +112,7 @@ export function NiulaiMascot({ pose, size = "md", form, surface = "light", activ
             src={niulaiPoseSources[pose]}
             alt=""
             fill
-            sizes={imageSizes[size]}
+            unoptimized
             className="object-contain object-top"
             draggable={false}
           />
