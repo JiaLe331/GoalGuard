@@ -1,10 +1,10 @@
 "use client";
 
-import { Check, ShieldCheck } from "@phosphor-icons/react";
+import { Check } from "@phosphor-icons/react";
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "motion/react";
 import type { PointerEvent } from "react";
 
-import { PipMark } from "@/components/brand/pip-mascot";
+import { NiulaiMark } from "@/components/brand/niulai-mascot";
 
 export function ProtectionOrbit() {
   const reduceMotion = useReducedMotion();
@@ -43,7 +43,6 @@ export function ProtectionOrbit() {
       transition={{ duration: reduceMotion ? 0 : 0.42, ease: [0.16, 1, 0.3, 1] }}
     >
       <div className="absolute -bottom-36 -right-24 size-[25rem] rounded-full border-[4.75rem] border-[var(--accent)] sm:-right-8 sm:size-[30rem]" aria-hidden="true" />
-      <div className="absolute right-[12%] top-7 grid size-14 place-items-center rounded-full border border-[color-mix(in_srgb,var(--foreground)_24%,transparent)] bg-[var(--accent)]" aria-hidden="true"><ShieldCheck className="size-7" /></div>
       <svg className="absolute left-6 top-8 h-24 w-40 sm:left-10" viewBox="0 0 170 100" fill="none" aria-hidden="true">
         <path d="M4 72C32 33 59 30 83 57c22 25 51 20 83-28" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         <circle cx="4" cy="72" r="3" fill="currentColor" /><circle cx="166" cy="29" r="3" fill="currentColor" />
@@ -55,7 +54,7 @@ export function ProtectionOrbit() {
             <p className="text-xs font-bold uppercase tracking-[0.1em] text-[color:var(--foreground-muted)]">01 · Purpose attached</p>
             <p className="mt-1 text-lg font-semibold tracking-[-0.03em]">Your goal sets the guardrail</p>
           </div>
-          <PipMark surface="light" />
+          <NiulaiMark surface="light" />
         </div>
         <div className="mt-5 grid grid-cols-3 gap-2">
           {["Cost limit", "Loss limit", "Deadline"].map((label) => <div key={label} className="rounded-xl bg-[var(--surface-muted)] px-3 py-2 text-xs font-semibold">{label}</div>)}

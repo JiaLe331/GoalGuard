@@ -4,7 +4,7 @@ import { AirplaneTilt, ArrowRight, FirstAidKit, GraduationCap, House, Sparkle, t
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-import { PipMascot, type PipPose } from "@/components/brand/pip-mascot";
+import { NiulaiMascot, type NiulaiPose } from "@/components/brand/niulai-mascot";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import type { GoalDraft, GoalType } from "@/lib/contracts";
@@ -35,9 +35,9 @@ export function GoalComposer() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ApiClientError | null>(null);
   const [engaged, setEngaged] = useState(false);
-  const [pipReaction, setPipReaction] = useState(0);
+  const [niulaiReaction, setNiulaiReaction] = useState(0);
 
-  const pipPose: PipPose = loading
+  const niulaiPose: NiulaiPose = loading
     ? "checking"
     : error
       ? "safe-stop"
@@ -109,15 +109,15 @@ export function GoalComposer() {
 
   return (
     <form onSubmit={submit} className="space-y-6" aria-labelledby="goal-heading" aria-busy={loading}>
-      <div className="grid grid-cols-1 items-end gap-1 min-[440px]:grid-cols-[minmax(0,1fr)_5.5rem] min-[440px]:gap-4">
+      <div className="grid grid-cols-1 items-end gap-1 min-[440px]:grid-cols-[minmax(0,1fr)_6.5rem] min-[440px]:gap-4">
         <div>
           <p className="section-eyebrow text-[color:var(--foreground-muted)]">Your protection goal</p>
           <h2 id="goal-heading" className="mt-3 text-[clamp(1.75rem,3vw,2.5rem)] font-semibold leading-[1.05] tracking-[-0.045em] text-[color:var(--foreground)]">What are you protecting?</h2>
           <p className="mt-3 max-w-xl text-sm leading-6 text-[color:var(--foreground-soft)]">Use plain language. You can review every limit before GoalGuard reads live options.</p>
         </div>
-        <div className="relative grid min-h-20 w-24 justify-self-end place-items-end overflow-visible min-[440px]:min-h-24" aria-hidden="true">
+        <div className="relative grid min-h-24 w-28 justify-self-end place-items-end overflow-visible" aria-hidden="true">
           <span className="absolute inset-x-2 bottom-1 h-10 rounded-full bg-[var(--accent-soft)]" />
-          <PipMascot key={`${pipPose}-${pipReaction}`} pose={pipPose} active={loading} size="sm" form="full" className="relative h-24 w-24" />
+          <NiulaiMascot key={`${niulaiPose}-${niulaiReaction}`} pose={niulaiPose} active={loading} size="sm" className="relative h-28 w-28" />
         </div>
       </div>
 
@@ -127,7 +127,7 @@ export function GoalComposer() {
             type="button"
             key={item.value}
             aria-pressed={category === item.value}
-            onClick={() => { setCategory(item.value); setError(null); setPipReaction((value) => value + 1); }}
+            onClick={() => { setCategory(item.value); setError(null); setNiulaiReaction((value) => value + 1); }}
             className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-semibold transition-[background-color,border-color,color,opacity,transform] duration-[var(--duration-press)] active:scale-[0.97] active:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)] ${category === item.value ? "border-[var(--accent)] bg-[var(--accent)] text-[color:var(--accent-foreground)]" : "border-[var(--surface-muted)] bg-[var(--surface-muted)] text-[color:var(--foreground-soft)] hover:border-[var(--border-strong)] hover:text-[color:var(--foreground)]"}`}
           >
             <CategoryIcon className="size-4" weight={category === item.value ? "fill" : "regular"} aria-hidden="true" />{item.label}

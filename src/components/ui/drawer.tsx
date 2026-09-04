@@ -36,9 +36,12 @@ export function Drawer({ open, title, onClose, children, labelledId = "drawer-pa
     <AnimatePresence>
       {open ? (
         <motion.div
-          className="fixed inset-0 z-[100] flex items-end justify-end bg-[var(--scrim)] sm:items-stretch"
+          className="pointer-events-auto fixed inset-0 z-[100] flex items-end justify-end bg-[var(--scrim)] sm:items-stretch"
           role="presentation"
-          initial={false}
+          initial={reduceMotion ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={reduceMotion ? undefined : { opacity: 0 }}
+          transition={{ duration: reduceMotion ? 0 : 0.2, ease: "easeOut" }}
           onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}
         >
           <motion.div
@@ -48,15 +51,16 @@ export function Drawer({ open, title, onClose, children, labelledId = "drawer-pa
             id={labelledId}
             aria-labelledby={`${labelledId}-title`}
             className="max-h-[calc(100dvh-max(1rem,env(safe-area-inset-top)))] min-w-0 w-full max-w-full overflow-x-hidden overflow-y-auto rounded-t-[var(--radius-feature)] border border-[var(--border)] bg-[var(--background)] px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4 shadow-[var(--shadow-float-strong)] sm:h-full sm:max-h-none sm:max-w-2xl sm:rounded-none sm:border-y-0 sm:border-r-0 sm:p-8"
-            initial={reduceMotion ? false : { opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={reduceMotion ? undefined : { opacity: 0, y: 16 }}
-            transition={{ duration: reduceMotion ? 0 : 0.22, ease: [0.22, 1, 0.36, 1] }}
+            style={{ transformOrigin: "right center" }}
+            initial={reduceMotion ? false : { opacity: 0, scale: 0.985 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={reduceMotion ? undefined : { opacity: 0, scale: 0.99 }}
+            transition={{ duration: reduceMotion ? 0 : 0.3, ease: [0.16, 1, 0.3, 1] }}
           >
             <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[var(--border-strong)] sm:hidden" aria-hidden="true" />
-            <div className="mb-6 flex items-center justify-between gap-4 sm:mb-8">
-              <h2 id={`${labelledId}-title`} className="text-2xl font-semibold tracking-[-0.045em] text-[color:var(--foreground)] sm:text-3xl">{title}</h2>
-              <Button ref={closeButton} variant="ghost" className="size-11 px-0" onClick={onClose} aria-label="Close panel"><X className="size-5" aria-hidden="true" /></Button>
+            <div className="sticky top-0 z-20 mb-6 flex min-w-0 items-center justify-between gap-4 bg-[var(--background)] pb-2 sm:mb-8">
+              <h2 id={`${labelledId}-title`} className="min-w-0 text-[1.375rem] font-semibold leading-tight tracking-[-0.045em] text-[color:var(--foreground)] min-[360px]:text-2xl sm:text-3xl">{title}</h2>
+              <Button ref={closeButton} variant="secondary" className="shrink-0 px-3 min-[360px]:px-4" onClick={onClose} aria-label="Close panel"><X className="size-5" aria-hidden="true" /><span className="hidden min-[360px]:inline">Close</span></Button>
             </div>
             {children}
           </motion.div>
