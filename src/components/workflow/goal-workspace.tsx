@@ -21,7 +21,7 @@ import {
   ReadOnlyTradePanel,
   WorkflowErrorPanel,
 } from "@/components/workflow/workflow-panels";
-import type { UpdateGoalRequest } from "@/lib/contracts";
+import type { CouncilRoleProgress, UpdateGoalRequest } from "@/lib/contracts";
 import { ApiClientError, goalGuardApi } from "@/lib/frontend/api-client";
 import {
   clearPreviewRetry,
@@ -54,6 +54,10 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
   const [hydrating, setHydrating] = useState(true);
   const [busy, setBusy] = useState(false);
   const [councilOpen, setCouncilOpen] = useState(false);
+  const [councilProgress, setCouncilProgress] = useState<CouncilRoleProgress[] | null>(null);
+  // Client wall-clock fallback for "how long has the running role been running", used only until
+  // that role's own server-derived startedAt is available.
+  const [reviewStartedAt, setReviewStartedAt] = useState<number | null>(null);
   const focusTarget = useRef<HTMLDivElement>(null);
   const previewWallet = useRef<string | null>(null);
   const previewRequest = useRef<AbortController | null>(null);
@@ -88,6 +92,38 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
   useEffect(() => {
     if (!hydrating) focusTarget.current?.focus({ preventScroll: true });
   }, [hydrating, state.stage]);
+
+  // Polls the real, already-committed per-role gonka_inferences rows (see
+  // /api/council/review/status) while the council review is in flight, so the loading screen can
+  // show live per-role progress instead of one opaque spinner for the whole 3-role sequence.
+  useEffect(() => {
+    if (state.stage !== "reviewing_candidate" || !state.goal || !state.selectedCandidate) return;
+    const goalIdForPoll = state.goal.id;
+    const candidateIdForPoll = state.selectedCandidate.id;
+    let cancelled = false;
+    // Deferred like the hydrate effect above: this keeps the wall-clock capture out of the
+    // effect's synchronous body while still running as soon as the review begins.
+    const startTimer = window.setTimeout(() => { if (!cancelled) setReviewStartedAt(Date.now()); }, 0);
+    async function poll() {
+      try {
+        const response = await goalGuardApi.getCouncilReviewStatus(goalIdForPoll, candidateIdForPoll);
+        if (!cancelled) setCouncilProgress(response.data.roles);
+      } catch {
+        // Best-effort progress display only; the authoritative outcome still comes from the
+        // POST /api/council/review call this is running alongside, so a poll failure here is not
+        // itself a workflow error.
+      }
+    }
+    void poll();
+    const interval = window.setInterval(() => { void poll(); }, 2000);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(startTimer);
+      window.clearInterval(interval);
+      setCouncilProgress(null);
+      setReviewStartedAt(null);
+    };
+  }, [state.stage, state.goal, state.selectedCandidate]);
 
   useEffect(() => {
     if (!["confirming_preview", "generating_preview", "demo_preview_ready"].includes(state.stage) || !previewWallet.current) return;
@@ -188,8 +224,8 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
     if (hydrating) return <Card className="mx-auto max-w-5xl p-6 sm:p-9"><Skeleton className="h-5 w-32" /><Skeleton className="mt-5 h-14 w-3/4" /><div className="mt-8 grid gap-3 sm:grid-cols-3"><Skeleton className="h-28" /><Skeleton className="h-28" /><Skeleton className="h-28" /></div></Card>;
     if (state.error && ["recoverable_error", "terminal_error"].includes(state.stage)) return <WorkflowErrorPanel error={state.error} onRetry={() => { const target = state.error?.returnStage; dispatch({ type: "clear_error" }); if (target === "plan_approved" && state.selectedCandidate) void retryReview(); }} onEdit={() => { if (state.goal) dispatch({ type: "goal_updated", goal: state.goal }); else router.push("/goals/new"); }} />;
     if (state.stage === "confirming_goal" && state.goal) return <GoalConfirmationForm goal={state.goal} busy={busy} fieldErrors={state.error?.fieldErrors ?? {}} onSave={saveGoal} onFind={(value) => void findAndReview(value)} />;
-    if (["searching_candidates", "reviewing_candidate", "generating_preview"].includes(state.stage)) return <ActiveProtectionPanel stage={state.stage as "searching_candidates" | "reviewing_candidate" | "generating_preview"} />;
-    if (["plan_approved", "plan_disputed", "plan_blocked"].includes(state.stage) && state.goal && state.selectedCandidate && state.decision) return <ProtectionPlanPanel goal={state.goal} candidate={state.selectedCandidate} alternatives={state.candidates.filter((candidate) => candidate.id !== state.selectedCandidate?.id)} decision={state.decision} busy={busy} walletStatus={wallet.status === "connected" ? "connected" : wallet.status === "wrong-network" ? "wrong-network" : "other"} suppressMascot={councilOpen} onContinue={() => void beginPreview()} onRefresh={() => void findAndReview(undefined, true)} onOpenCouncil={() => setCouncilOpen(true)} />;
+    if (["searching_candidates", "reviewing_candidate", "generating_preview"].includes(state.stage)) return <ActiveProtectionPanel stage={state.stage as "searching_candidates" | "reviewing_candidate" | "generating_preview"} councilProgress={councilProgress} reviewStartedAt={reviewStartedAt} />;
+    if (["plan_approved", "plan_disputed", "plan_blocked"].includes(state.stage) && state.goal && state.selectedCandidate && state.decision) return <ProtectionPlanPanel goal={state.goal} candidate={state.selectedCandidate} alternatives={state.candidates.filter((candidate) => candidate.id !== state.selectedCandidate?.id)} decision={state.decision} busy={busy} walletStatus={wallet.status === "connected" ? "connected" : wallet.status === "wrong-network" ? "wrong-network" : "other"} suppressMascot={councilOpen} onContinue={() => void beginPreview()} onRefresh={() => void findAndReview(undefined, true)} onRetryReview={() => void retryReview()} onOpenCouncil={() => setCouncilOpen(true)} />;
     if (state.stage === "confirming_preview" && state.goal && state.selectedCandidate && wallet.address) return <PreviewConfirmationPanel goal={state.goal} candidate={state.selectedCandidate} walletAddress={wallet.address} acknowledged={state.previewAcknowledged} physicalSettlementAcknowledged={state.physicalSettlementAcknowledged} busy={busy} onAcknowledged={(acknowledged) => dispatch({ type: "preview_acknowledgment_changed", acknowledged })} onPhysicalSettlementAcknowledged={(acknowledged) => dispatch({ type: "physical_settlement_acknowledgment_changed", acknowledged })} onBack={() => { previewWallet.current = null; dispatch({ type: "preview_confirmation_cancelled" }); }} onGenerate={() => void generatePreview()} />;
     if (state.stage === "demo_preview_ready" && state.goal && state.preview && state.previewMeta && state.decision) return <DemoPreviewReadyPanel goal={state.goal} preview={state.preview} meta={state.previewMeta} decision={state.decision} onStartAnother={startAnother} onFreshPreview={() => dispatch({ type: "preview_invalidated", notice: "The previous preview expired. Confirm a fresh snapshot from the approved plan." })} />;
     if (state.stage === "read_only_trade" && state.goal && state.trade) return <ReadOnlyTradePanel goal={state.goal} trade={state.trade} onStartAnother={startAnother} />;

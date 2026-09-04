@@ -11,9 +11,9 @@ import { Card } from "@/components/ui/card";
 import { Drawer } from "@/components/ui/drawer";
 import { Field } from "@/components/ui/field";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { CouncilCard, MetricCard, ScenarioComparison, UnsignedTransactionCard } from "@/components/workflow/workflow-primitives";
-import { UpdateGoalRequestSchema, type ApiMeta, type CouncilDecision, type Goal, type GoalType, type JsonValue, type PublicProtectionCandidate, type Trade, type TradePreview, type UpdateGoalRequest } from "@/lib/contracts";
-import { formatBaseUnits, formatCountdown, formatDate, formatPercentFromBps, formatUsd, secondsUntil, shortenAddress } from "@/lib/frontend/format";
+import { CouncilCard, CouncilRoleProgressCard, MetricCard, ScenarioComparison, UnsignedTransactionCard } from "@/components/workflow/workflow-primitives";
+import { UpdateGoalRequestSchema, type ApiMeta, type CouncilDecision, type CouncilRoleProgress, type Goal, type GoalType, type JsonValue, type PublicProtectionCandidate, type Trade, type TradePreview, type UpdateGoalRequest } from "@/lib/contracts";
+import { describeCandidateDifference, formatBaseUnits, formatCountdown, formatDate, formatPercentFromBps, formatUsd, secondsUntil, shortenAddress } from "@/lib/frontend/format";
 import type { WorkflowError } from "@/lib/frontend/workflow";
 
 const goalLabels: Record<GoalType, string> = {
@@ -32,6 +32,15 @@ const roleLabels = {
 
 function goalName(goal: Goal) {
   return goal.customGoalLabel ?? goalLabels[goal.goalType];
+}
+
+// A plain-language synthesis built only from figures already shown on this screen (goal amount,
+// coverage, floor, cost, settlement type) -- no new data, no recalculation.
+function whyThisPlan(goal: Goal, candidate: PublicProtectionCandidate) {
+  const settlementNote = candidate.settlementType === "physical"
+    ? `it settles by exchanging your ETH for ${candidate.settlementTokenSymbol} rather than a cash top-up`
+    : "it settles in cash, so you keep your ETH and receive a top-up";
+  return `This plan covers ${formatPercentFromBps(candidate.goalCoverageBps)} of your ${formatUsd(goal.protectedValueUsd)} goal for ${formatUsd(candidate.premiumUsd)}, keeping your estimated floor at ${formatUsd(candidate.estimatedFloorUsd)} even if ETH falls -- ${settlementNote}.`;
 }
 
 function firstError(errors: Record<string, string[]>, key: string) {
@@ -176,13 +185,52 @@ export function GoalConfirmationForm({ goal, busy, fieldErrors, onSave, onFind }
   );
 }
 
-export function ActiveProtectionPanel({ stage }: { stage: "searching_candidates" | "reviewing_candidate" | "generating_preview" }) {
+export function ActiveProtectionPanel({ stage, councilProgress = null, reviewStartedAt = null }: {
+  stage: "searching_candidates" | "reviewing_candidate" | "generating_preview";
+  councilProgress?: CouncilRoleProgress[] | null;
+  reviewStartedAt?: number | null;
+}) {
   const content = stage === "searching_candidates"
-    ? ["Checking live protection", "GoalGuard is reading active ETH put options from Thetanuts and applying your exact limits."]
+    ? ["Checking live protection", "GoalGuard reads active ETH put options from Thetanuts, checking cash-settled options first and only considering physical-settlement options if none qualify."]
     : stage === "reviewing_candidate"
       ? ["Three independent checks", "The Gonka council is reviewing fit, downside risk, and clarity. Deterministic values cannot be changed by the reviewers."]
       : ["Generating unsigned preview", "GoalGuard is revalidating the approved option, wallet readiness, allowance, and exact Base calldata."];
   const niulaiPose: NiulaiPose = stage === "searching_candidates" ? "checking" : stage === "reviewing_candidate" ? "explaining" : "attentive";
+
+  const runningProgress = councilProgress?.find((role) => role.status === "running") ?? null;
+  const runningRole = runningProgress?.role ?? null;
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!runningRole) return;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [runningRole]);
+  const runningStartMs = runningProgress ? (runningProgress.startedAt ? Date.parse(runningProgress.startedAt) : reviewStartedAt) : null;
+  const runningElapsedSeconds = runningStartMs !== null ? Math.max(0, Math.round((now - runningStartMs) / 1000)) : null;
+
+  if (stage === "reviewing_candidate" && councilProgress) {
+    return (
+      <div className="mx-auto max-w-5xl">
+        <div className="relative isolate overflow-hidden rounded-[var(--radius-section)] bg-[var(--surface-dark)] p-7 text-[color:var(--text-on-dark)] sm:p-10">
+          <div className="absolute -bottom-44 -left-32 size-[30rem] rounded-full border-[5rem] border-[var(--accent)] opacity-15" aria-hidden="true" />
+          <div className="relative">
+            <StatusBadge tone="info" label="Live request active" />
+            <h1 className="mt-6 max-w-2xl text-4xl font-semibold leading-[1.02] tracking-[-0.05em] sm:text-5xl">{content[0]}</h1>
+            <p className="mt-4 max-w-xl text-base leading-7 text-[color:var(--text-on-dark-muted)]">{content[1]}</p>
+            <div className="mt-6 flex items-center gap-3 text-sm" role="status">
+              <HourglassHigh className="size-5 animate-pulse motion-reduce:animate-none" aria-hidden="true" />
+              Each role&rsquo;s status below reflects what Gonka has actually returned so far. No simulated percentage.
+            </div>
+          </div>
+        </div>
+        <div className="mt-6 grid gap-4 sm:grid-cols-3">
+          {councilProgress.map((progress) => (
+            <CouncilRoleProgressCard key={progress.role} progress={progress} label={roleLabels[progress.role]} elapsedSeconds={progress.status === "running" ? runningElapsedSeconds : null} />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative isolate mx-auto grid min-h-[34rem] max-w-5xl overflow-hidden rounded-[var(--radius-section)] bg-[var(--surface-dark)] text-[color:var(--text-on-dark)] lg:grid-cols-[1fr_20rem]">
@@ -207,7 +255,7 @@ export function ActiveProtectionPanel({ stage }: { stage: "searching_candidates"
   );
 }
 
-export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, busy, walletStatus, suppressMascot = false, onContinue, onRefresh, onOpenCouncil }: {
+export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, busy, walletStatus, suppressMascot = false, onContinue, onRefresh, onRetryReview, onOpenCouncil }: {
   goal: Goal;
   candidate: PublicProtectionCandidate;
   alternatives: PublicProtectionCandidate[];
@@ -217,6 +265,7 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
   suppressMascot?: boolean;
   onContinue: () => void;
   onRefresh: () => void;
+  onRetryReview: () => void;
   onOpenCouncil: () => void;
 }) {
   const approved = decision.status === "approved";
@@ -235,6 +284,7 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
           </div>
           <h1 className="mt-6 max-w-3xl text-4xl font-semibold leading-[1.02] tracking-[-0.055em] sm:text-6xl">A protection plan for {goalName(goal)}.</h1>
           <p className="mt-4 max-w-2xl text-[color:var(--foreground-soft)]">A live ETH put limits the selected downside through its displayed expiry. It does not guarantee the full goal after that time.</p>
+          <p className="mt-4 max-w-2xl rounded-[var(--radius-card)] bg-[var(--surface-subtle)] p-4 text-sm leading-6 text-[color:var(--foreground-soft)]"><span className="font-semibold text-[color:var(--foreground)]">Why this plan? </span>{whyThisPlan(goal, candidate)}</p>
           <Alert className="mt-4" tone={isPhysical ? "warning" : "info"} title={isPhysical ? "This is asset-delivery protection" : "This is cash protection"}>
             {isPhysical
               ? "No cash-settled option was available, so this plan uses asset-delivery settlement instead. Under the settlement conditions shown below, your covered ETH may be delivered/exchanged, and you would receive a USD-linked settlement asset instead. This is different from a cash payout."
@@ -265,7 +315,7 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
                 <div><dt className="text-xs text-[color:var(--foreground-soft)]">Goal coverage</dt><dd className="mt-1 tabular-nums">{formatPercentFromBps(candidate.goalCoverageBps)}</dd></div>
               </dl>
             </Accordion>
-            {alternatives.length ? <Accordion title={alternatives.length + " other viable option" + (alternatives.length === 1 ? "" : "s")}><div>{alternatives.map((item) => <div key={item.id} className="flex min-h-12 items-center justify-between gap-4 border-t border-[var(--border)] py-3"><span>Ends {formatDate(item.expiry)}</span><span className="font-semibold tabular-nums">{formatUsd(item.premiumUsd)}</span></div>)}</div></Accordion> : null}
+            {alternatives.length ? <Accordion title={alternatives.length + " other viable option" + (alternatives.length === 1 ? "" : "s")}><div>{alternatives.map((item) => <div key={item.id} className="border-t border-[var(--border)] py-3"><div className="flex min-h-6 items-center justify-between gap-4"><span>Ends {formatDate(item.expiry)}</span><span className="font-semibold tabular-nums">{formatUsd(item.premiumUsd)}</span></div><p className="mt-1 text-xs text-[color:var(--foreground-soft)]">{describeCandidateDifference(item, candidate)}</p></div>)}</div></Accordion> : null}
           </div>
         </div>
       </Card>
@@ -277,7 +327,11 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
           <Button className="mt-5 w-full" variant="secondary" onClick={onOpenCouncil}>Open council review</Button>
         </Card>
         {!approved ? <div className={`grid items-center gap-2 ${suppressMascot ? "grid-cols-1" : "grid-cols-[auto_minmax(0,1fr)]"}`}>{suppressMascot ? null : <NiulaiMascot pose="safe-stop" size="sm" />}<Alert tone={decision.status === "disputed" ? "warning" : "error"} title={decision.status === "disputed" ? "Council needs another look" : "This plan cannot proceed"}>{decision.blockedReasons[0] ?? "Open the council review to see the concern before refreshing live options."}</Alert></div> : null}
-        <div className="grid gap-3"><Button onClick={onContinue} disabled={!approved || busy}>{cta}<ArrowRight aria-hidden="true" /></Button><Button variant="ghost" onClick={onRefresh} disabled={busy}>Refresh live options</Button></div>
+        <div className="grid gap-3">
+          <Button onClick={onContinue} disabled={!approved || busy}>{cta}<ArrowRight aria-hidden="true" /></Button>
+          {decision.status === "disputed" ? <Button variant="secondary" onClick={onRetryReview} disabled={busy}>Ask the council to re-review this candidate</Button> : null}
+          <Button variant="ghost" onClick={onRefresh} disabled={busy}>Refresh live options</Button>
+        </div>
       </aside>
     </div>
   );
@@ -291,7 +345,7 @@ export function CouncilDrawer({ decision, open, onClose }: { decision: CouncilDe
         <p className="min-w-0 text-sm leading-6 text-[color:var(--foreground-soft)]">Three Gonka roles independently check plan fit, risk, and clarity. Their request IDs make the review traceable.</p>
       </div>
       <div className="grid gap-4">{decision.reviews.map((review) => <CouncilCard key={review.id} review={review} label={roleLabels[review.role]} />)}</div>
-      <div className="mt-5"><Alert tone={decision.status === "approved" ? "success" : decision.status === "disputed" ? "warning" : "error"} title={"Council result: " + decision.status}>{decision.blockedReasons.length ? decision.blockedReasons.join(" ") : "All " + decision.approvedReviewCount + " checks approved this plan."}</Alert></div>
+      <div className="mt-5"><Alert tone={decision.status === "approved" ? "success" : decision.status === "disputed" ? "warning" : "error"} title={"Council result: " + decision.status}>{decision.status === "approved" ? "All " + decision.approvedReviewCount + " checks approved this plan." : decision.blockedReasons.length ? decision.blockedReasons.join(" ") : decision.approvedReviewCount + " of 3 checks approved this plan; the rest raised concerns."}</Alert></div>
     </Drawer>
   );
 }

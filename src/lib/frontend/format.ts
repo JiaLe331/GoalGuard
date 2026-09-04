@@ -44,3 +44,22 @@ export function formatCountdown(seconds: number) {
   const remainder = seconds % 60;
   return `${minutes}:${remainder.toString().padStart(2, "0")}`;
 }
+
+// Explains why an alternative candidate wasn't selected, on the same three axes rankAndSelect()
+// (src/lib/thetanuts/strategy.ts) tie-breaks on: deadline fit, floor, then premium.
+export function describeCandidateDifference(
+  alternative: { premiumUsd: string; estimatedFloorUsd: string; deadlineGapHours: number },
+  selected: { premiumUsd: string; estimatedFloorUsd: string; deadlineGapHours: number },
+) {
+  const parts: string[] = [];
+  const gapDiff = alternative.deadlineGapHours - selected.deadlineGapHours;
+  if (gapDiff !== 0) parts.push(`expires ${Math.abs(gapDiff)}h ${gapDiff < 0 ? "closer to" : "further past"} your deadline`);
+  const floorDiff = new Decimal(alternative.estimatedFloorUsd).minus(selected.estimatedFloorUsd);
+  if (!floorDiff.isZero()) parts.push(`a ${formatUsd(floorDiff.abs().toString())} ${floorDiff.isNegative() ? "lower" : "higher"} floor`);
+  const premiumDiff = new Decimal(alternative.premiumUsd).minus(selected.premiumUsd);
+  if (!premiumDiff.isZero()) parts.push(`${formatUsd(premiumDiff.abs().toString())} ${premiumDiff.isNegative() ? "cheaper" : "more expensive"}`);
+  if (!parts.length) return "Matches the selected plan on cost, floor, and timing.";
+  const [first, ...rest] = parts;
+  const sentence = rest.length ? `${first}, but ${rest.join(" and ")}` : first!;
+  return sentence.charAt(0).toUpperCase() + sentence.slice(1) + ".";
+}

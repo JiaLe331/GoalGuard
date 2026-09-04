@@ -151,6 +151,19 @@ export class PostgresGoalGuardRepository implements GoalGuardRepository {
     return { decision: decisionFromRows(found[0].decision, reviews), inputHash: found[0].decision.inputHash };
   }
 
+  // Every inference written by one reviewCandidate() call shares the exact same `createdAt`
+  // (a single timestamp captured once before its role loop starts, see council/service.ts) --
+  // so the rows sharing the newest createdAt are exactly this candidate's current/most recent
+  // attempt, and roles that attempt hasn't reached yet correctly have no row at all, rather than
+  // showing a stale row from an earlier attempt.
+  async getCurrentCouncilAttemptInferences(goalId: UUID, candidateId: UUID, ownerSessionHash: string) {
+    const reviewPurposes = ["strategist_review", "risk_auditor_review", "consumer_advocate_review"] as const;
+    const rows = await this.db.select({ inference: gonkaInferences }).from(gonkaInferences).innerJoin(goals, eq(gonkaInferences.goalId, goals.id)).where(and(eq(gonkaInferences.goalId, goalId), eq(gonkaInferences.candidateId, candidateId), eq(goals.ownerSessionHash, ownerSessionHash), inArray(gonkaInferences.purpose, reviewPurposes))).orderBy(desc(gonkaInferences.createdAt));
+    if (!rows[0]) return [];
+    const latestCreatedAt = rows[0].inference.createdAt;
+    return rows.filter((row) => row.inference.createdAt === latestCreatedAt).map((row) => row.inference);
+  }
+
   async createTrade(trade: Trade, expectation: TradeExecutionExpectation, ownerSessionHash: string) {
     return this.db.transaction(async (transaction) => {
       const goalRows = await transaction.select().from(goals).where(and(eq(goals.id, trade.goalId), eq(goals.ownerSessionHash, ownerSessionHash))).for("update").limit(1);

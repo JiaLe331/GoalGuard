@@ -1,9 +1,11 @@
-import { UUIDSchema } from "@/lib/contracts";
+import { z } from "zod";
+import { DecimalStringSchema, GoalTypeSchema, ISODateTimeSchema, UUIDSchema } from "@/lib/contracts";
 
 export const storageKeys = {
   draft: "goalguard:goal-draft",
   activeGoalId: "goalguard:v1:active-goal-id",
   previewRetry: "goalguard:v1:preview-retry",
+  recentGoals: "goalguard:v1:recent-goals",
 } as const;
 
 export function readActiveGoalId() {
@@ -35,3 +37,41 @@ export function readPreviewRetry(): PreviewRetry | null {
 
 export function savePreviewRetry(value: PreviewRetry) { window.localStorage.setItem(storageKeys.previewRetry, JSON.stringify(value)); }
 export function clearPreviewRetry() { window.localStorage.removeItem(storageKeys.previewRetry); }
+
+// A per-browser, best-effort "recent goals" list -- a cached snapshot from goal-creation time,
+// not live status (re-opening a goal always re-hydrates its real current state from the server).
+// This needs no new backend capability: goals are already scoped to this browser's 30-day
+// anonymous session cookie, and GET /api/goals/[goalId] already returns full live state for any
+// goal ID this browser owns -- the only missing piece was a client-side list of IDs to link to.
+const RecentGoalEntrySchema = z.object({
+  id: UUIDSchema,
+  createdAt: ISODateTimeSchema,
+  goalType: GoalTypeSchema,
+  customGoalLabel: z.string().trim().min(1).max(80).nullable(),
+  protectedValueUsd: DecimalStringSchema,
+}).strict();
+
+export type RecentGoalEntry = z.infer<typeof RecentGoalEntrySchema>;
+
+const MAX_RECENT_GOALS = 8;
+
+export function readRecentGoals(): RecentGoalEntry[] {
+  const raw = window.localStorage.getItem(storageKeys.recentGoals);
+  if (!raw) return [];
+  try {
+    const value = JSON.parse(raw) as unknown;
+    if (!Array.isArray(value)) return [];
+    return value.flatMap((item) => {
+      const parsed = RecentGoalEntrySchema.safeParse(item);
+      return parsed.success ? [parsed.data] : [];
+    });
+  } catch {
+    return [];
+  }
+}
+
+export function saveRecentGoal(entry: RecentGoalEntry) {
+  const deduped = readRecentGoals().filter((item) => item.id !== entry.id);
+  const updated = [entry, ...deduped].slice(0, MAX_RECENT_GOALS);
+  window.localStorage.setItem(storageKeys.recentGoals, JSON.stringify(updated));
+}

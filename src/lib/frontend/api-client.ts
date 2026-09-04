@@ -3,6 +3,7 @@ import type { ZodType } from "zod";
 import {
   ApiErrorResponseSchema,
   GenerateCandidatesResponseSchema,
+  GetCouncilReviewStatusResponseSchema,
   GetGoalResponseSchema,
   type JsonValue,
   ParseGoalResponseSchema,
@@ -109,6 +110,8 @@ export const goalGuardApi = {
     post<ReturnType<typeof GenerateCandidatesResponseSchema.parse>>("/api/protection/candidates", body, GenerateCandidatesResponseSchema, undefined, signal),
   reviewCandidate: (body: ReviewCandidateRequest, signal?: AbortSignal) =>
     post<ReturnType<typeof ReviewCandidateResponseSchema.parse>>("/api/council/review", body, ReviewCandidateResponseSchema, undefined, signal),
+  getCouncilReviewStatus: (goalId: string, candidateId: string, signal?: AbortSignal) =>
+    requestGoalGuard<ReturnType<typeof GetCouncilReviewStatusResponseSchema.parse>>(`/api/council/review/status?goalId=${encodeURIComponent(goalId)}&candidateId=${encodeURIComponent(candidateId)}`, { schema: GetCouncilReviewStatusResponseSchema, signal }),
   previewTrade: (body: PreviewTradeRequest, idempotencyKey: string, signal?: AbortSignal) =>
     post<ReturnType<typeof PreviewTradeResponseSchema.parse>>("/api/trades/preview", body, PreviewTradeResponseSchema, { "Idempotency-Key": idempotencyKey }, signal),
 };

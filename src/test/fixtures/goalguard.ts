@@ -128,6 +128,7 @@ export const fixtureDisputedDecision: CouncilDecision = {
   status: "disputed",
   approvedReviewCount: 2,
   uncertainReviewCount: 1,
+  blockedReasons: ["The deadline gap needs clearer disclosure."],
   reviews: fixtureDecision.reviews.map((item, index) => index === 2 ? { ...item, verdict: "uncertain" as const, concerns: ["The deadline gap needs clearer disclosure."] } : item),
 };
 

@@ -2,7 +2,8 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { fixtureBlockedDecision, fixtureDecision, fixtureGoal, fixturePublicCandidate, fixturePublicPhysicalCandidate, fixtureTrade, previewTradeResponse } from "@/test/fixtures/goalguard";
+import type { CouncilRoleProgress } from "@/lib/contracts";
+import { fixtureBlockedDecision, fixtureDecision, fixtureDisputedDecision, fixtureGoal, fixturePublicCandidate, fixturePublicPhysicalCandidate, fixtureTrade, previewTradeResponse } from "@/test/fixtures/goalguard";
 import { ActiveProtectionPanel, CouncilDrawer, DemoPreviewReadyPanel, GoalConfirmationForm, PreviewConfirmationPanel, ProtectionPlanPanel, ReadOnlyTradePanel, WorkflowErrorPanel } from "./workflow-panels";
 
 describe("workflow panels", () => {
@@ -13,6 +14,27 @@ describe("workflow panels", () => {
     expect(screen.getByRole("heading", { name: "Consumer Advocate" })).toBeInTheDocument();
     expect(screen.getByText(/gonka-request-1/i)).toBeInTheDocument();
     expect(container.querySelectorAll('[data-niulai-pose="explaining"]')).toHaveLength(1);
+  });
+
+  it("falls back to the static provenance list when no live council progress is available yet", () => {
+    render(<ActiveProtectionPanel stage="reviewing_candidate" />);
+    expect(screen.getByRole("list", { name: /live request provenance/i })).toBeInTheDocument();
+  });
+
+  it("progressively reveals each council role's real status instead of one opaque spinner", () => {
+    const roles: CouncilRoleProgress[] = [
+      { role: "strategist", status: "succeeded", model: "deepseek-ai/DeepSeek-V4-Flash-0731", requestId: "req-1", startedAt: null, completedAt: "2026-08-31T12:00:20.000Z", latencyMs: 20000, verdict: "approve", summary: "Fits the goal.", concerns: [], errorMessage: null },
+      { role: "risk_auditor", status: "running", model: null, requestId: null, startedAt: "2026-08-31T12:00:20.000Z", completedAt: null, latencyMs: null, verdict: null, summary: null, concerns: [], errorMessage: null },
+      { role: "consumer_advocate", status: "waiting", model: null, requestId: null, startedAt: null, completedAt: null, latencyMs: null, verdict: null, summary: null, concerns: [], errorMessage: null },
+    ];
+    render(<ActiveProtectionPanel stage="reviewing_candidate" councilProgress={roles} reviewStartedAt={Date.now()} />);
+    expect(screen.getByRole("heading", { name: "Strategist" })).toBeInTheDocument();
+    expect(screen.getByText("Fits the goal.")).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Risk Auditor" })).toBeInTheDocument();
+    expect(screen.getByText(/live request to gonka in progress/i)).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Consumer Advocate" })).toBeInTheDocument();
+    expect(screen.getByText(/not started yet/i)).toBeVisible();
+    expect(screen.queryByRole("list", { name: /live request provenance/i })).not.toBeInTheDocument();
   });
 
   it("maps active backend stages to distinct Niu Lai poses", () => {
@@ -38,7 +60,7 @@ describe("workflow panels", () => {
   });
 
   it("keeps approved and read-only financial surfaces mascot-free", () => {
-    const callbacks = { onContinue: vi.fn(), onRefresh: vi.fn(), onOpenCouncil: vi.fn() };
+    const callbacks = { onContinue: vi.fn(), onRefresh: vi.fn(), onRetryReview: vi.fn(), onOpenCouncil: vi.fn() };
     const { container, rerender } = render(<ProtectionPlanPanel goal={fixtureGoal} candidate={fixturePublicCandidate} alternatives={[]} decision={fixtureDecision} busy={false} walletStatus="other" {...callbacks} />);
     expect(container.querySelector("[data-niulai-pose]")).not.toBeInTheDocument();
     rerender(<ReadOnlyTradePanel goal={fixtureGoal} trade={fixtureTrade} onStartAnother={vi.fn()} />);
@@ -46,7 +68,7 @@ describe("workflow panels", () => {
   });
 
   it("uses safe-stop Niu Lai for blocked plans and workflow errors", () => {
-    const callbacks = { onContinue: vi.fn(), onRefresh: vi.fn(), onOpenCouncil: vi.fn() };
+    const callbacks = { onContinue: vi.fn(), onRefresh: vi.fn(), onRetryReview: vi.fn(), onOpenCouncil: vi.fn() };
     const { container, rerender } = render(<ProtectionPlanPanel goal={fixtureGoal} candidate={fixturePublicCandidate} alternatives={[]} decision={fixtureBlockedDecision} busy={false} walletStatus="other" {...callbacks} />);
     expect(container.querySelectorAll('[data-niulai-pose="safe-stop"]')).toHaveLength(1);
     rerender(<WorkflowErrorPanel error={{ code: "NO_SUITABLE_CANDIDATE", message: "No candidate matched.", retryable: true, fieldErrors: {}, details: null, requestId: null, returnStage: "confirming_goal" }} onRetry={vi.fn()} onEdit={vi.fn()} />);
@@ -54,7 +76,7 @@ describe("workflow panels", () => {
   });
 
   it("gives the council drawer mascot precedence over an underlying blocked plan", () => {
-    const callbacks = { onContinue: vi.fn(), onRefresh: vi.fn(), onOpenCouncil: vi.fn() };
+    const callbacks = { onContinue: vi.fn(), onRefresh: vi.fn(), onRetryReview: vi.fn(), onOpenCouncil: vi.fn() };
     const { container } = render(<><ProtectionPlanPanel goal={fixtureGoal} candidate={fixturePublicCandidate} alternatives={[]} decision={fixtureBlockedDecision} busy={false} walletStatus="other" suppressMascot {...callbacks} /><CouncilDrawer decision={fixtureBlockedDecision} open onClose={vi.fn()} /></>);
     expect(container.querySelectorAll("[data-niulai-pose]")).toHaveLength(1);
     expect(container.querySelector('[data-niulai-pose="explaining"]')).toBeInTheDocument();
@@ -93,14 +115,40 @@ describe("workflow panels", () => {
     expect(onGenerate).toHaveBeenCalledOnce();
   });
 
+  it("synthesizes a plain-language 'why this plan' summary from figures already on screen", () => {
+    const callbacks = { onContinue: vi.fn(), onRefresh: vi.fn(), onRetryReview: vi.fn(), onOpenCouncil: vi.fn() };
+    render(<ProtectionPlanPanel goal={fixtureGoal} candidate={fixturePublicCandidate} alternatives={[]} decision={fixtureDecision} busy={false} walletStatus="other" {...callbacks} />);
+    expect(screen.getByText(/why this plan\?/i)).toBeVisible();
+    expect(screen.getByText(/it settles in cash/i)).toBeVisible();
+  });
+
   it("labels cash and physical protection plans distinctly", () => {
-    const callbacks = { onContinue: vi.fn(), onRefresh: vi.fn(), onOpenCouncil: vi.fn() };
+    const callbacks = { onContinue: vi.fn(), onRefresh: vi.fn(), onRetryReview: vi.fn(), onOpenCouncil: vi.fn() };
     const { rerender } = render(<ProtectionPlanPanel goal={fixtureGoal} candidate={fixturePublicCandidate} alternatives={[]} decision={fixtureDecision} busy={false} walletStatus="other" {...callbacks} />);
     expect(screen.getByText("Cash Protection")).toBeVisible();
     expect(screen.queryByText("Asset-Delivery Protection")).not.toBeInTheDocument();
     rerender(<ProtectionPlanPanel goal={fixtureGoal} candidate={fixturePublicPhysicalCandidate} alternatives={[]} decision={fixtureDecision} busy={false} walletStatus="other" {...callbacks} />);
     expect(screen.getByText("Asset-Delivery Protection")).toBeVisible();
     expect(screen.queryByText("Cash Protection")).not.toBeInTheDocument();
+  });
+
+  it("shows the real disputed concern and a re-review CTA distinct from refreshing live options", async () => {
+    const user = userEvent.setup();
+    const onRetryReview = vi.fn();
+    render(<ProtectionPlanPanel goal={fixtureGoal} candidate={fixturePublicCandidate} alternatives={[]} decision={fixtureDisputedDecision} busy={false} walletStatus="other" onContinue={vi.fn()} onRefresh={vi.fn()} onRetryReview={onRetryReview} onOpenCouncil={vi.fn()} />);
+    expect(screen.getByText("The deadline gap needs clearer disclosure.")).toBeVisible();
+    const retryButton = screen.getByRole("button", { name: /ask the council to re-review/i });
+    await user.click(retryButton);
+    expect(onRetryReview).toHaveBeenCalledOnce();
+    expect(screen.getByRole("button", { name: /refresh live options/i })).toBeVisible();
+  });
+
+  it("does not offer a re-review CTA for approved or blocked plans", () => {
+    const callbacks = { onContinue: vi.fn(), onRefresh: vi.fn(), onRetryReview: vi.fn(), onOpenCouncil: vi.fn() };
+    const { rerender } = render(<ProtectionPlanPanel goal={fixtureGoal} candidate={fixturePublicCandidate} alternatives={[]} decision={fixtureDecision} busy={false} walletStatus="other" {...callbacks} />);
+    expect(screen.queryByRole("button", { name: /re-review/i })).not.toBeInTheDocument();
+    rerender(<ProtectionPlanPanel goal={fixtureGoal} candidate={fixturePublicCandidate} alternatives={[]} decision={fixtureBlockedDecision} busy={false} walletStatus="other" {...callbacks} />);
+    expect(screen.queryByRole("button", { name: /re-review/i })).not.toBeInTheDocument();
   });
 
   it("renders wallet-readiness balances using the candidate's actual settlement-token decimals, not a USDC-or-18 guess", () => {

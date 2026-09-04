@@ -1,11 +1,12 @@
 "use client";
 
-import { Check, CheckCircle, Copy, Question, ShieldCheck, XCircle } from "@phosphor-icons/react";
+import { Check, CheckCircle, Copy, HourglassHigh, Question, ShieldCheck, XCircle } from "@phosphor-icons/react";
+import Decimal from "decimal.js";
 import { motion, useReducedMotion } from "motion/react";
 import { useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
-import type { CouncilReview, ScenarioResult, SettlementType } from "@/lib/contracts";
+import type { CouncilReview, CouncilRoleProgress, ScenarioResult, SettlementType } from "@/lib/contracts";
 import { formatUsd, shortenAddress } from "@/lib/frontend/format";
 
 // A pure display-labeling comparison, not a financial calculation: it only compares two
@@ -87,6 +88,19 @@ export function MetricCard({ label, value, hint, tone = "default" }: { label: st
   );
 }
 
+// Derives the ETH price move a scenario represents purely from already-returned settlement
+// prices (down/up are fixed moves off the flat/current price -- see scenario() in
+// src/lib/thetanuts/strategy.ts) -- arithmetic on real numbers, not an invented label.
+function scenarioMoveLabel(scenarios: ScenarioResult[], key: ScenarioResult["key"]) {
+  if (key === "custom") return null;
+  if (key === "flat") return "0%";
+  const flat = scenarios.find((item) => item.key === "flat");
+  const current = scenarios.find((item) => item.key === key);
+  if (!flat || !current) return null;
+  const movePct = new Decimal(current.settlementPriceUsd).div(flat.settlementPriceUsd).minus(1).times(100).toDecimalPlaces(0);
+  return `${movePct.isPositive() ? "+" : ""}${movePct.toString()}%`;
+}
+
 export function ScenarioComparison({ scenarios, settlementType, strikeUsd }: { scenarios: ScenarioResult[]; settlementType: SettlementType; strikeUsd: string }) {
   const reducedMotion = useReducedMotion();
   const values = scenarios.map((scenario) => Number(scenario.netProtectedValueUsd));
@@ -95,15 +109,18 @@ export function ScenarioComparison({ scenarios, settlementType, strikeUsd }: { s
   return (
     <div className="min-w-0" role="list" aria-label="Estimated value after protection by market scenario">
       <div className="space-y-5">
-        {scenarios.map((scenario) => (
+        {scenarios.map((scenario) => {
+          const moveLabel = scenarioMoveLabel(scenarios, scenario.key);
+          return (
           <div key={scenario.key} role="listitem" className="scenario-row grid min-w-0 gap-2">
-            <span className="text-sm text-[color:var(--foreground-soft)]">{labels[scenario.key]}</span>
+            <span className="text-sm text-[color:var(--foreground-soft)]">{labels[scenario.key]}{moveLabel ? ` (ETH ${moveLabel})` : ""}</span>
             <div className="h-3 overflow-hidden rounded-full bg-[var(--scenario-track)]" aria-hidden="true"><motion.div className="h-full min-w-1 origin-left rounded-full bg-[var(--accent)]" initial={reducedMotion ? false : { scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: reducedMotion ? 0 : 0.42, ease: [0.16, 1, 0.3, 1] }} style={{ width: Math.max(4, Math.min(100, (Number(scenario.netProtectedValueUsd) / max) * 100)) + "%" }} /></div>
             <span className="text-left text-sm font-semibold tabular-nums scenario-value">{formatUsd(scenario.netProtectedValueUsd)}</span>
             <span className="text-xs text-[color:var(--foreground-soft)]">{assetCompositionLabel(settlementType, strikeUsd, scenario.settlementPriceUsd)}</span>
             <span className="sr-only">Settlement price {formatUsd(scenario.settlementPriceUsd)}. Net protected value {formatUsd(scenario.netProtectedValueUsd)}.</span>
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -126,6 +143,69 @@ export function CouncilCard({ review, label }: { review: CouncilReview; label: s
         <div className="mt-2 flex items-center gap-2"><code className="min-w-0 flex-1 truncate text-xs tabular-nums">{review.requestId}</code><Button variant="ghost" className="px-3" aria-label={"Copy " + label + " Gonka request ID"} onClick={async () => { await navigator.clipboard.writeText(review.requestId); setCopied(true); window.setTimeout(() => setCopied(false), 1500); }}><Copy aria-hidden="true" />{copied ? "Copied" : "Copy"}</Button></div>
       </div>
       {review.requiredDisclosures.length ? <ul className="mt-4 space-y-1 text-xs leading-5 text-[color:var(--foreground-soft)]">{review.requiredDisclosures.map((item) => <li key={item}>Disclosure: {item}</li>)}</ul> : null}
+    </article>
+  );
+}
+
+// A truthful, real-time view of one council role while reviewCandidate() may still be running.
+// Unlike CouncilCard (which requires a fully-formed CouncilReview), this renders "waiting" and
+// "running" states backed only by real signals -- an actual gonka_inferences row's presence/
+// absence and a real elapsed-second count -- never an invented completion percentage.
+export function CouncilRoleProgressCard({ progress, label, elapsedSeconds }: { progress: CouncilRoleProgress; label: string; elapsedSeconds: number | null }) {
+  const [copied, setCopied] = useState(false);
+  if (progress.status === "waiting") {
+    return (
+      <article className="min-w-0 rounded-[var(--radius-card)] border-l-4 border-[var(--border)] bg-[var(--surface-subtle)] p-5 opacity-60 sm:p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--foreground-soft)]">Waiting</p><h3 className="mt-1 text-2xl font-semibold tracking-[-0.04em]">{label}</h3></div>
+          <HourglassHigh className="size-6 text-[color:var(--foreground-soft)]" aria-hidden="true" />
+        </div>
+        <p className="mt-4 text-sm leading-6 text-[color:var(--foreground-soft)]">Not started yet -- runs after the role ahead of it.</p>
+      </article>
+    );
+  }
+  if (progress.status === "running") {
+    return (
+      <article className="min-w-0 rounded-[var(--radius-card)] border-l-4 bg-[var(--surface-subtle)] p-5 sm:p-6" style={{ borderColor: "var(--accent)" }}>
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-[0.12em]">Running</p><h3 className="mt-1 text-2xl font-semibold tracking-[-0.04em]">{label}</h3></div>
+          <HourglassHigh className="size-6 animate-pulse motion-reduce:animate-none" style={{ color: "var(--accent)" }} aria-hidden="true" />
+        </div>
+        <p className="mt-4 text-sm leading-6 text-[color:var(--foreground-soft)]" role="status" aria-live="polite">Live request to Gonka in progress{elapsedSeconds !== null ? ` — ${elapsedSeconds}s so far` : ""}.</p>
+      </article>
+    );
+  }
+  if (progress.status === "failed") {
+    return (
+      <article className="min-w-0 rounded-[var(--radius-card)] border-l-4 bg-[var(--surface-subtle)] p-5 sm:p-6" style={{ borderColor: "var(--negative)" }}>
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-[0.12em]">Failed</p><h3 className="mt-1 text-2xl font-semibold tracking-[-0.04em]">{label}</h3></div>
+          <XCircle className="size-6" style={{ color: "var(--negative)" }} aria-hidden="true" />
+        </div>
+        <p className="mt-4 text-sm leading-6 text-[color:var(--foreground-soft)]">{progress.errorMessage ?? "This role's request did not complete."}</p>
+      </article>
+    );
+  }
+  const statusColor = progress.verdict === "approve" ? "var(--positive)" : progress.verdict === "uncertain" ? "var(--accent)" : "var(--negative)";
+  const VerdictIcon = progress.verdict === "approve" ? CheckCircle : progress.verdict === "uncertain" ? Question : XCircle;
+  return (
+    <article className="min-w-0 rounded-[var(--radius-card)] border-l-4 bg-[var(--surface-subtle)] p-5 sm:p-6" style={{ borderColor: statusColor }}>
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-[0.12em]">{progress.verdict ?? "done"}</p><h3 className="mt-1 text-2xl font-semibold tracking-[-0.04em]">{label}</h3></div>
+        <VerdictIcon className="size-6" style={{ color: statusColor }} weight={progress.verdict === "approve" ? "fill" : "regular"} aria-hidden="true" />
+      </div>
+      {progress.summary ? <p className="mt-4 text-sm leading-6 text-[color:var(--foreground-soft)]">{progress.summary}</p> : null}
+      <div className="mt-5 border-t border-[var(--border)] pt-4">
+        <p className="text-xs text-[color:var(--foreground-soft)]">Model · {progress.model}{progress.latencyMs !== null ? ` · completed in ${(progress.latencyMs / 1000).toFixed(1)}s` : ""}</p>
+        {progress.requestId ? (
+          <div className="mt-2 flex items-center gap-2">
+            <code className="min-w-0 flex-1 truncate text-xs tabular-nums">{progress.requestId}</code>
+            <Button variant="ghost" className="px-3" aria-label={"Copy " + label + " Gonka request ID"} onClick={async () => { await navigator.clipboard.writeText(progress.requestId!); setCopied(true); window.setTimeout(() => setCopied(false), 1500); }}>
+              <Copy aria-hidden="true" />{copied ? "Copied" : "Copy"}
+            </Button>
+          </div>
+        ) : null}
+      </div>
     </article>
   );
 }

@@ -9,7 +9,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import type { GoalDraft, GoalType } from "@/lib/contracts";
 import { ApiClientError, goalGuardApi } from "@/lib/frontend/api-client";
-import { saveActiveGoalId, storageKeys } from "@/lib/frontend/storage";
+import { saveActiveGoalId, saveRecentGoal, storageKeys } from "@/lib/frontend/storage";
 
 const categories: ReadonlyArray<{ label: string; value: GoalType; icon: Icon }> = [
   { label: "Rent", value: "rent", icon: House },
@@ -92,6 +92,13 @@ export function GoalComposer() {
       }, controller.signal);
       if (response.data.goal) {
         saveActiveGoalId(response.data.goal.id);
+        saveRecentGoal({
+          id: response.data.goal.id,
+          createdAt: response.data.goal.createdAt,
+          goalType: response.data.goal.goalType,
+          customGoalLabel: response.data.goal.customGoalLabel,
+          protectedValueUsd: response.data.goal.protectedValueUsd,
+        });
         window.localStorage.removeItem(storageKeys.draft);
         router.push(`/goals/${response.data.goal.id}`);
         return;
