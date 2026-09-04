@@ -14,7 +14,7 @@ import {
 describe("Thetanuts unit conversions", () => {
   it("uses the SDK's 8-decimal price and 6-decimal put contract units exactly", () => {
     expect(usdFromPriceBaseUnits(300_000_000_000n).toFixed()).toBe("3000");
-    expect(underlyingFromContractBaseUnits(400_000n).toFixed()).toBe("0.4");
+    expect(underlyingFromContractBaseUnits(400_000n, 6).toFixed()).toBe("0.4");
     expect(contractsForPremium(3_000_000n, 750_000_000n)).toBe(400_000n);
     expect(premiumForContracts(400_000n, 750_000_000n)).toBe(3_000_000n);
     expect(putCollateralForContracts(300_000_000_000n, 400_000n)).toBe(1_200_000_000n);
@@ -24,6 +24,13 @@ describe("Thetanuts unit conversions", () => {
     expect(premiumForContracts(1n, 1n)).toBe(1n);
     expect(decimalToBaseUnits(new Decimal("1.2345678"), 6)).toBe(1_234_567n);
     expect(decimalFromBaseUnits(1_234_567n, 6).toFixed()).toBe("1.234567");
+  });
+
+  it("resolves contract/collateral quantities using the caller's supplied decimals, not a fixed assumption", () => {
+    // A collateral token with 18 decimals must produce a completely different
+    // decimal value from the same raw base-unit integer than a 6-decimal token would.
+    expect(underlyingFromContractBaseUnits(400_000n, 18).toFixed()).toBe("0.0000000000004");
+    expect(underlyingFromContractBaseUnits(400_000_000_000_000_000n, 18).toFixed()).toBe("0.4");
   });
 
   it("rejects unsafe numeric, exponent, NaN, and negative inputs", () => {
