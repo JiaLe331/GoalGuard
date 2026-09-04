@@ -7,8 +7,28 @@ export type GonkaSmokeResult = { status: "unconfigured"; model: null; requestId:
 export class GonkaCallError extends Error { constructor(message: string, readonly requestId: string | null = null, readonly causeValue?: unknown) { super(message); } }
 export interface GonkaJsonResult<T> { data: T; requestId: string; model: string; raw: unknown; latencyMs: number; }
 
+/**
+ * Some Gonka-hosted reasoning models (e.g. MiniMax-M2.7) always prepend a visible
+ * <think>...</think> block before the actual JSON answer, even under response_format:
+ * json_object -- so the raw content is not valid JSON on its own. Strip any such block, and
+ * fall back to the outermost {...} span, before attempting to parse. A no-op for content that
+ * is already plain JSON.
+ */
+function extractJsonContent(content: string): unknown {
+  const withoutThinking = content.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+  try { return JSON.parse(withoutThinking); } catch { /* fall through */ }
+  const start = withoutThinking.indexOf("{"); const end = withoutThinking.lastIndexOf("}");
+  if (start === -1 || end === -1 || end <= start) return null;
+  try { return JSON.parse(withoutThinking.slice(start, end + 1)); } catch { return null; }
+}
+
 export async function callGonkaJson<T>({ apiKey, baseUrl, model, requestIdHeader, system, input, schema }: { apiKey: string; baseUrl: string; model: string; requestIdHeader: string; system: string; input: unknown; schema: ZodType<T>; }): Promise<GonkaJsonResult<T>> {
-  const client = new OpenAI({ apiKey, baseURL: baseUrl, timeout: 25_000, maxRetries: 1 });
+  // Council reviews send a much larger prompt (full candidate JSON) than the single-field goal
+  // parse this timeout also covers. Observed live latencies for this prompt size have ranged from
+  // ~20s to 120s+ per attempt independent of concurrency (i.e. this is Gonka-side generation time
+  // for a larger prompt, not contention) -- sized generously so a genuinely slow-but-successful
+  // response is not cut off.
+  const client = new OpenAI({ apiKey, baseURL: baseUrl, timeout: 120_000, maxRetries: 1 });
   const started = Date.now();
   let repair: string | null = null;
   let lastRequestId: string | null = null;
@@ -22,9 +42,9 @@ export async function callGonkaJson<T>({ apiKey, baseUrl, model, requestIdHeader
       if (!lastRequestId) throw new GonkaCallError("Gonka response did not include a request ID.");
       const content = result.data.choices[0]?.message.content;
       if (!content) throw new GonkaCallError("Gonka returned an empty structured response.", lastRequestId);
-      let json: unknown;
-      try { json = JSON.parse(content); } catch { json = null; }
+      const json = extractJsonContent(content);
       const parsed = schema.safeParse(json);
+      if (process.env.GOALGUARD_DEBUG_GONKA) console.error("[gonka-debug]", { attempt, model, contentLength: content.length, contentPreview: content.slice(0, 80), extracted: json, parseSuccess: parsed.success, parseErrors: parsed.success ? null : parsed.error.issues });
       if (parsed.success) return { data: parsed.data, requestId: lastRequestId, model: result.data.model || model, raw: json, latencyMs: Date.now() - started };
       repair = "Your previous output did not match the required JSON contract. Return only a corrected JSON object with no prose or markdown.";
     } catch (error) {

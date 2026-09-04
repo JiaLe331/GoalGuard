@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { publicCandidate } from "@/lib/contracts";
 import type { PostgresGoalGuardRepository } from "@/lib/db/repository";
 import { hashJson } from "@/lib/domain/hash";
-import { fixtureCandidate, fixtureDecision, fixtureReadyGoal } from "@/test/fixtures/goalguard";
+import { fixtureCandidate, fixtureDecision, fixturePhysicalCandidate, fixtureReadyGoal } from "@/test/fixtures/goalguard";
 
 const mocks = vi.hoisted(() => ({ callGonkaJson: vi.fn() }));
 vi.mock("@/lib/gonka/client", async (importOriginal) => ({ ...(await importOriginal<typeof import("@/lib/gonka/client")>()), callGonkaJson: mocks.callGonkaJson }));
@@ -36,6 +36,23 @@ describe("Gonka council service", () => {
     expect(new Set(result.reviews.map(({ model }) => model)).size).toBe(2);
     expect(repo.saveInference).toHaveBeenCalledTimes(3);
     expect(repo.saveDecision).toHaveBeenCalledOnce();
+  });
+
+  it("deterministically appends a physical-settlement disclosure to every review, even when the model omits one", async () => {
+    const repo = repository();
+    mocks.callGonkaJson.mockImplementation(async ({ input, model }) => approve((input as { role: string }).role, model));
+    const physicalCandidateForGoal = { ...fixturePhysicalCandidate, goalId: fixtureReadyGoal.id };
+    const result = await reviewCandidate(fixtureReadyGoal, physicalCandidateForGoal, "a".repeat(64), false, repo);
+    const expectedDisclosure = `This candidate settles physically: your covered ETH may be delivered/exchanged for ${physicalCandidateForGoal.settlementTokenSymbol} rather than a cash payment.`;
+    expect(result.reviews).toHaveLength(3);
+    expect(result.reviews.every((review) => review.requiredDisclosures.includes(expectedDisclosure))).toBe(true);
+  });
+
+  it("never adds a physical-settlement disclosure to a cash-settled candidate's reviews", async () => {
+    const repo = repository();
+    mocks.callGonkaJson.mockImplementation(async ({ input, model }) => approve((input as { role: string }).role, model));
+    const result = await reviewCandidate(fixtureReadyGoal, fixtureCandidate, "a".repeat(64), false, repo);
+    expect(result.reviews.every((review) => review.requiredDisclosures.every((disclosure) => !disclosure.startsWith("This candidate settles physically")))).toBe(true);
   });
 
   it("returns a matching cached decision without calling Gonka", async () => {
