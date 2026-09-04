@@ -121,8 +121,6 @@ export function NiulaiMascot({ pose, size = "md", form, surface = "light", activ
             sizes={imageSizes[size]}
             className="object-contain object-top"
             draggable={false}
-            loading="eager"
-            unoptimized
           />
         </span>
       </motion.span>

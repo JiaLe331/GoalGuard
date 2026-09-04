@@ -14,7 +14,8 @@ describe("Niu Lai brand artwork", () => {
       expect(mascot).toHaveAttribute("data-niulai-pose-source", niulaiPoseSources[pose]);
       expect(mascot).toHaveAttribute("data-niulai-expression");
       expect(mascot).toHaveAttribute("data-niulai-model", "niulai-v1-pose-set");
-      expect(mascot?.querySelector("img")).toHaveAttribute("src", niulaiPoseSources[pose]);
+      expect(mascot?.querySelector("img")).toHaveAttribute("loading", "lazy");
+      expect(mascot?.querySelector("img")?.getAttribute("src")).toContain(encodeURIComponent(niulaiPoseSources[pose]));
       expect(container.querySelector("button, a, [tabindex]")).not.toBeInTheDocument();
     }
   });

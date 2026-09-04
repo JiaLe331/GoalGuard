@@ -10,12 +10,12 @@
   },
   "purposeRingSide": "character-left",
   "assets": {
-    "neutral": { "file": "poses/niulai-v1-pose-neutral.png", "width": 640, "height": 800, "alpha": true, "sha256": "54f206f6960592475e1614439091d2c5ff23216c6e6d8061ca3e46bfc6f09a22" },
-    "listening": { "file": "poses/niulai-v1-pose-listening.png", "width": 653, "height": 800, "alpha": true, "sha256": "f29f878843c9882aa08dcda0eae1ba8eb878904d064f33cfcc7c782682ad8ef8" },
-    "checking": { "file": "poses/niulai-v1-pose-checking.png", "width": 680, "height": 800, "alpha": true, "sha256": "6010231e90b0a86a0456663a1fdf60372e10565577b29c3a16358fee6d54135f" },
-    "explaining": { "file": "poses/niulai-v1-pose-explaining.png", "width": 751, "height": 800, "alpha": true, "sha256": "1b589373d8c01afebb7fed6c43bdff2aa1cb39a165e7427ebeb8852d409dae51" },
-    "attentive": { "file": "poses/niulai-v1-pose-attentive.png", "width": 706, "height": 800, "alpha": true, "sha256": "3f9e80227d0b9813f5f888e2d7465e4c462a08801fd4a7b73d962527a45daf7c" },
-    "safe-stop": { "file": "poses/niulai-v1-pose-safe-stop.png", "width": 640, "height": 800, "alpha": true, "sha256": "2b122821b396bcace700985ddf02d63d263bf8e3d4f8ae7d2dbd8b5536c9a783" },
-    "ready": { "file": "poses/niulai-v1-pose-ready.png", "width": 608, "height": 800, "alpha": true, "sha256": "7965b253e022ee53fa258bd2b91ba3c6437df0d36f14861fb83cb3ed61996ad2" }
+    "neutral": { "file": "poses/niulai-v1-pose-neutral.png", "width": 640, "height": 800, "alpha": true, "sha256": "05548633fa40a537b1a3c37ad479e5acb934fa41e761e752668796148d378bc2" },
+    "listening": { "file": "poses/niulai-v1-pose-listening.png", "width": 653, "height": 800, "alpha": true, "sha256": "c89681705e4e22423557826be54a6ac8060f3bf298b141775547bde97ebd2e57" },
+    "checking": { "file": "poses/niulai-v1-pose-checking.png", "width": 680, "height": 800, "alpha": true, "sha256": "86a5387bf3250343e7512513f4e41a75feebf892150eed70e308b0534104a4e7" },
+    "explaining": { "file": "poses/niulai-v1-pose-explaining.png", "width": 751, "height": 800, "alpha": true, "sha256": "b912a9483fcdfd59e43d7db76ff5ee4d9a3d2b8824c4f8cb4f29833ef1055854" },
+    "attentive": { "file": "poses/niulai-v1-pose-attentive.png", "width": 706, "height": 800, "alpha": true, "sha256": "79ad5ffe7fee332bf30c54bfe2cb1d6390f988f077171b04bcd066c7e3aac58a" },
+    "safe-stop": { "file": "poses/niulai-v1-pose-safe-stop.png", "width": 640, "height": 800, "alpha": true, "sha256": "5eb383b09ebc70937fe88929b351c856d03f980ffe11d62526564c4572a416e7" },
+    "ready": { "file": "poses/niulai-v1-pose-ready.png", "width": 608, "height": 800, "alpha": true, "sha256": "58c106293b3bf7a3d3cb91b1cd92609eb84c984f5c1eaaec70f8be672b2c1cad" }
   }
 }

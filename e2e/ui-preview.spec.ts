@@ -87,12 +87,16 @@ test("keeps Niu Lai clear of copy and provenance at the 547px review width", asy
   await page.goto("/dev/ui-preview?state=generating-preview");
   const provenance = page.getByRole("list", { name: "Live request provenance" });
   const activeMascot = page.locator('[data-niulai-placement="active-request"]');
+  await expect(provenance).toBeVisible();
+  await expect(activeMascot).toBeVisible();
   const [provenanceBox, activeMascotBox] = await Promise.all([provenance.boundingBox(), activeMascot.boundingBox()]);
   expect(activeMascotBox?.y ?? 0).toBeGreaterThanOrEqual((provenanceBox?.y ?? 0) + (provenanceBox?.height ?? 0) + 16);
 
   await page.goto("/dev/ui-preview?state=demo-ready");
   const readyCopy = page.locator('[data-niulai-copy="demo-ready"]');
   const readyMascot = page.locator('[data-niulai-placement="demo-ready"]');
+  await expect(readyCopy).toBeVisible();
+  await expect(readyMascot).toBeVisible();
   const [readyCopyBox, readyMascotBox] = await Promise.all([readyCopy.boundingBox(), readyMascot.boundingBox()]);
   expect(readyMascotBox?.y ?? 0).toBeGreaterThanOrEqual((readyCopyBox?.y ?? 0) + (readyCopyBox?.height ?? 0) + 16);
 });
