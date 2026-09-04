@@ -32,7 +32,7 @@
         "maximumDurationMs": 1500,
         "loop": true,
         "alpha": true,
-        "sha256": "8804a54f5bff58c8d2565c6ae9724812dcd9a049c822650143b026c896c6f4f3"
+        "sha256": "4fe4598d7d2c54d45633b6a1cf3817dcfdae89e5259849f1dac442695ccd22c6"
       }
     },
     "scuba": {
@@ -50,7 +50,7 @@
   },
   "assets": {
     "neutral": { "file": "poses/niulai-v1-pose-neutral.png", "width": 640, "height": 800, "alpha": true, "sha256": "05548633fa40a537b1a3c37ad479e5acb934fa41e761e752668796148d378bc2" },
-    "listening": { "file": "poses/niulai-v1-pose-listening.png", "width": 653, "height": 800, "alpha": true, "sha256": "c89681705e4e22423557826be54a6ac8060f3bf298b141775547bde97ebd2e57" },
+    "listening": { "file": "poses/niulai-v1-pose-listening.png", "width": 653, "height": 800, "alpha": true, "sha256": "506c5c5d684468ac8bf2bf8529eb9dfb0ed3c4c70149ede75158a1318d522cf1" },
     "checking": { "file": "poses/niulai-v1-pose-checking.png", "width": 680, "height": 800, "alpha": true, "sha256": "86a5387bf3250343e7512513f4e41a75feebf892150eed70e308b0534104a4e7" },
     "explaining": { "file": "poses/niulai-v1-pose-explaining.png", "width": 751, "height": 800, "alpha": true, "sha256": "b912a9483fcdfd59e43d7db76ff5ee4d9a3d2b8824c4f8cb4f29833ef1055854" },
     "attentive": { "file": "poses/niulai-v1-pose-attentive.png", "width": 706, "height": 800, "alpha": true, "sha256": "79ad5ffe7fee332bf30c54bfe2cb1d6390f988f077171b04bcd066c7e3aac58a" },
