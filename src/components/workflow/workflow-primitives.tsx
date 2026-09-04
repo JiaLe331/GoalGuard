@@ -5,8 +5,18 @@ import { motion, useReducedMotion } from "motion/react";
 import { useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
-import type { CouncilReview, ScenarioResult } from "@/lib/contracts";
+import type { CouncilReview, ScenarioResult, SettlementType } from "@/lib/contracts";
 import { formatUsd, shortenAddress } from "@/lib/frontend/format";
+
+// A pure display-labeling comparison, not a financial calculation: it only compares two
+// already-deterministically-computed values to describe what the user would hold at that
+// scenario's settlement price, never originating or recalculating a dollar amount.
+function assetCompositionLabel(settlementType: SettlementType, strikeUsd: string, settlementPriceUsd: string): string {
+  if (settlementType === "cash") return "You would hold: ETH plus a cash top-up";
+  // Primary copy never names the raw settlement-token symbol; the technical symbol is available
+  // in the expandable protocol details instead.
+  return Number(settlementPriceUsd) < Number(strikeUsd) ? "You would hold: a USD-linked settlement asset instead of ETH" : "You would hold: your ETH, unchanged";
+}
 
 const steps = ["Define goal", "Live options", "Council review", "Confirm preview", "Demo ready"] as const;
 
@@ -77,7 +87,7 @@ export function MetricCard({ label, value, hint, tone = "default" }: { label: st
   );
 }
 
-export function ScenarioComparison({ scenarios }: { scenarios: ScenarioResult[] }) {
+export function ScenarioComparison({ scenarios, settlementType, strikeUsd }: { scenarios: ScenarioResult[]; settlementType: SettlementType; strikeUsd: string }) {
   const reducedMotion = useReducedMotion();
   const values = scenarios.map((scenario) => Number(scenario.netProtectedValueUsd));
   const max = Math.max(...values, 1);
@@ -90,6 +100,7 @@ export function ScenarioComparison({ scenarios }: { scenarios: ScenarioResult[] 
             <span className="text-sm text-[color:var(--foreground-soft)]">{labels[scenario.key]}</span>
             <div className="h-3 overflow-hidden rounded-full bg-[var(--scenario-track)]" aria-hidden="true"><motion.div className="h-full min-w-1 origin-left rounded-full bg-[var(--accent)]" initial={reducedMotion ? false : { scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: reducedMotion ? 0 : 0.42, ease: [0.16, 1, 0.3, 1] }} style={{ width: Math.max(4, Math.min(100, (Number(scenario.netProtectedValueUsd) / max) * 100)) + "%" }} /></div>
             <span className="text-left text-sm font-semibold tabular-nums scenario-value">{formatUsd(scenario.netProtectedValueUsd)}</span>
+            <span className="text-xs text-[color:var(--foreground-soft)]">{assetCompositionLabel(settlementType, strikeUsd, scenario.settlementPriceUsd)}</span>
             <span className="sr-only">Settlement price {formatUsd(scenario.settlementPriceUsd)}. Net protected value {formatUsd(scenario.netProtectedValueUsd)}.</span>
           </div>
         ))}

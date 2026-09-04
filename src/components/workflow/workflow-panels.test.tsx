@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { fixtureBlockedDecision, fixtureDecision, fixtureGoal, fixturePublicCandidate, fixtureTrade, previewTradeResponse } from "@/test/fixtures/goalguard";
+import { fixtureBlockedDecision, fixtureDecision, fixtureGoal, fixturePublicCandidate, fixturePublicPhysicalCandidate, fixtureTrade, previewTradeResponse } from "@/test/fixtures/goalguard";
 import { ActiveProtectionPanel, CouncilDrawer, DemoPreviewReadyPanel, GoalConfirmationForm, PreviewConfirmationPanel, ProtectionPlanPanel, ReadOnlyTradePanel, WorkflowErrorPanel } from "./workflow-panels";
 
 describe("workflow panels", () => {
@@ -60,13 +60,57 @@ describe("workflow panels", () => {
     const user = userEvent.setup();
     const onGenerate = vi.fn();
     const onAcknowledged = vi.fn();
-    const { rerender } = render(<PreviewConfirmationPanel goal={fixtureGoal} candidate={previewTradeResponse.data.candidate} walletAddress="0x1111111111111111111111111111111111111111" acknowledged={false} busy={false} onAcknowledged={onAcknowledged} onBack={vi.fn()} onGenerate={onGenerate} />);
+    const { rerender } = render(<PreviewConfirmationPanel goal={fixtureGoal} candidate={previewTradeResponse.data.candidate} walletAddress="0x1111111111111111111111111111111111111111" acknowledged={false} physicalSettlementAcknowledged={false} busy={false} onAcknowledged={onAcknowledged} onPhysicalSettlementAcknowledged={vi.fn()} onBack={vi.fn()} onGenerate={onGenerate} />);
     expect(screen.getByRole("button", { name: /generate unsigned preview/i })).toBeDisabled();
     await user.click(screen.getByRole("checkbox"));
     expect(onAcknowledged).toHaveBeenCalledWith(true);
-    rerender(<PreviewConfirmationPanel goal={fixtureGoal} candidate={previewTradeResponse.data.candidate} walletAddress="0x1111111111111111111111111111111111111111" acknowledged busy={false} onAcknowledged={onAcknowledged} onBack={vi.fn()} onGenerate={onGenerate} />);
+    rerender(<PreviewConfirmationPanel goal={fixtureGoal} candidate={previewTradeResponse.data.candidate} walletAddress="0x1111111111111111111111111111111111111111" acknowledged physicalSettlementAcknowledged={false} busy={false} onAcknowledged={onAcknowledged} onPhysicalSettlementAcknowledged={vi.fn()} onBack={vi.fn()} onGenerate={onGenerate} />);
     await user.click(screen.getByRole("button", { name: /generate unsigned preview/i }));
     expect(onGenerate).toHaveBeenCalledOnce();
+  });
+
+  it("does not show a physical-settlement checkbox for a cash-settled candidate", () => {
+    render(<PreviewConfirmationPanel goal={fixtureGoal} candidate={previewTradeResponse.data.candidate} walletAddress="0x1111111111111111111111111111111111111111" acknowledged physicalSettlementAcknowledged={false} busy={false} onAcknowledged={vi.fn()} onPhysicalSettlementAcknowledged={vi.fn()} onBack={vi.fn()} onGenerate={vi.fn()} />);
+    expect(screen.getAllByRole("checkbox")).toHaveLength(1);
+    expect(screen.getByRole("button", { name: /generate unsigned preview/i })).toBeEnabled();
+  });
+
+  it("requires a second, physical-settlement-specific acknowledgment before generating a physical-settlement preview", async () => {
+    const user = userEvent.setup();
+    const onGenerate = vi.fn();
+    const onPhysicalSettlementAcknowledged = vi.fn();
+    const { rerender } = render(<PreviewConfirmationPanel goal={fixtureGoal} candidate={fixturePublicPhysicalCandidate} walletAddress="0x1111111111111111111111111111111111111111" acknowledged physicalSettlementAcknowledged={false} busy={false} onAcknowledged={vi.fn()} onPhysicalSettlementAcknowledged={onPhysicalSettlementAcknowledged} onBack={vi.fn()} onGenerate={onGenerate} />);
+    expect(screen.getAllByRole("checkbox")).toHaveLength(2);
+    expect(screen.getByRole("button", { name: /generate unsigned preview/i })).toBeDisabled();
+    expect(screen.getByText(/asset delivery, not a cash payout/i)).toBeVisible();
+    rerender(<PreviewConfirmationPanel goal={fixtureGoal} candidate={fixturePublicPhysicalCandidate} walletAddress="0x1111111111111111111111111111111111111111" acknowledged physicalSettlementAcknowledged busy={false} onAcknowledged={vi.fn()} onPhysicalSettlementAcknowledged={onPhysicalSettlementAcknowledged} onBack={vi.fn()} onGenerate={onGenerate} />);
+    await user.click(screen.getByRole("button", { name: /generate unsigned preview/i }));
+    expect(onGenerate).toHaveBeenCalledOnce();
+  });
+
+  it("labels cash and physical protection plans distinctly", () => {
+    const callbacks = { onContinue: vi.fn(), onRefresh: vi.fn(), onOpenCouncil: vi.fn() };
+    const { rerender } = render(<ProtectionPlanPanel goal={fixtureGoal} candidate={fixturePublicCandidate} alternatives={[]} decision={fixtureDecision} busy={false} walletStatus="other" {...callbacks} />);
+    expect(screen.getByText("Cash Protection")).toBeVisible();
+    expect(screen.queryByText("Asset-Delivery Protection")).not.toBeInTheDocument();
+    rerender(<ProtectionPlanPanel goal={fixtureGoal} candidate={fixturePublicPhysicalCandidate} alternatives={[]} decision={fixtureDecision} busy={false} walletStatus="other" {...callbacks} />);
+    expect(screen.getByText("Asset-Delivery Protection")).toBeVisible();
+    expect(screen.queryByText("Cash Protection")).not.toBeInTheDocument();
+  });
+
+  it("renders wallet-readiness balances using the candidate's actual settlement-token decimals, not a USDC-or-18 guess", () => {
+    // aBasUSDC has 6 decimals like USDC, but a naive "USDC ? 6 : 18" check would misread it as
+    // 18 decimals and shrink the displayed amount by a factor of 10^12.
+    const physicalPreview = {
+      ...previewTradeResponse.data,
+      candidate: fixturePublicPhysicalCandidate,
+      walletReadiness: {
+        ...previewTradeResponse.data.walletReadiness,
+        settlementToken: { symbol: "aBasUSDC", balanceBaseUnits: "2500000", requiredBaseUnits: "2500000", sufficient: true },
+      },
+    };
+    render(<DemoPreviewReadyPanel goal={fixtureGoal} preview={physicalPreview} meta={previewTradeResponse.meta} decision={fixtureDecision} onStartAnother={vi.fn()} onFreshPreview={vi.fn()} />);
+    expect(screen.getByText(/balance 2\.5 aBasUSDC/i)).toBeVisible();
   });
 
   it("renders demo-ready audit data and no signing action", () => {

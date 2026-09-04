@@ -153,7 +153,8 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
   }, [state.decision, state.goal, state.selectedCandidate, wallet]);
 
   const generatePreview = useCallback(async () => {
-    if (!state.previewAcknowledged || wallet.status !== "connected" || !wallet.address || wallet.chainId !== 8453 || !state.goal || !state.selectedCandidate || state.decision?.status !== "approved") return;
+    const requiresPhysicalAcknowledgment = state.selectedCandidate?.settlementType === "physical";
+    if (!state.previewAcknowledged || (requiresPhysicalAcknowledgment && !state.physicalSettlementAcknowledged) || wallet.status !== "connected" || !wallet.address || wallet.chainId !== 8453 || !state.goal || !state.selectedCandidate || state.decision?.status !== "approved") return;
     setBusy(true);
     dispatch({ type: "preview_started" });
     const controller = new AbortController();
@@ -173,7 +174,7 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
       if (previewRequest.current === controller) previewRequest.current = null;
       setBusy(false);
     }
-  }, [fail, state.decision, state.goal, state.previewAcknowledged, state.selectedCandidate, wallet.address, wallet.chainId, wallet.status]);
+  }, [fail, state.decision, state.goal, state.previewAcknowledged, state.physicalSettlementAcknowledged, state.selectedCandidate, wallet.address, wallet.chainId, wallet.status]);
 
   function startAnother() {
     clearPreviewRetry();
@@ -189,7 +190,7 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
     if (state.stage === "confirming_goal" && state.goal) return <GoalConfirmationForm goal={state.goal} busy={busy} fieldErrors={state.error?.fieldErrors ?? {}} onSave={saveGoal} onFind={(value) => void findAndReview(value)} />;
     if (["searching_candidates", "reviewing_candidate", "generating_preview"].includes(state.stage)) return <ActiveProtectionPanel stage={state.stage as "searching_candidates" | "reviewing_candidate" | "generating_preview"} />;
     if (["plan_approved", "plan_disputed", "plan_blocked"].includes(state.stage) && state.goal && state.selectedCandidate && state.decision) return <ProtectionPlanPanel goal={state.goal} candidate={state.selectedCandidate} alternatives={state.candidates.filter((candidate) => candidate.id !== state.selectedCandidate?.id)} decision={state.decision} busy={busy} walletStatus={wallet.status === "connected" ? "connected" : wallet.status === "wrong-network" ? "wrong-network" : "other"} suppressMascot={councilOpen} onContinue={() => void beginPreview()} onRefresh={() => void findAndReview(undefined, true)} onOpenCouncil={() => setCouncilOpen(true)} />;
-    if (state.stage === "confirming_preview" && state.goal && state.selectedCandidate && wallet.address) return <PreviewConfirmationPanel goal={state.goal} candidate={state.selectedCandidate} walletAddress={wallet.address} acknowledged={state.previewAcknowledged} busy={busy} onAcknowledged={(acknowledged) => dispatch({ type: "preview_acknowledgment_changed", acknowledged })} onBack={() => { previewWallet.current = null; dispatch({ type: "preview_confirmation_cancelled" }); }} onGenerate={() => void generatePreview()} />;
+    if (state.stage === "confirming_preview" && state.goal && state.selectedCandidate && wallet.address) return <PreviewConfirmationPanel goal={state.goal} candidate={state.selectedCandidate} walletAddress={wallet.address} acknowledged={state.previewAcknowledged} physicalSettlementAcknowledged={state.physicalSettlementAcknowledged} busy={busy} onAcknowledged={(acknowledged) => dispatch({ type: "preview_acknowledgment_changed", acknowledged })} onPhysicalSettlementAcknowledged={(acknowledged) => dispatch({ type: "physical_settlement_acknowledgment_changed", acknowledged })} onBack={() => { previewWallet.current = null; dispatch({ type: "preview_confirmation_cancelled" }); }} onGenerate={() => void generatePreview()} />;
     if (state.stage === "demo_preview_ready" && state.goal && state.preview && state.previewMeta && state.decision) return <DemoPreviewReadyPanel goal={state.goal} preview={state.preview} meta={state.previewMeta} decision={state.decision} onStartAnother={startAnother} onFreshPreview={() => dispatch({ type: "preview_invalidated", notice: "The previous preview expired. Confirm a fresh snapshot from the approved plan." })} />;
     if (state.stage === "read_only_trade" && state.goal && state.trade) return <ReadOnlyTradePanel goal={state.goal} trade={state.trade} onStartAnother={startAnother} />;
     return <Card className="mx-auto max-w-2xl p-8 text-center"><h1 className="text-4xl font-semibold tracking-[-0.05em]">Goal not available</h1><p className="mt-3 text-[color:var(--foreground-soft)]">Return home and start a new goal in this browser session.</p><Button className="mt-6" onClick={() => router.push("/")}>Return home</Button></Card>;
