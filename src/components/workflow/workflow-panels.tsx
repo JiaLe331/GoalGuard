@@ -191,10 +191,10 @@ export function ActiveProtectionPanel({ stage }: { stage: "searching_candidates"
         <div><StatusBadge tone="info" label="Live request active" /></div>
         <h1 className="mt-7 max-w-2xl text-5xl font-semibold leading-[0.98] tracking-[-0.05em] sm:text-6xl">{content[0]}</h1>
         <p className="mt-6 max-w-xl text-base leading-7 text-[color:var(--text-on-dark-muted)]">{content[1]}</p>
-        <div className="mt-9 flex items-center gap-3 text-sm" role="status"><HourglassHigh className="size-5 animate-pulse motion-reduce:animate-none" aria-hidden="true" />Waiting for a truthful backend result—no simulated percentage.</div>
+        <div className="mt-9 flex items-center gap-3 text-sm" role="status"><HourglassHigh className="size-5 animate-pulse motion-reduce:animate-none" aria-hidden="true" />Waiting for a truthful backend result. No simulated percentage.</div>
       </div>
       <div className="relative border-t border-[var(--dark-border)] lg:border-l lg:border-t-0">
-        <div className="grid place-items-center px-7 pt-6 lg:px-8 lg:pt-8"><div className="grid size-40 place-items-center rounded-full bg-[var(--white)]"><PipMascot pose={pipPose} surface="light" active size="md" /></div></div>
+        <div className="grid place-items-center px-7 pt-6 lg:px-8 lg:pt-8"><PipMascot pose={pipPose} surface="dark" active size="md" /></div>
         <ol className="p-7 pt-2 text-sm text-[color:var(--foreground-on-strong-muted)] lg:p-8 lg:pt-2" aria-label="Live request provenance">
           <li className="border-t border-[var(--dark-border)] py-4">01 · Read authoritative inputs</li>
           <li className="border-t border-[var(--dark-border)] py-4">02 · Apply deterministic checks</li>
@@ -359,8 +359,8 @@ export function DemoPreviewReadyPanel({ goal, preview, meta, decision, onStartAn
             <p className="mt-4 text-lg font-semibold">No funds moved; no protected position was created</p>
             <p className="mt-2 max-w-3xl text-[color:var(--foreground-on-strong-muted)]">This is a time-limited, unsigned snapshot of the approved plan and wallet requirements.</p>
           </div>
-          <div className="grid size-24 place-items-center rounded-full bg-[var(--white)] sm:size-36">
-            <PipMascot pose={expired ? "safe-stop" : "ready"} surface="light" size="sm" form="full" className="h-24 w-24 sm:h-32 sm:w-36" />
+          <div className="grid size-24 place-items-center min-[440px]:size-28 sm:size-36">
+            <PipMascot pose={expired ? "safe-stop" : "ready"} surface="dark" size="sm" form="full" className="h-24 w-24 min-[440px]:h-28 min-[440px]:w-28 sm:h-32 sm:w-36" />
           </div>
         </div>
         <div className="p-6 sm:p-8">

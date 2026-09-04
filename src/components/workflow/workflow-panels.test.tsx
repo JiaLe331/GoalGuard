@@ -24,11 +24,12 @@ describe("workflow panels", () => {
     expect(container.querySelector('[data-pip-pose="attentive"]')).toBeInTheDocument();
   });
 
-  it("keeps expressive Pip in its original colours on dark workflow surfaces", () => {
+  it("uses the unframed dark-surface treatment on dark workflow panels", () => {
     const { container, rerender } = render(<ActiveProtectionPanel stage="searching_candidates" />);
-    expect(container.querySelector('[data-pip-pose="checking"]')).toHaveAttribute("data-pip-surface", "light");
+    expect(container.querySelector('[data-pip-pose="checking"]')).toHaveAttribute("data-pip-surface", "dark");
+    expect(container.querySelector('[data-pip-pose="checking"] [data-pip-ground-shadow="true"]')).toBeInTheDocument();
     rerender(<DemoPreviewReadyPanel goal={fixtureGoal} preview={previewTradeResponse.data} meta={previewTradeResponse.meta} decision={fixtureDecision} onStartAnother={vi.fn()} onFreshPreview={vi.fn()} />);
-    expect(container.querySelector('[data-pip-pose="ready"]')).toHaveAttribute("data-pip-surface", "light");
+    expect(container.querySelector('[data-pip-pose="ready"]')).toHaveAttribute("data-pip-surface", "dark");
     expect(container.querySelector('[data-pip-pose="ready"]')).toHaveAttribute("data-pip-artwork", "full");
   });
 

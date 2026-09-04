@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ShieldCheck } from "@phosphor-icons/react";
+import { Check } from "@phosphor-icons/react";
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "motion/react";
 import type { PointerEvent } from "react";
 
@@ -43,7 +43,6 @@ export function ProtectionOrbit() {
       transition={{ duration: reduceMotion ? 0 : 0.42, ease: [0.16, 1, 0.3, 1] }}
     >
       <div className="absolute -bottom-36 -right-24 size-[25rem] rounded-full border-[4.75rem] border-[var(--accent)] sm:-right-8 sm:size-[30rem]" aria-hidden="true" />
-      <div className="absolute right-[12%] top-7 grid size-14 place-items-center rounded-full border border-[color-mix(in_srgb,var(--foreground)_24%,transparent)] bg-[var(--accent)]" aria-hidden="true"><ShieldCheck className="size-7" /></div>
       <svg className="absolute left-6 top-8 h-24 w-40 sm:left-10" viewBox="0 0 170 100" fill="none" aria-hidden="true">
         <path d="M4 72C32 33 59 30 83 57c22 25 51 20 83-28" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         <circle cx="4" cy="72" r="3" fill="currentColor" /><circle cx="166" cy="29" r="3" fill="currentColor" />

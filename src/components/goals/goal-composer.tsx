@@ -109,15 +109,14 @@ export function GoalComposer() {
 
   return (
     <form onSubmit={submit} className="space-y-6" aria-labelledby="goal-heading" aria-busy={loading}>
-      <div className="grid grid-cols-1 items-end gap-1 min-[440px]:grid-cols-[minmax(0,1fr)_5.5rem] min-[440px]:gap-4">
+      <div className="grid grid-cols-1 items-end gap-1 min-[440px]:grid-cols-[minmax(0,1fr)_6.5rem] min-[440px]:gap-4">
         <div>
           <p className="section-eyebrow text-[color:var(--foreground-muted)]">Your protection goal</p>
           <h2 id="goal-heading" className="mt-3 text-[clamp(1.75rem,3vw,2.5rem)] font-semibold leading-[1.05] tracking-[-0.045em] text-[color:var(--foreground)]">What are you protecting?</h2>
           <p className="mt-3 max-w-xl text-sm leading-6 text-[color:var(--foreground-soft)]">Use plain language. You can review every limit before GoalGuard reads live options.</p>
         </div>
-        <div className="relative grid min-h-20 w-24 justify-self-end place-items-end overflow-visible min-[440px]:min-h-24" aria-hidden="true">
-          <span className="absolute inset-x-2 bottom-1 h-10 rounded-full bg-[var(--accent-soft)]" />
-          <PipMascot key={`${pipPose}-${pipReaction}`} pose={pipPose} active={loading} size="sm" form="full" className="relative h-24 w-24" />
+        <div className="relative grid min-h-20 w-24 justify-self-end place-items-end overflow-visible min-[440px]:min-h-28 min-[440px]:w-28" aria-hidden="true">
+          <PipMascot key={`${pipPose}-${pipReaction}`} pose={pipPose} active={loading} size="sm" form="full" className="relative h-24 w-24 min-[440px]:h-28 min-[440px]:w-28" />
         </div>
       </div>
 

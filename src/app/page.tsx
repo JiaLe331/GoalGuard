@@ -8,7 +8,6 @@ import {
   Eye,
   LockKey,
   ShieldCheck,
-  Sparkle,
 } from "@phosphor-icons/react/dist/ssr";
 
 import { PipMark, PipMascot } from "@/components/brand/pip-mascot";
@@ -52,7 +51,6 @@ function HowItWorksIllustration({ variant }: { variant: "goal" | "review" }) {
   }
   return (
     <div className="relative grid min-h-48 place-items-end overflow-hidden" aria-hidden="true">
-      <div className="absolute -bottom-8 right-0 size-48 rounded-full bg-[var(--accent-soft)]" />
       <PipMascot pose="explaining" size="lg" className="relative -bottom-1 right-0" />
     </div>
   );
@@ -68,13 +66,11 @@ export default function Home() {
         <section id="top" className="page-shell pb-16 pt-4 sm:pb-20 sm:pt-6 min-[1200px]:pb-28">
           <div className="relative isolate overflow-hidden rounded-[1.75rem] bg-[var(--hero-bg)] px-4 py-7 text-[color:var(--hero-fg)] sm:rounded-[var(--radius-section)] sm:px-8 sm:py-10 min-[1200px]:px-16 min-[1200px]:py-16 min-[1440px]:px-20">
             <div className="absolute -left-32 -top-36 size-96 rounded-full border-[5rem] border-[color-mix(in_srgb,var(--white)_26%,transparent)]" aria-hidden="true" />
-            <div className="absolute left-[48%] top-20 hidden h-32 w-40 rotate-[-10deg] rounded-full border-2 border-[var(--accent-foreground)] min-[1200px]:block" aria-hidden="true" />
-
             <div className="relative z-10 grid gap-8 sm:gap-10 min-[1200px]:grid-cols-12 min-[1200px]:gap-8">
               <div className="flex min-w-0 flex-col min-[1200px]:col-span-7 min-[1200px]:pt-2">
-                <p className="section-eyebrow"><Sparkle className="size-4" aria-hidden="true" />Purpose-first ETH protection</p>
+                <p className="section-eyebrow">Purpose-first ETH protection</p>
                 <h1 className="display-heading mt-6 max-w-[8.5ch]">Protect the purpose behind your money.</h1>
-                <p className="pretty-text mt-7 max-w-xl text-lg leading-8 sm:text-xl">Turn a real-life goal into a live, independently reviewed downside-protection plan—then inspect the exact Base transaction data without signing anything.</p>
+                <p className="pretty-text mt-7 max-w-xl text-lg leading-8 sm:text-xl">Turn a real-life goal into a live, independently reviewed downside-protection plan. Then inspect the exact Base transaction data without signing anything.</p>
                 <a href="#how-it-works" className="mt-8 inline-flex min-h-12 w-fit items-center gap-2 rounded-full bg-[var(--surface-strong)] px-6 text-sm font-semibold text-[color:var(--foreground-on-strong)] transition-[background-color,transform] duration-[var(--duration-press)] hover:bg-[var(--surface-strong-raised)] active:scale-[0.98]">See how protection works<ArrowDown className="size-4" aria-hidden="true" /></a>
               </div>
 
@@ -126,11 +122,11 @@ export default function Home() {
           </div>
 
           <div className="mt-16 grid gap-x-14 gap-y-14 lg:grid-cols-2 lg:gap-y-20">
-            {advantages.map((item, index) => {
+            {advantages.map((item) => {
               const Icon = item.icon;
               return (
                 <article key={item.title} className="grid grid-cols-[4rem_1fr] gap-5">
-                  <div className={`grid size-14 place-items-center rounded-full ${index === 0 ? "bg-[var(--accent)]" : "bg-[var(--accent-soft)]"}`}><Icon className="size-6" aria-hidden="true" /></div>
+                  <div className="grid size-14 place-items-center rounded-full bg-[var(--accent-soft)]"><Icon className="size-6" aria-hidden="true" /></div>
                   <div>
                     <h3 className="text-xl font-semibold tracking-[-0.035em]">{item.title}</h3>
                     <p className="mt-3 max-w-xl leading-7 text-[color:var(--foreground-soft)]">{item.copy}</p>
@@ -184,7 +180,7 @@ export default function Home() {
               <div>
                 <p className="section-eyebrow text-[color:var(--foreground-on-strong-muted)]"><ShieldCheck className="size-4" aria-hidden="true" />Unsigned preview only</p>
                 <h2 className="section-heading mt-5 max-w-4xl">Know what would happen before anything can happen.</h2>
-                <p className="mt-6 max-w-2xl text-lg leading-8 text-[color:var(--foreground-on-strong-muted)]">The final screen contains inspectable transaction targets, values, calldata, readiness, timestamps, and audit references—with no signing action.</p>
+                <p className="mt-6 max-w-2xl text-lg leading-8 text-[color:var(--foreground-on-strong-muted)]">The final screen contains inspectable transaction targets, values, calldata, readiness, timestamps, and audit references. No signing action is taken.</p>
               </div>
               <ul className="space-y-3 text-sm text-[color:var(--foreground-on-strong-muted)]">
                 {["No private keys reach the server", "No wallet signature or transaction broadcast", "No protected position is created", "Stale facts require a fresh review"].map((item) => <li key={item} className="flex items-center gap-3 border-t border-[var(--border-on-strong)] pt-3"><span className="grid size-6 place-items-center rounded-full bg-[var(--accent)] text-[color:var(--accent-foreground)]"><Check className="size-3.5" aria-hidden="true" /></span>{item}</li>)}
