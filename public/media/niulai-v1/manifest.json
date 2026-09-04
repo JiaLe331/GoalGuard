@@ -9,6 +9,45 @@
     "purposeRing": "#FFFFFF"
   },
   "purposeRingSide": "character-left",
+  "motions": {
+    "gesture-67": {
+      "file": "motion/niulai-v1-motion-67.webp",
+      "width": 480,
+      "height": 600,
+      "fps": 24,
+      "durationMs": 1500,
+      "loop": true,
+      "alpha": true,
+      "posterPose": "listening",
+      "fallbackPose": "listening",
+      "sha256": "c46e39eae51b8413ec5104961ad7cf09a2bee9f93efa439ed9a9220d5d5486c8",
+      "adaptivePlayback": {
+        "file": "motion/niulai-v1-motion-67-sprite.webp",
+        "width": 7200,
+        "height": 600,
+        "frameWidth": 480,
+        "frameHeight": 600,
+        "frameCount": 15,
+        "minimumDurationMs": 480,
+        "maximumDurationMs": 1500,
+        "loop": true,
+        "alpha": true,
+        "sha256": "8804a54f5bff58c8d2565c6ae9724812dcd9a049c822650143b026c896c6f4f3"
+      }
+    },
+    "scuba": {
+      "file": "motion/niulai-v1-motion-scuba.webp",
+      "width": 480,
+      "height": 600,
+      "fps": 24,
+      "durationMs": 1500,
+      "loop": true,
+      "alpha": true,
+      "posterPose": "checking",
+      "fallbackPose": "checking",
+      "sha256": "aed077ce028cd37d7c8e14e3a244ee63e8391308f96f8771b445f483a72d4910"
+    }
+  },
   "assets": {
     "neutral": { "file": "poses/niulai-v1-pose-neutral.png", "width": 640, "height": 800, "alpha": true, "sha256": "05548633fa40a537b1a3c37ad479e5acb934fa41e761e752668796148d378bc2" },
     "listening": { "file": "poses/niulai-v1-pose-listening.png", "width": 653, "height": 800, "alpha": true, "sha256": "c89681705e4e22423557826be54a6ac8060f3bf298b141775547bde97ebd2e57" },

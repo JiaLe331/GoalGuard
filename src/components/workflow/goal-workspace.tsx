@@ -180,13 +180,13 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
     clearPreviewRetry();
     window.localStorage.removeItem(storageKeys.activeGoalId);
     dispatch({ type: "restart" });
-    router.push("/");
+    router.push("/goals/new");
   }
 
   const presentation = stagePresentation(state.stage);
   const renderStage = () => {
     if (hydrating) return <Card className="mx-auto max-w-5xl p-6 sm:p-9"><Skeleton className="h-5 w-32" /><Skeleton className="mt-5 h-14 w-3/4" /><div className="mt-8 grid gap-3 sm:grid-cols-3"><Skeleton className="h-28" /><Skeleton className="h-28" /><Skeleton className="h-28" /></div></Card>;
-    if (state.error && ["recoverable_error", "terminal_error"].includes(state.stage)) return <WorkflowErrorPanel error={state.error} onRetry={() => { const target = state.error?.returnStage; dispatch({ type: "clear_error" }); if (target === "plan_approved" && state.selectedCandidate) void retryReview(); }} onEdit={() => { if (state.goal) dispatch({ type: "goal_updated", goal: state.goal }); else router.push("/"); }} />;
+    if (state.error && ["recoverable_error", "terminal_error"].includes(state.stage)) return <WorkflowErrorPanel error={state.error} onRetry={() => { const target = state.error?.returnStage; dispatch({ type: "clear_error" }); if (target === "plan_approved" && state.selectedCandidate) void retryReview(); }} onEdit={() => { if (state.goal) dispatch({ type: "goal_updated", goal: state.goal }); else router.push("/goals/new"); }} />;
     if (state.stage === "confirming_goal" && state.goal) return <GoalConfirmationForm goal={state.goal} busy={busy} fieldErrors={state.error?.fieldErrors ?? {}} onSave={saveGoal} onFind={(value) => void findAndReview(value)} />;
     if (["searching_candidates", "reviewing_candidate", "generating_preview"].includes(state.stage)) return <ActiveProtectionPanel stage={state.stage as "searching_candidates" | "reviewing_candidate" | "generating_preview"} />;
     if (["plan_approved", "plan_disputed", "plan_blocked"].includes(state.stage) && state.goal && state.selectedCandidate && state.decision) return <ProtectionPlanPanel goal={state.goal} candidate={state.selectedCandidate} alternatives={state.candidates.filter((candidate) => candidate.id !== state.selectedCandidate?.id)} decision={state.decision} busy={busy} walletStatus={wallet.status === "connected" ? "connected" : wallet.status === "wrong-network" ? "wrong-network" : "other"} suppressMascot={councilOpen} onContinue={() => void beginPreview()} onRefresh={() => void findAndReview(undefined, true)} onOpenCouncil={() => setCouncilOpen(true)} />;
