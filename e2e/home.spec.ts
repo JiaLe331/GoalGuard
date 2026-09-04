@@ -17,7 +17,13 @@ test("renders the honest GoalGuard P0 entry shell", async ({ page }) => {
   }));
   await page.goto("/");
   await expect(page.getByRole("heading", { name: /protect the purpose behind your money/i })).toBeVisible();
-  await expect(page.getByRole("heading", { name: /what are you protecting/i })).toBeVisible();
+  await expect(page.locator("#goal-preview").getByRole("heading", { name: /start with what the money is for/i })).toBeVisible();
+  await expect(page.locator("#goal-preview").getByText("Protection goal", { exact: true })).toBeVisible();
+  await expect(page.getByText("Illustration only")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /pause examples/i })).toHaveCount(0);
+  await expect(page.getByRole("textbox")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Rent" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /build my protection plan/i }).first()).toHaveAttribute("href", "/goals/new");
   await expect(page.getByRole("heading", { name: /from your goal to a plan you can actually inspect/i })).toBeVisible();
   await expect(page.getByRole("heading", { name: /clear advantages without hidden custody/i })).toBeVisible();
   await expect(page.getByRole("navigation", { name: /primary navigation/i })).toBeVisible();
@@ -39,9 +45,24 @@ test("renders the honest GoalGuard P0 entry shell", async ({ page }) => {
   await expectNoSeriousAccessibilityViolations(page);
 });
 
+test("opens the real goal composer from the landing preview", async ({ page }) => {
+  let parseRequests = 0;
+  await page.route("**/api/goals/parse", (route) => {
+    parseRequests += 1;
+    return route.abort();
+  });
+  await page.goto("/");
+  expect(parseRequests).toBe(0);
+  await page.locator("#goal-preview").getByRole("link", { name: /build my protection plan/i }).click();
+  await page.waitForURL(/\/goals\/new$/);
+  expect(parseRequests).toBe(0);
+  await expect(page.getByRole("textbox", { name: /describe your protection goal/i })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Rent" })).toBeVisible();
+});
+
 test("keeps an incomplete Gonka draft and asks exactly one clarification", async ({ page }) => {
   await page.route("**/api/goals/parse", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ data: { draft: { goalType: "rent", underlyingAsset: "ETH", protectedValueUsd: "1200" }, missingFields: ["deadline", "maxLossBps"], clarificationQuestion: "By what date do you need this money?", goal: null, inference: { id: "6b3e798c-e0e8-4ab5-9e37-d4526424eb8f", purpose: "goal_parse", model: "gonka-model-a", requestId: "gonka-clarification-1", status: "succeeded" } }, meta: fixtureMeta }) }));
-  await page.goto("/");
+  await page.goto("/goals/new");
   await page.getByRole("textbox", { name: /describe your protection goal/i }).fill("Protect my $1,200 rent fund.");
   await page.getByRole("button", { name: /create protection goal/i }).click();
   await expect(page.getByText("One detail needed")).toBeVisible();
@@ -70,7 +91,7 @@ test("keeps the landing interface usable without horizontal overflow across the 
     const radius = Number.parseFloat(await navigation.evaluate((element) => getComputedStyle(element).borderRadius));
     expect(radius).toBeGreaterThan(30);
     if (width < 1200) {
-      const composer = page.locator("#goal-composer");
+      const composer = page.locator("#goal-preview");
       const orbit = page.locator(".protection-orbit");
       expect((await composer.boundingBox())?.y ?? 0).toBeLessThan((await orbit.boundingBox())?.y ?? 0);
     }
@@ -94,7 +115,7 @@ test("keeps the landing interface usable without horizontal overflow across the 
       await expect(orbit).toHaveCSS("transform", before);
     }
     if (width === 1280) {
-      const desktopAction = page.getByRole("navigation", { name: "Primary navigation" }).getByRole("link", { name: "Start a goal" }).first();
+      const desktopAction = page.getByRole("navigation", { name: "Primary navigation" }).getByRole("link", { name: "Build a plan" }).first();
       await expect(desktopAction).toBeVisible();
       const actionLayout = await desktopAction.evaluate((element) => ({
         height: element.getBoundingClientRect().height,

@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { FloatingEditorialNavbar } from "@/components/navigation/floating-editorial-navbar";
+import { NiulaiChatPreview } from "@/components/dev/niulai-chat-preview";
 import {
   ActiveProtectionPanel,
   CouncilDrawer,
@@ -236,6 +237,10 @@ export function UiPreviewLab({ initialState, samples }: { initialState: UiPrevie
               <Button variant="secondary" className="px-4" disabled={stateIndex === uiPreviewStates.length - 1} onClick={() => selectState(uiPreviewStates[stateIndex + 1]?.value ?? state)}>Next<ArrowRight aria-hidden="true" /></Button>
             </div>
           </div>
+        </div>
+
+        <div className="reading-shell mt-8">
+          <NiulaiChatPreview />
         </div>
 
         <StageShell step={frame.step} title={frame.title} eyebrow={frame.eyebrow}>

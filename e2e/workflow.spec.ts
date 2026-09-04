@@ -59,7 +59,7 @@ async function installWorkflowFixtures(page: Page, preview = previewTradeRespons
 }
 
 async function completeToPlan(page: Page) {
-  await page.goto("/");
+  await page.goto("/goals/new");
   await page.getByRole("textbox", { name: /describe your protection goal/i }).fill("Protect my $1,200 rent fund by 30 September and limit loss to 5%.");
   const parseCompleted = page.waitForResponse((response) => new URL(response.url()).pathname === "/api/goals/parse");
   await page.getByRole("button", { name: /create protection goal/i }).click();

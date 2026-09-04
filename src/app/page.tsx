@@ -8,10 +8,11 @@ import {
   Eye,
   LockKey,
 } from "@phosphor-icons/react/dist/ssr";
+import Link from "next/link";
 
 import { NiulaiMark, NiulaiMascot } from "@/components/brand/niulai-mascot";
-import { GoalComposer } from "@/components/goals/goal-composer";
 import { IntegrationStatus } from "@/components/integrations/integration-status";
+import { GoalPreview } from "@/components/marketing/goal-preview";
 import { ProtectionOrbit } from "@/components/marketing/protection-orbit";
 import { FloatingEditorialNavbar } from "@/components/navigation/floating-editorial-navbar";
 
@@ -74,9 +75,9 @@ export default function Home() {
                 <a href="#how-it-works" className="mt-8 inline-flex min-h-12 w-fit items-center gap-2 rounded-full bg-[var(--surface-strong)] px-6 text-sm font-semibold text-[color:var(--foreground-on-strong)] transition-[background-color,transform] duration-[var(--duration-press)] hover:bg-[var(--surface-strong-raised)] active:scale-[0.98]">See how protection works<ArrowDown className="size-4" aria-hidden="true" /></a>
               </div>
 
-              <div id="goal-composer" className="section-anchor relative z-20 mx-auto w-full max-w-3xl min-[1200px]:col-span-5 min-[1200px]:row-span-2 min-[1200px]:max-w-none min-[1200px]:pl-3">
+              <div id="goal-preview" className="relative z-20 mx-auto w-full max-w-3xl min-[1200px]:col-span-5 min-[1200px]:row-span-2 min-[1200px]:max-w-none min-[1200px]:pl-3">
                 <div className="rounded-[1.5rem] bg-[var(--surface-raised)] p-5 text-[color:var(--foreground)] shadow-[var(--shadow-float-strong)] sm:rounded-[1.75rem] sm:p-7 min-[1200px]:sticky min-[1200px]:top-28">
-                  <GoalComposer />
+                  <GoalPreview />
                 </div>
               </div>
 
@@ -97,7 +98,7 @@ export default function Home() {
                 <p className="text-xs font-bold uppercase tracking-[0.1em] text-[color:var(--foreground-muted)]">01 · Define</p>
                 <h3 className="mt-4 text-2xl font-semibold tracking-[-0.04em]">Make the purpose measurable</h3>
                 <p className="mt-4 max-w-md text-[color:var(--foreground-soft)]">Confirm the amount, deadline, acceptable loss, and maximum cost. Nothing reaches the market until those guardrails are clear.</p>
-                <a href="#goal-composer" className="mt-auto inline-flex min-h-11 w-fit items-center gap-2 pt-6 text-sm font-semibold underline-offset-4 hover:underline">Start with your goal<ArrowRight className="size-4" aria-hidden="true" /></a>
+                <Link href="/goals/new" className="mt-auto inline-flex min-h-11 w-fit items-center gap-2 pt-6 text-sm font-semibold underline-offset-4 hover:underline">Start with your goal<ArrowRight className="size-4" aria-hidden="true" /></Link>
               </div>
               <HowItWorksIllustration variant="goal" />
             </article>
@@ -192,7 +193,7 @@ export default function Home() {
         <section className="px-5 py-28 text-center lg:py-40">
           <h2 className="section-heading mx-auto max-w-3xl">Start with what the money is for.</h2>
           <p className="mx-auto mt-5 max-w-xl text-lg text-[color:var(--foreground-soft)]">Define the goal first. Every protection decision follows from there.</p>
-          <a href="#goal-composer" className="mt-8 inline-flex min-h-14 items-center gap-2 rounded-full bg-[var(--button-primary-bg)] px-8 text-sm font-semibold text-[color:var(--button-primary-fg)] transition-[background-color,transform] duration-[var(--duration-press)] hover:bg-[var(--button-primary-hover)] active:scale-[0.98]">Create a protection goal<ArrowRight className="size-4" aria-hidden="true" /></a>
+          <Link href="/goals/new" className="mt-8 inline-flex min-h-14 items-center gap-2 rounded-full bg-[var(--button-primary-bg)] px-8 text-sm font-semibold text-[color:var(--button-primary-fg)] transition-[background-color,transform] duration-[var(--duration-press)] hover:bg-[var(--button-primary-hover)] active:scale-[0.98]">Build my protection plan<ArrowRight className="size-4" aria-hidden="true" /></Link>
         </section>
       </main>
 

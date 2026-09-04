@@ -162,7 +162,11 @@ These categories are UX labels only. The underlying engine should work from stru
 ## 6. End-to-End User Flow
 
 ### Step 1 — Start goal
-User opens GoalGuard and sees:
+User opens GoalGuard's marketing landing page, sees clearly illustrative example goals, and selects:
+
+> Build my protection plan
+
+GoalGuard then opens the dedicated `/goals/new` app entry, where the user sees:
 
 > What are you protecting?
 
@@ -690,19 +694,28 @@ Default experience:
 
 ### 12.2 Screen/state list
 
-#### A. Landing / New Goal
+#### A. Landing
 Required:
 
 - GoalGuard branding.
+- clearly labelled, non-interactive example goals;
+- one primary “Build my protection plan” action linking to `/goals/new`;
+- no goal inputs, draft persistence, or goal-parsing requests.
+
+The example sequence may continuously loop at a calm typing speed. It pauses automatically while the pointer is over the preview or keyboard focus is inside it. No visible motion control is shown, keeping the CTA as the only action in the preview. Reduced-motion mode skips directly to a static final example. Character-level changes are hidden from assistive technology and accompanied by a stable text summary.
+
+#### B. New Goal
+Required:
+
 - “What are you protecting?” prompt.
 - goal chips;
 - free-text input;
 - connect wallet action available but not mandatory before goal creation.
 
-#### B. Goal Confirmation
+#### C. Goal Confirmation
 Display normalized fields and allow edit.
 
-#### C. Searching State
+#### D. Searching State
 Show distinct stages:
 
 1. Reading your goal
@@ -711,7 +724,7 @@ Show distinct stages:
 
 Do not fake progress. Tie state to actual backend steps.
 
-#### D. Protection Plan
+#### E. Protection Plan
 Show only the most important values first:
 
 - goal;
@@ -729,7 +742,7 @@ receive a USD-linked settlement asset instead — this is different from a cash 
 the raw settlement-token symbol (e.g. an aToken) in this primary copy; it may appear only in the
 expandable protocol details (§12.3).
 
-#### E. GoalGuard Drawer
+#### F. GoalGuard Drawer
 Show three role cards:
 
 - Strategist
@@ -744,7 +757,7 @@ Each card:
 - concerns;
 - Gonka Request ID.
 
-#### F. Confirm Demo Preview
+#### G. Confirm Demo Preview
 Must display:
 
 - exact premium/cost;
@@ -754,14 +767,14 @@ Must display:
 - clear limitation that protection is evaluated at the option settlement/expiry conditions;
 - wallet/network;
 - final CTA labelled as generating an unsigned preview, not executing a trade;
-- the same Cash Protection/Asset-Delivery Protection label as the Protection Plan screen (§12.2.D).
+- the same Cash Protection/Asset-Delivery Protection label as the Protection Plan screen (§12.2.E).
 
 When `settlementType` is `physical`, require a second, separate, explicit acknowledgement in
 addition to the general confirmation checkbox: "I understand this position settles by asset
 delivery, not a cash payout, and my ETH may be delivered at settlement." The final preview CTA
 stays disabled until both acknowledgements are checked.
 
-#### G. Demo Preview Ready
+#### H. Demo Preview Ready
 Display:
 
 - “Protection Plan Ready (Demo)” status;
@@ -990,7 +1003,7 @@ The exact request/response schemas and status behavior are normative in Section 
 13. **Record model/request IDs for auditability.**
 14. **Do not expose private chain-of-thought.** Show concise reasons/evidence only.
 15. **Never fabricate transaction success.** No hash, position, or protected status may be shown without verified on-chain execution.
-16. **Physical-settlement disclosures are deterministically enforced, not solely LLM-dependent.** The backend appends a fixed disclosure to every council review when `settlementType` is `physical`, regardless of whether the model already included one, and the UI requires a separate explicit acknowledgement (§12.2.F) before a physical preview can be generated.
+16. **Physical-settlement disclosures are deterministically enforced, not solely LLM-dependent.** The backend appends a fixed disclosure to every council review when `settlementType` is `physical`, regardless of whether the model already included one, and the UI requires a separate explicit acknowledgement (§12.2.G) before a physical preview can be generated.
 
 ---
 

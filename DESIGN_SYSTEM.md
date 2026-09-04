@@ -283,14 +283,14 @@ The navigation is a solid floating capsule shared by the landing page, workflow,
 Desktop order:
 
 ```text
-GoalGuard | How it works | Trust & safety | Live foundations | Preview only | Connect wallet | Start a goal
+GoalGuard | How it works | Trust & safety | Live foundations | Preview only | Connect wallet | Build a plan
 ```
 
 - Brand links to `#top`.
 - Section links point only to real anchors.
 - `Preview only` is a non-interactive status label.
 - Wallet control is secondary.
-- `Start a goal` is the one black pill CTA and links to `#goal-composer`.
+- `Build a plan` is the one black pill CTA and links to `/goals/new`.
 - Do not add fictional login, signup, app-download, catalog, pricing, or account routes to match the reference.
 
 ### 5.2 Desktop specification
@@ -364,7 +364,7 @@ White page canvas
 - Internal padding: `clamp(32px, 5vw, 80px)`.
 - Headline width: roughly 7 columns and no more than three lines on wide desktop; natural wrapping takes priority below that range.
 - Primary CTA uses black/white. A secondary text link may sit beside it when it points to a real section.
-- Preserve the goal composer as the product's primary action; do not replace it with an app-download motif.
+- Present an unmistakably illustrative goal preview with one primary `Build my protection plan` action to `/goals/new`; the real composer belongs on that dedicated app route.
 
 ### 6.2 Product composition
 
@@ -378,7 +378,7 @@ Use layered HTML/CSS and simple inline SVG as a GoalGuard protection orbit:
 
 No stock photo, architectural photo, phone screenshot, coin imagery, candlestick dashboard, Apple mark, or invented portfolio chart. Production mockups must render real current state or content-safe generic labels such as “Protection floor” without invented numeric values.
 
-On mobile, remove fragile overlap, keep the artwork compact, and stack the composer before the protection orbit in reading and focus order. On fine pointers only, the orbit may tilt by at most 4 degrees and resets immediately on leave. Coarse pointers and reduced-motion mode remain static.
+On mobile, remove fragile overlap, keep the artwork compact, and stack the goal preview before the protection orbit in reading order. On fine pointers only, the orbit may tilt by at most 4 degrees and resets immediately on leave. Coarse pointers and reduced-motion mode remain static.
 
 ## 7. Surfaces, cards, and illustrations
 
@@ -446,6 +446,8 @@ Niu Lai is GoalGuard's branch-specific 3D brand companion. The production colour
 - Use one expressive `NiulaiMascot` per active view at most. Approved poses are neutral, listening, checking, explaining, attentive, safe-stop, and ready.
 - Match the pose to explicit interface state supplied by the parent. Niu Lai never fetches data, infers financial state, or changes workflow behavior.
 - Niu Lai may respond to focus, selection, acknowledgment, request activity, and stage entry. It is not directly clickable or focusable and never follows the cursor.
+- The standalone chat rail may use the approved 67 gesture only while recent text-entry activity is present. Its cycle follows a smoothed keystroke cadence from 480–1500ms and settles to listening after an adaptive 160–600ms inactivity window, so fast typing stops promptly without flickering for slower typists. It may use the approved Scuba loop only after a real request has remained active for 350ms. Both stop immediately when their source state ends.
+- Chat-rail poses stand directly above the input divider without a platform, disc, or added ground shadow.
 - Keep Niu Lai out of financial metrics, scenarios, transaction data, protocol facts, individual council verdicts, repeated rows, and read-only audit surfaces.
 - Use the full-body transparent cutout at medium and large sizes. Small placements default to a cropped upper-body view with no added shadow.
 - Place full-body poses directly on their parent surface without a white disc or circular frame. In active workflow compositions, reserve the lower-right area for the pose and keep provenance steps above it.
@@ -464,6 +466,8 @@ Motion is supportive, brief, and limited to transform and opacity.
 - Card stagger: at most 35ms.
 - Product modules may shift 2–4px on hover for fine pointers; never use constant bobbing.
 - No scroll hijacking, marquee, continuous parallax, layout animation, or decorative loading loop.
+- Niu Lai chat-rail gesture loops are state feedback rather than idle decoration: 67 is limited to active typing and Scuba is limited to a corresponding live request. Neither supplies semantic status or runs under reduced motion.
+- The landing goal preview may continuously loop through three short illustrative goals at a calm typing speed. It pauses automatically while the pointer is over the preview or keyboard focus is inside it, and reduced-motion mode skips directly to a static final state. No visible motion control is shown, so the CTA remains the preview's only actionable element. Assistive technology receives one stable text summary rather than character updates.
 - Progress animation runs only while the corresponding request is active.
 
 ```css
@@ -538,7 +542,7 @@ Landing-page rhythm:
 
 ```text
 Solid floating pill navbar
-Electric-lime hero + goal composer + GoalGuard protection orbit
+Electric-lime hero + illustrative goal preview + GoalGuard protection orbit
 Large “How protection works” heading
 Two wide soft-gray explanation modules
 Open two-column trust/safety advantages list with lime icon discs
@@ -558,7 +562,7 @@ Layout:      PageContainer, Section, Grid, SplitLayout, Stack, Cluster
 Navigation:  FloatingEditorialNavbar, GoalGuardBrand, ThemeSelector, MobileNavigation
 Typography:  DisplayHeading, SectionHeading, LeadText, BodyText, Metadata, FinancialValue
 Actions:     PrimaryButton, SecondaryButton, TextLink, IconButton, CopyButton
-Marketing:   LimeHero, FeatureModule, AdvantageItem, FoundationRail, DarkCTABand
+Marketing:   LimeHero, GoalPreview, FeatureModule, AdvantageItem, FoundationRail, DarkCTABand
 Illustration: ProtectionOrbit, AbstractArc, DataChip, DirectionalStroke
 Workflow:    StageShell, MetricCard, TrustRail, ScenarioComparison, CouncilCard
 Preview:     UnsignedTransactionCard, PreviewSafetySummary, ExpiryStatus
@@ -575,7 +579,7 @@ Create a reusable component only when it serves a real production state. Do not 
 4. Use Tailwind CSS v4 utilities against CSS variables; do not scatter arbitrary values through components.
 5. Load Manrope through `next/font`; remove active Instrument Serif usage.
 6. Reuse existing accessible primitives and Phosphor icons before creating new controls.
-7. Keep landing content server-rendered. Client boundaries are limited to actual interactions such as the menu, wallet, composer, copy controls, and workflow state.
+7. Keep landing content server-rendered. Client boundaries are limited to actual interactions such as the menu, wallet, bounded goal-preview animation, copy controls, and workflow state. The real composer is isolated on `/goals/new`.
 8. Use inline SVG/CSS for abstract art; do not add a heavy illustration, WebGL, or charting dependency.
 9. Do not use raw hex values, arbitrary radii, arbitrary shadows, gradients, or backdrop blur in component files.
 10. Do not ship links to sections or routes that do not exist.

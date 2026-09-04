@@ -21,7 +21,7 @@ describe("FloatingEditorialNavbar", () => {
     expect(screen.getAllByRole("link", { name: "How it works" }).at(0)).toHaveAttribute("href", "#how-it-works");
     expect(screen.getAllByRole("link", { name: "Trust & safety" }).at(0)).toHaveAttribute("href", "#trust-safety");
     expect(screen.getAllByRole("link", { name: "Live foundations" }).at(0)).toHaveAttribute("href", "#live-foundations");
-    expect(screen.getAllByRole("link", { name: "Start a goal" }).at(0)).toHaveAttribute("href", "#goal-composer");
+    expect(screen.getAllByRole("link", { name: "Build a plan" }).at(0)).toHaveAttribute("href", "/goals/new");
   });
 
   it("opens an accessible sheet, closes on Escape, and restores focus", async () => {
