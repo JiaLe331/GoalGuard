@@ -180,19 +180,16 @@ Use three layers: primitive values, semantic aliases, and component tokens. Comp
   --footer-bg: var(--surface-strong);
   --footer-fg: var(--foreground-on-strong);
 
-  --pip-body: var(--accent);
-  --pip-purpose: var(--accent);
-  --pip-armour: var(--black);
-  --pip-outline: var(--black);
-  --pip-eye: var(--white);
-  --pip-feature: var(--black);
-  --pip-belly: var(--white);
-  --pip-warning: var(--negative);
-  --pip-warning-surface: var(--negative-surface);
-  --pip-armour-on-dark: var(--white);
-  --pip-outline-on-dark: var(--white);
-  --pip-mark-on-lime: var(--black);
-  --pip-stage-on-lime: var(--white);
+  --niulai-fur: #c9f52b;
+  --niulai-fur-shadow: #a6d31e;
+  --niulai-muzzle: #b8a3c8;
+  --niulai-muzzle-shadow: #7e6a90;
+  --niulai-horn: #1b1d19;
+  --niulai-feature: #1b1d19;
+  --niulai-eye: var(--white);
+  --niulai-purpose: var(--white);
+  --niulai-horn-on-dark: var(--white);
+  --niulai-mark-on-lime: var(--black);
 }
 ```
 
@@ -441,15 +438,17 @@ All actions define default, hover, pressed, focus-visible, disabled, and loading
 - Decorative icons beside visible text are hidden from assistive technology.
 - Success, warning, rejection, and expiry always combine icon, label, and explanation.
 
-### 9.1 Pip mascot system
+### 9.1 Niu Lai mascot system
 
-Pip the Pangolin is GoalGuard's selected 2D brand companion. The production colourway is Electric Lime: lime body, near-black armour and features on light surfaces, reversed white armour on dark surfaces, and a black-only micro-mark on lime.
+Niu Lai is GoalGuard's branch-specific 3D brand companion. The production colourway keeps the intentionally stiff, low-budget character style while using electric-lime fur, charcoal horns and facial linework, pale-lavender muzzle, hands, and feet, plus one white GoalGuard purpose ring on the character's left flank.
 
-- Use `PipMark` for normal brand identity in the navbar, footer, app icon, and small product-brand placements.
-- Use one expressive `PipMascot` per active view at most. Approved poses are neutral, listening, checking, explaining, attentive, safe-stop, and ready.
-- Match the pose to explicit interface state supplied by the parent. Pip never fetches data, infers financial state, or changes workflow behavior.
-- Pip may respond to focus, selection, acknowledgment, request activity, and stage entry. It is not directly clickable or focusable and never follows the cursor.
-- Keep Pip out of financial metrics, scenarios, transaction data, protocol facts, individual council verdicts, repeated rows, and read-only audit surfaces.
+- Use `NiulaiMark` for normal brand identity in the navbar, footer, app icon, and small product-brand placements.
+- Use one expressive `NiulaiMascot` per active view at most. Approved poses are neutral, listening, checking, explaining, attentive, safe-stop, and ready.
+- Match the pose to explicit interface state supplied by the parent. Niu Lai never fetches data, infers financial state, or changes workflow behavior.
+- Niu Lai may respond to focus, selection, acknowledgment, request activity, and stage entry. It is not directly clickable or focusable and never follows the cursor.
+- Keep Niu Lai out of financial metrics, scenarios, transaction data, protocol facts, individual council verdicts, repeated rows, and read-only audit surfaces.
+- Use the full-body transparent cutout at medium and large sizes. Small placements default to a cropped upper-body view with no added shadow.
+- Place full-body poses directly on their parent surface without a white disc or circular frame. In active workflow compositions, reserve the lower-right area for the pose and keep provenance steps above it.
 - Ready means an unsigned preview is available to inspect. Do not use cheering, confetti, profit imagery, or any pose that implies protection was executed.
 - Decorative instances are hidden from assistive technology. Visible text and semantic status components remain the sole source of state meaning.
 - On compact screens, reduce the mascot before reducing or obscuring form, status, or action content.
