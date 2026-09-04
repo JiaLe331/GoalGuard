@@ -4,7 +4,7 @@ import Decimal from "decimal.js";
 import { getAddress } from "ethers";
 
 import { readServerEnvironment } from "@/lib/config/env";
-import type { PreparedTransaction, ProtectionCandidate, Trade, TradePreview, UUID } from "@/lib/contracts";
+import type { BalanceReadiness, PreparedTransaction, ProtectionCandidate, Trade, TradePreview, UUID } from "@/lib/contracts";
 import { publicCandidate } from "@/lib/contracts";
 import type { GoalGuardRepository } from "@/lib/db/repository";
 import { PostgresGoalGuardRepository } from "@/lib/db/repository";
@@ -52,8 +52,22 @@ async function buildUnsignedPreview(candidate: ProtectionCandidate, walletAddres
     const execution = prepared(encoded.to, encoded.data); const token = getAddress(candidate.settlementTokenAddress); const spender = execution.to;
     const current = await client.erc20.getAllowance(token, getAddress(walletAddress), spender); const approvalRequired = current < amount;
     const approval = approvalRequired ? client.erc20.encodeApprove(token, spender, amount) : null;
-    return { execution, approval: approval ? prepared(approval.to, approval.data) : null, allowance: { tokenAddress: token, spenderAddress: spender, currentAmountBaseUnits: current.toString(), requiredAmountBaseUnits: amount.toString(), approvalRequired }, expiresAt: new Date(Math.min(now.getTime() + QUOTE_LIFETIME_MS, orderDeadline - ORDER_SAFETY_MARGIN_MS)).toISOString(), quoteFingerprint: hashJson({ order: serializeOrder(order), premiumAmountBaseUnits: amount.toString() }) };
+    const underlyingExposure = await buildUnderlyingExposure(candidate, walletAddress, client);
+    return { execution, approval: approval ? prepared(approval.to, approval.data) : null, allowance: { tokenAddress: token, spenderAddress: spender, currentAmountBaseUnits: current.toString(), requiredAmountBaseUnits: amount.toString(), approvalRequired }, underlyingExposure, expiresAt: new Date(Math.min(now.getTime() + QUOTE_LIFETIME_MS, orderDeadline - ORDER_SAFETY_MARGIN_MS)).toISOString(), quoteFingerprint: hashJson({ order: serializeOrder(order), premiumAmountBaseUnits: amount.toString() }) };
   });
+}
+
+// Cash settlement never requires the user to deliver ETH; physical settlement requires delivering
+// exactly candidate.quantityBaseUnits of WETH at settlement (see units.ts/strategy.ts commentary
+// on the verified PHYSICAL_PUT delivery mechanics). This is a preview-time snapshot only -- it
+// cannot guarantee the wallet still holds enough WETH by the time expiry/settlement occurs.
+async function buildUnderlyingExposure(candidate: ProtectionCandidate, walletAddress: string, client: PreviewClient): Promise<BalanceReadiness> {
+  if (candidate.settlementType !== "physical") return { symbol: "ETH", balanceBaseUnits: "0", requiredBaseUnits: "0", sufficient: true };
+  const weth = client.chainConfig.tokens.WETH;
+  if (!weth) return { symbol: "ETH", balanceBaseUnits: "0", requiredBaseUnits: candidate.quantityBaseUnits, sufficient: false };
+  const required = BigInt(candidate.quantityBaseUnits);
+  const balance = await client.erc20.getBalance(weth.address, getAddress(walletAddress));
+  return { symbol: "ETH", balanceBaseUnits: balance.toString(), requiredBaseUnits: required.toString(), sufficient: balance >= required };
 }
 
 export async function previewTrade(goalId: UUID, candidateId: UUID, decisionId: UUID, walletAddress: string, idempotencyKey: string, ownerSessionHash: string, repository: GoalGuardRepository = new PostgresGoalGuardRepository(), dependencies: PreviewDependencies = {}): Promise<TradePreview> {
@@ -67,7 +81,7 @@ export async function previewTrade(goalId: UUID, candidateId: UUID, decisionId: 
   const trade: Trade = { schemaVersion: 1, id: randomUUID(), goalId, candidateId, councilDecisionId: decisionId, idempotencyKey, walletAddress: getAddress(walletAddress), chainId: BASE_CHAIN_ID, status: "previewed", quoteFingerprint: exact.quoteFingerprint, previewExpiresAt: exact.expiresAt, settlementTokenAddress: candidate.settlementTokenAddress, premiumAmountBaseUnits: candidate.premiumAmountBaseUnits, premiumUsd: candidate.premiumUsd, txHash: null, protocolPositionId: null, failureCode: null, failureMessage: null, createdAt: now.toISOString(), updatedAt: now.toISOString(), submittedAt: null, confirmedAt: null };
   const saved = await repository.createTrade(trade, { target: exact.execution.to, calldataHash: sha256(exact.execution.data.toLowerCase()), valueBaseUnits: exact.execution.valueBaseUnits, verificationDeadline: exact.expiresAt }, ownerSessionHash);
   const referrer = env.THETANUTS_REFERRER_ADDRESS ?? null;
-  return { trade: saved, candidate: publicCandidate(candidate), allowance: exact.allowance, approvalTransaction: exact.approval, executionTransaction: exact.execution, estimatedGasBaseUnits: null, walletReadiness: { gas: { symbol: "ETH", balanceBaseUnits: "0", requiredBaseUnits: "0", sufficient: false }, settlementToken: { symbol: candidate.settlementTokenSymbol, balanceBaseUnits: "0", requiredBaseUnits: candidate.premiumAmountBaseUnits, sufficient: false }, underlyingExposure: { symbol: "ETH", balanceBaseUnits: "0", requiredBaseUnits: "0", sufficient: false } }, referralDisclosure: { referrerAddress: referrer, mayReceiveFee: Boolean(referrer), message: referrer ? "The configured referrer may receive part of the protocol fee." : "No GoalGuard referrer fee is configured." }, purpose: "unsigned_transaction_preview", proposal: { premiumAmountBaseUnits: candidate.premiumAmountBaseUnits, quantityBaseUnits: candidate.quantityBaseUnits, coverageMode: candidate.coverageMode, goalCoverageBps: candidate.goalCoverageBps }, warnings: ["This is an unsigned demo preview. No transaction was signed, no funds moved, and no protected position was created.", exact.approval ? "The displayed token approval is exact and unsigned." : null].filter((value): value is string => value !== null) };
+  return { trade: saved, candidate: publicCandidate(candidate), allowance: exact.allowance, approvalTransaction: exact.approval, executionTransaction: exact.execution, estimatedGasBaseUnits: null, walletReadiness: { gas: { symbol: "ETH", balanceBaseUnits: "0", requiredBaseUnits: "0", sufficient: false }, settlementToken: { symbol: candidate.settlementTokenSymbol, balanceBaseUnits: "0", requiredBaseUnits: candidate.premiumAmountBaseUnits, sufficient: false }, underlyingExposure: exact.underlyingExposure }, referralDisclosure: { referrerAddress: referrer, mayReceiveFee: Boolean(referrer), message: referrer ? "The configured referrer may receive part of the protocol fee." : "No GoalGuard referrer fee is configured." }, purpose: "unsigned_transaction_preview", proposal: { premiumAmountBaseUnits: candidate.premiumAmountBaseUnits, quantityBaseUnits: candidate.quantityBaseUnits, coverageMode: candidate.coverageMode, goalCoverageBps: candidate.goalCoverageBps }, warnings: ["This is an unsigned demo preview. No transaction was signed, no funds moved, and no protected position was created.", exact.approval ? "The displayed token approval is exact and unsigned." : null].filter((value): value is string => value !== null) };
 }
 
 export async function prepareExecution(): Promise<never> { throw new ApiRouteError("EXECUTION_DISABLED", "Execution is disabled for the unsigned-demo policy.", 422); }

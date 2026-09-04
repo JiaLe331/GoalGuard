@@ -272,6 +272,7 @@ export type ReviewCandidateResponse = z.infer<typeof ReviewCandidateResponseSche
 export type PreviewTradeRequest = z.infer<typeof PreviewTradeRequestSchema>;
 export type AllowanceRequirement = z.infer<typeof AllowanceRequirementSchema>;
 export type PreparedTransaction = z.infer<typeof PreparedTransactionSchema>;
+export type BalanceReadiness = z.infer<typeof BalanceReadinessSchema>;
 export type WalletReadiness = z.infer<typeof WalletReadinessSchema>;
 export type ReferralDisclosure = z.infer<typeof ReferralDisclosureSchema>;
 export type UnsignedPreviewProposal = z.infer<typeof UnsignedPreviewProposalSchema>;

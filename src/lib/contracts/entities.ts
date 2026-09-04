@@ -13,6 +13,7 @@ import {
   InferencePurposeSchema,
   InferenceStatusSchema,
   OptionTypeSchema,
+  SettlementTypeSchema,
   SupportedAssetSchema,
   TradeStatusSchema,
 } from "./enums";
@@ -76,6 +77,7 @@ export const ProtectionCandidateSchema = z.object({
   protocolOrderId: z.string().trim().min(1).nullable(),
   underlyingAsset: SupportedAssetSchema,
   optionType: OptionTypeSchema,
+  settlementType: SettlementTypeSchema,
   strikeUsd: positiveDecimal,
   expiry: ISODateTimeSchema,
   settlementTokenAddress: EvmAddressSchema,

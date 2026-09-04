@@ -47,6 +47,7 @@ export interface WorkflowState {
   preview: TradePreview | null;
   previewMeta: ApiMeta | null;
   previewAcknowledged: boolean;
+  physicalSettlementAcknowledged: boolean;
   trade: Trade | null;
   error: WorkflowError | null;
   notice: string | null;
@@ -62,6 +63,7 @@ export const initialWorkflowState: WorkflowState = {
   preview: null,
   previewMeta: null,
   previewAcknowledged: false,
+  physicalSettlementAcknowledged: false,
   trade: null,
   error: null,
   notice: null,
@@ -77,6 +79,7 @@ export type WorkflowAction =
   | { type: "preview_confirmation_started" }
   | { type: "preview_confirmation_cancelled" }
   | { type: "preview_acknowledgment_changed"; acknowledged: boolean }
+  | { type: "physical_settlement_acknowledgment_changed"; acknowledged: boolean }
   | { type: "preview_started" }
   | { type: "preview_ready"; response: PreviewTradeResponse }
   | { type: "preview_invalidated"; notice: string }
@@ -127,9 +130,9 @@ export function workflowReducer(state: WorkflowState, action: WorkflowAction): W
       };
     }
     case "goal_updated":
-      return { ...state, goal: action.goal, stage: "confirming_goal", error: null, notice: "Goal changes saved.", previewAcknowledged: false };
+      return { ...state, goal: action.goal, stage: "confirming_goal", error: null, notice: "Goal changes saved.", previewAcknowledged: false, physicalSettlementAcknowledged: false };
     case "search_started":
-      return { ...state, stage: "searching_candidates", error: null, notice: null, preview: null, previewMeta: null, previewAcknowledged: false };
+      return { ...state, stage: "searching_candidates", error: null, notice: null, preview: null, previewMeta: null, previewAcknowledged: false, physicalSettlementAcknowledged: false };
     case "candidates_found":
       return { ...state, goal: action.goal, candidates: action.candidates, selectedCandidate: action.selected, error: null };
     case "review_started":
@@ -144,19 +147,26 @@ export function workflowReducer(state: WorkflowState, action: WorkflowAction): W
         preview: null,
         previewMeta: null,
         previewAcknowledged: false,
+        physicalSettlementAcknowledged: false,
         error: null,
       };
     case "preview_confirmation_started":
       if (state.stage !== "plan_approved") return state;
-      return { ...state, stage: "confirming_preview", previewAcknowledged: false, error: null, notice: null };
+      return { ...state, stage: "confirming_preview", previewAcknowledged: false, physicalSettlementAcknowledged: false, error: null, notice: null };
     case "preview_confirmation_cancelled":
-      return { ...state, stage: "plan_approved", previewAcknowledged: false, error: null };
+      return { ...state, stage: "plan_approved", previewAcknowledged: false, physicalSettlementAcknowledged: false, error: null };
     case "preview_acknowledgment_changed":
       if (state.stage !== "confirming_preview") return state;
       return { ...state, previewAcknowledged: action.acknowledged };
-    case "preview_started":
+    case "physical_settlement_acknowledgment_changed":
+      if (state.stage !== "confirming_preview") return state;
+      return { ...state, physicalSettlementAcknowledged: action.acknowledged };
+    case "preview_started": {
       if (state.stage !== "confirming_preview" || !state.previewAcknowledged) return state;
+      const requiresPhysicalAcknowledgment = state.selectedCandidate?.settlementType === "physical";
+      if (requiresPhysicalAcknowledgment && !state.physicalSettlementAcknowledged) return state;
       return { ...state, stage: "generating_preview", error: null, notice: null };
+    }
     case "preview_ready":
       if (state.stage !== "generating_preview") return state;
       return {
@@ -166,6 +176,7 @@ export function workflowReducer(state: WorkflowState, action: WorkflowAction): W
         previewMeta: action.response.meta,
         trade: action.response.data.trade,
         previewAcknowledged: false,
+        physicalSettlementAcknowledged: false,
         error: null,
       };
     case "preview_invalidated":
@@ -175,6 +186,7 @@ export function workflowReducer(state: WorkflowState, action: WorkflowAction): W
         preview: null,
         previewMeta: null,
         previewAcknowledged: false,
+        physicalSettlementAcknowledged: false,
         notice: action.notice,
       };
     case "restart":
@@ -184,10 +196,11 @@ export function workflowReducer(state: WorkflowState, action: WorkflowAction): W
         ...state,
         stage: action.error.retryable ? "recoverable_error" : "terminal_error",
         previewAcknowledged: false,
+        physicalSettlementAcknowledged: false,
         error: action.error,
       };
     case "clear_error":
-      return { ...state, stage: state.error?.returnStage ?? "confirming_goal", previewAcknowledged: false, error: null };
+      return { ...state, stage: state.error?.returnStage ?? "confirming_goal", previewAcknowledged: false, physicalSettlementAcknowledged: false, error: null };
     case "notice":
       return { ...state, notice: action.notice };
   }

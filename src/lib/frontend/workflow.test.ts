@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { fixtureBlockedDecision, fixtureCandidate, fixtureDecision, fixtureDisputedDecision, fixtureGoal, fixtureReadyGoal, fixtureTrade, getDraftGoalResponse, previewTradeResponse } from "@/test/fixtures/goalguard";
+import { fixtureBlockedDecision, fixtureCandidate, fixtureDecision, fixtureDisputedDecision, fixtureGoal, fixturePhysicalCandidate, fixtureReadyGoal, fixtureTrade, getDraftGoalResponse, previewTradeResponse } from "@/test/fixtures/goalguard";
 import { initialWorkflowState, workflowReducer } from "./workflow";
 
 describe("preview-only workflow reducer", () => {
@@ -36,6 +36,22 @@ describe("preview-only workflow reducer", () => {
     const confirming = { ...initialWorkflowState, stage: "confirming_preview" as const, previewAcknowledged: true };
     expect(workflowReducer(confirming, { type: "preview_confirmation_cancelled" }).previewAcknowledged).toBe(false);
     expect(workflowReducer(confirming, { type: "preview_invalidated", notice: "wallet changed" }).previewAcknowledged).toBe(false);
+  });
+
+  it("additionally requires a physical-settlement-specific acknowledgment before requesting a preview for a physical candidate", () => {
+    const approved = { ...initialWorkflowState, stage: "plan_approved" as const, goal: fixtureReadyGoal, selectedCandidate: fixturePhysicalCandidate, decision: fixtureDecision };
+    const confirming = workflowReducer(approved, { type: "preview_confirmation_started" });
+    const acknowledged = workflowReducer(confirming, { type: "preview_acknowledgment_changed", acknowledged: true });
+    // The general acknowledgment alone is not enough for a physical candidate.
+    expect(workflowReducer(acknowledged, { type: "preview_started" }).stage).toBe("confirming_preview");
+    const bothAcknowledged = workflowReducer(acknowledged, { type: "physical_settlement_acknowledgment_changed", acknowledged: true });
+    expect(workflowReducer(bothAcknowledged, { type: "preview_started" }).stage).toBe("generating_preview");
+  });
+
+  it("resets the physical-settlement acknowledgment alongside the general one", () => {
+    const confirming = { ...initialWorkflowState, stage: "confirming_preview" as const, previewAcknowledged: true, physicalSettlementAcknowledged: true };
+    expect(workflowReducer(confirming, { type: "preview_confirmation_cancelled" }).physicalSettlementAcknowledged).toBe(false);
+    expect(workflowReducer(confirming, { type: "preview_invalidated", notice: "wallet changed" }).physicalSettlementAcknowledged).toBe(false);
   });
 
   it("never restores preview calldata from hydration", () => {

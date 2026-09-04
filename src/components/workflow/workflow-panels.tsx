@@ -221,16 +221,25 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
 }) {
   const approved = decision.status === "approved";
   const cta = walletStatus === "wrong-network" ? "Switch to Base" : walletStatus === "connected" ? "Continue to unsigned preview" : "Connect wallet to continue";
+  const isPhysical = candidate.settlementType === "physical";
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_23rem]">
       <Card className="overflow-hidden">
         <div className="p-6 sm:p-9">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <StatusBadge tone={approved ? "ready" : decision.status === "disputed" ? "warning" : "error"} label={approved ? "Approved by 3 checks" : decision.status === "disputed" ? "Review disputed" : "Plan blocked"} />
+            <div className="flex flex-wrap gap-2">
+              <StatusBadge tone={approved ? "ready" : decision.status === "disputed" ? "warning" : "error"} label={approved ? "Approved by 3 checks" : decision.status === "disputed" ? "Review disputed" : "Plan blocked"} />
+              <StatusBadge tone={isPhysical ? "warning" : "info"} label={isPhysical ? "Asset-Delivery Protection" : "Cash Protection"} />
+            </div>
             <span className="text-xs text-[color:var(--foreground-soft)] tabular-nums">Market {formatDate(candidate.marketAsOf, { hour: "numeric", minute: "2-digit" })}</span>
           </div>
           <h1 className="mt-6 max-w-3xl text-4xl font-semibold leading-[1.02] tracking-[-0.055em] sm:text-6xl">A protection plan for {goalName(goal)}.</h1>
           <p className="mt-4 max-w-2xl text-[color:var(--foreground-soft)]">A live ETH put limits the selected downside through its displayed expiry. It does not guarantee the full goal after that time.</p>
+          <Alert className="mt-4" tone={isPhysical ? "warning" : "info"} title={isPhysical ? "This is asset-delivery protection" : "This is cash protection"}>
+            {isPhysical
+              ? "No cash-settled option was available, so this plan uses asset-delivery settlement instead. Under the settlement conditions shown below, your covered ETH may be delivered/exchanged, and you would receive a USD-linked settlement asset instead. This is different from a cash payout."
+              : "If ETH falls, you keep your ETH and receive a cash top-up according to the settlement conditions shown below."}
+          </Alert>
         </div>
         <div className="border-t border-[var(--border)] bg-[var(--surface-raised)] p-6 sm:p-8">
           <div className="metric-grid grid gap-3">
@@ -245,7 +254,7 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
               <div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--foreground-soft)]">Scenario comparison</p><h2 id="scenario-title" className="mt-2 text-3xl font-semibold tracking-[-0.045em]">What the protection changes</h2></div>
               <p className="text-xs text-[color:var(--foreground-soft)]">Estimated net value after cost</p>
             </div>
-            <div className="mt-6"><ScenarioComparison scenarios={candidate.scenarios} /></div>
+            <div className="mt-6"><ScenarioComparison scenarios={candidate.scenarios} settlementType={candidate.settlementType} strikeUsd={candidate.strikeUsd} /></div>
           </section>
           <div className="mt-8">
             <Accordion title="Protocol facts">
@@ -287,21 +296,28 @@ export function CouncilDrawer({ decision, open, onClose }: { decision: CouncilDe
   );
 }
 
-export function PreviewConfirmationPanel({ goal, candidate, walletAddress, acknowledged, busy, onAcknowledged, onBack, onGenerate }: {
+export function PreviewConfirmationPanel({ goal, candidate, walletAddress, acknowledged, physicalSettlementAcknowledged, busy, onAcknowledged, onPhysicalSettlementAcknowledged, onBack, onGenerate }: {
   goal: Goal;
   candidate: PublicProtectionCandidate;
   walletAddress: string;
   acknowledged: boolean;
+  physicalSettlementAcknowledged: boolean;
   busy: boolean;
   onAcknowledged: (value: boolean) => void;
+  onPhysicalSettlementAcknowledged: (value: boolean) => void;
   onBack: () => void;
   onGenerate: () => void;
 }) {
+  const isPhysical = candidate.settlementType === "physical";
+  const canGenerate = acknowledged && (!isPhysical || physicalSettlementAcknowledged);
   return (
     <Card className="mx-auto max-w-5xl overflow-hidden">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 p-6 sm:gap-6 sm:p-9">
         <div>
-          <StatusBadge label="Final review · no wallet signature" tone="info" />
+          <div className="flex flex-wrap gap-2">
+            <StatusBadge label="Final review · no wallet signature" tone="info" />
+            <StatusBadge tone={isPhysical ? "warning" : "info"} label={isPhysical ? "Asset-Delivery Protection" : "Cash Protection"} />
+          </div>
           <h1 className="mt-5 text-4xl font-semibold leading-[1.02] tracking-[-0.05em] sm:text-5xl">Confirm the facts before generating an unsigned preview.</h1>
           <p className="mt-3 max-w-3xl text-[color:var(--foreground-soft)]">Back makes no API change. Generate calls the preview endpoint once and returns transaction data for inspection only.</p>
         </div>
@@ -321,14 +337,23 @@ export function PreviewConfirmationPanel({ goal, candidate, walletAddress, ackno
           <input type="checkbox" checked={acknowledged} onChange={(event) => onAcknowledged(event.target.checked)} className="mt-1 size-5 shrink-0 accent-[var(--foreground)]" />
           I understand the exact cost, expiry, coverage, connected wallet, and that this produces unsigned transaction data only.
         </label>
-        <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end"><Button variant="ghost" onClick={onBack} disabled={busy}><ArrowLeft aria-hidden="true" />Back to plan</Button><Button onClick={onGenerate} disabled={!acknowledged || busy}>{busy ? "Generating unsigned preview…" : "Generate unsigned preview"}<ShieldCheck aria-hidden="true" /></Button></div>
+        {isPhysical ? (
+          <label className="mt-3 flex min-h-14 cursor-pointer items-start gap-3 rounded-[var(--radius-control)] border-2 border-[var(--negative)] bg-[var(--negative-surface)] p-4 text-sm leading-6 focus-within:outline-2 focus-within:outline-offset-3 focus-within:outline-[var(--focus-ring)]">
+            <input type="checkbox" checked={physicalSettlementAcknowledged} onChange={(event) => onPhysicalSettlementAcknowledged(event.target.checked)} className="mt-1 size-5 shrink-0 accent-[var(--negative)]" />
+            I understand this position settles by asset delivery, not a cash payout, and my ETH may be delivered at settlement.
+          </label>
+        ) : null}
+        <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end"><Button variant="ghost" onClick={onBack} disabled={busy}><ArrowLeft aria-hidden="true" />Back to plan</Button><Button onClick={onGenerate} disabled={!canGenerate || busy}>{busy ? "Generating unsigned preview…" : "Generate unsigned preview"}<ShieldCheck aria-hidden="true" /></Button></div>
       </div>
     </Card>
   );
 }
 
-function readinessDecimals(symbol: string) {
-  return symbol === "USDC" ? 6 : 18;
+// "gas" and "underlyingExposure" are always native/wrapped ETH (18 decimals); "settlementToken"
+// must use the candidate's own verified decimals -- it is never assumed to be USDC/6-decimal,
+// since a physical candidate's settlement token (e.g. aBasUSDC) may differ.
+function readinessDecimals(key: string, settlementTokenDecimals: number) {
+  return key === "settlementToken" ? settlementTokenDecimals : 18;
 }
 
 export function DemoPreviewReadyPanel({ goal, preview, meta, decision, onStartAnother, onFreshPreview }: {
@@ -379,7 +404,7 @@ export function DemoPreviewReadyPanel({ goal, preview, meta, decision, onStartAn
             <h2 id="readiness-title" className="text-3xl font-semibold tracking-[-0.045em]">Wallet readiness</h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
               {readiness.map(([key, item]) => {
-                const decimals = readinessDecimals(item.symbol);
+                const decimals = readinessDecimals(key, preview.candidate.settlementTokenDecimals);
                 return (
                   <div key={key} className="border-t border-[var(--border)] bg-[var(--surface)] p-4">
                     <div className="flex items-center gap-2"><CheckCircle weight={item.sufficient ? "fill" : "regular"} className={item.sufficient ? "text-[color:var(--positive)]" : "text-[color:var(--negative)]"} aria-hidden="true" /><p className="text-sm font-semibold capitalize">{key.replace(/([A-Z])/g, " $1")}</p></div>

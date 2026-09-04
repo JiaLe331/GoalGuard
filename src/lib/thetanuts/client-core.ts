@@ -22,6 +22,23 @@ export function parseThetanutsMarketData(value: unknown) {
   return marketDataSchema.parse(value);
 }
 
+export interface KnownToken { symbol: string; decimals: number }
+
+/**
+ * Resolve a collateral token's symbol/decimals from the SDK's own chain
+ * configuration (which lists every token the protocol currently recognizes,
+ * e.g. USDC and aBasUSDC). Returns null for an address the SDK does not
+ * recognize -- callers must reject rather than guess, since decimals drive
+ * every downstream dollar calculation for that order.
+ */
+export function resolveKnownToken(chainConfig: ThetanutsReadClient["chainConfig"], tokenAddress: string): KnownToken | null {
+  const lowerAddress = tokenAddress.toLowerCase();
+  for (const token of Object.values(chainConfig.tokens)) {
+    if (token.address.toLowerCase() === lowerAddress) return { symbol: token.symbol, decimals: token.decimals };
+  }
+  return null;
+}
+
 export function parseThetanutsOrders(value: unknown): ThetanutsOrder[] {
   const result = z.array(z.object({
     order: z.object({ nonce: z.bigint() }).passthrough(),

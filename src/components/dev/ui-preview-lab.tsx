@@ -85,6 +85,7 @@ export function UiPreviewLab({ initialState, samples }: { initialState: UiPrevie
   const [state, setState] = useState(initialState);
   const [goal, setGoal] = useState(samples.goal);
   const [acknowledged, setAcknowledged] = useState(false);
+  const [physicalAcknowledged, setPhysicalAcknowledged] = useState(false);
   const [saved, setSaved] = useState(false);
   const [councilOpen, setCouncilOpen] = useState(initialState === "council-drawer");
   const frame = stageFrame(state);
@@ -111,6 +112,7 @@ export function UiPreviewLab({ initialState, samples }: { initialState: UiPrevie
   const selectState = useCallback((next: UiPreviewState) => {
     setState(next);
     setAcknowledged(false);
+    setPhysicalAcknowledged(false);
     setSaved(false);
     setCouncilOpen(next === "council-drawer");
     const url = new URL(window.location.href);
@@ -178,10 +180,12 @@ export function UiPreviewLab({ initialState, samples }: { initialState: UiPrevie
           candidate={samples.candidate}
           walletAddress={previewWallet}
           acknowledged={acknowledged}
+          physicalSettlementAcknowledged={physicalAcknowledged}
           busy={false}
           onAcknowledged={setAcknowledged}
+          onPhysicalSettlementAcknowledged={setPhysicalAcknowledged}
           onBack={() => selectState("plan-approved")}
-          onGenerate={() => { if (acknowledged) selectState("generating-preview"); }}
+          onGenerate={() => { if (acknowledged && (samples.candidate.settlementType !== "physical" || physicalAcknowledged)) selectState("generating-preview"); }}
         />
       );
     }
