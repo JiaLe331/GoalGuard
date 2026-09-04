@@ -228,6 +228,44 @@ pre,
   animation: niulai-checking 1.1s ease-in-out infinite;
 }
 
+.niulai-chat-rail {
+  container-type: inline-size;
+}
+
+.niulai-chat-rail__stage {
+  height: 4.5rem;
+}
+
+.niulai-chat-rail__mascot {
+  width: 3.2rem;
+  height: 4rem;
+}
+
+.niulai-chat-rail__gesture-67 {
+  background-image: url("/media/niulai-v1/motion/niulai-v1-motion-67-sprite.webp");
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  background-size: 1500% 100%;
+  animation: niulai-gesture-67 var(--niulai-gesture-cycle, 800ms) steps(14, end) infinite;
+}
+
+@container (min-width: 30rem) {
+  .niulai-chat-rail__stage {
+    height: 6.5rem;
+  }
+
+  .niulai-chat-rail__mascot {
+    width: 4.8rem;
+    height: 6rem;
+  }
+}
+
+@keyframes niulai-gesture-67 {
+  to {
+    background-position: 100% 0;
+  }
+}
+
 .pretty-text {
   text-wrap: pretty;
 }
@@ -250,5 +288,9 @@ pre,
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+  }
+
+  [data-niulai-motion-asset] {
+    display: none !important;
   }
 }

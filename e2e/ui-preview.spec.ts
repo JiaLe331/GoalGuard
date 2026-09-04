@@ -89,14 +89,68 @@ test("keeps Niu Lai clear of copy and provenance at the 547px review width", asy
   const activeMascot = page.locator('[data-niulai-placement="active-request"]');
   await expect(provenance).toBeVisible();
   await expect(activeMascot).toBeVisible();
-  const [provenanceBox, activeMascotBox] = await Promise.all([provenance.boundingBox(), activeMascot.boundingBox()]);
-  expect(activeMascotBox?.y ?? 0).toBeGreaterThanOrEqual((provenanceBox?.y ?? 0) + (provenanceBox?.height ?? 0) + 16);
+  await expect.poll(async () => {
+    const [provenanceBox, activeMascotBox] = await Promise.all([provenance.boundingBox(), activeMascot.boundingBox()]);
+    if (!provenanceBox || !activeMascotBox) return Number.NEGATIVE_INFINITY;
+    return activeMascotBox.y - provenanceBox.y - provenanceBox.height;
+  }).toBeGreaterThanOrEqual(16);
 
   await page.goto("/dev/ui-preview?state=demo-ready");
   const readyCopy = page.locator('[data-niulai-copy="demo-ready"]');
   const readyMascot = page.locator('[data-niulai-placement="demo-ready"]');
   await expect(readyCopy).toBeVisible();
   await expect(readyMascot).toBeVisible();
-  const [readyCopyBox, readyMascotBox] = await Promise.all([readyCopy.boundingBox(), readyMascot.boundingBox()]);
-  expect(readyMascotBox?.y ?? 0).toBeGreaterThanOrEqual((readyCopyBox?.y ?? 0) + (readyCopyBox?.height ?? 0) + 16);
+  await expect.poll(async () => {
+    const [readyCopyBox, readyMascotBox] = await Promise.all([readyCopy.boundingBox(), readyMascot.boundingBox()]);
+    if (!readyCopyBox || !readyMascotBox) return Number.NEGATIVE_INFINITY;
+    return readyMascotBox.y - readyCopyBox.y - readyCopyBox.height;
+  }).toBeGreaterThanOrEqual(16);
+});
+
+test("runs the standalone chat rail choreography without backend traffic", async ({ page }) => {
+  const apiRequests: string[] = [];
+  page.on("request", (request) => {
+    if (new URL(request.url()).pathname.startsWith("/api/")) apiRequests.push(request.url());
+  });
+
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/dev/ui-preview");
+
+  const preview = page.getByRole("region", { name: "Niu Lai chat rail" });
+  const rail = preview.locator("[data-niulai-chat-state]").first();
+  const message = preview.getByLabel("Mock chat message");
+
+  await message.focus();
+  await expect(rail).toHaveAttribute("data-niulai-chat-state", "listening");
+  await message.fill("Protect my rent money until next month");
+  await expect(rail).toHaveAttribute("data-niulai-chat-state", "typing");
+  await expect(rail).toHaveAttribute("data-niulai-motion-active", "gesture-67");
+  await expect(rail).toHaveAttribute("data-niulai-gesture-cycle-ms", "800");
+  const gesture = rail.locator("[data-niulai-motion-asset='gesture-67']");
+  await expect(gesture).toBeVisible();
+  const gesturePreload = rail.locator("[data-niulai-motion-preload='gesture-67']");
+  await expect.poll(() => gesturePreload.evaluate((image: HTMLImageElement) => [image.naturalWidth, image.naturalHeight])).toEqual([7200, 600]);
+
+  await page.waitForTimeout(650);
+  await expect(rail).toHaveAttribute("data-niulai-chat-state", "listening");
+  await expect(rail).toHaveAttribute("data-niulai-motion-active", "none");
+
+  await preview.getByRole("button", { name: "Run mock agent" }).click();
+  await expect(rail).toHaveAttribute("data-niulai-chat-state", "processing");
+  await expect(rail).toHaveAttribute("data-niulai-processing-stage", "reading-goal");
+  await expect(rail).toHaveAttribute("data-niulai-motion-active", "none");
+  await page.waitForTimeout(400);
+  await expect(rail).toHaveAttribute("data-niulai-motion-active", "scuba");
+  const scuba = rail.locator("[data-niulai-motion-asset='scuba']");
+  await expect(scuba).toBeVisible();
+  await expect.poll(() => scuba.evaluate((image: HTMLImageElement) => [image.naturalWidth, image.naturalHeight])).toEqual([480, 600]);
+
+  await preview.getByRole("checkbox", { name: "Reduce motion preview" }).check();
+  await expect(rail).toHaveAttribute("data-niulai-motion-active", "none");
+  await expect(rail.locator("[data-niulai-static-fallback='true']")).toBeVisible();
+
+  await preview.getByRole("button", { name: "Error" }).click();
+  await expect(rail).toHaveAttribute("data-niulai-chat-state", "error");
+  await expect(rail).toHaveAttribute("data-niulai-motion-active", "none");
+  expect(apiRequests).toEqual([]);
 });

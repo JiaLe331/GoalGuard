@@ -1,6 +1,7 @@
 "use client";
 
 import { List, ShieldCheck } from "@phosphor-icons/react";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { NiulaiMark } from "@/components/brand/niulai-mascot";
@@ -18,7 +19,7 @@ const defaultLinks: readonly EditorialNavLink[] = [
   { label: "Live foundations", href: "#live-foundations" },
 ];
 
-const defaultPrimaryAction: EditorialNavLink = { label: "Start a goal", href: "#goal-composer" };
+const defaultPrimaryAction: EditorialNavLink = { label: "Build a plan", href: "/goals/new" };
 
 export function GoalGuardBrand({ href = "#top" }: { href?: string }) {
   return (
@@ -140,7 +141,7 @@ export function FloatingEditorialNavbar({
           {variant === "marketing" ? (
             <>
               <span className="hidden min-[1200px]:inline-flex">{walletSlot ?? <WalletControl compact />}</span>
-              {action ? <a href={action.href} className="hidden min-h-12 shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-[var(--button-primary-bg)] px-5 text-sm font-semibold text-[color:var(--button-primary-fg)] transition-[background-color,transform] duration-[var(--duration-press)] hover:bg-[var(--button-primary-hover)] active:scale-[0.98] min-[1200px]:inline-flex xl:px-6">{action.label}</a> : null}
+              {action ? <Link href={action.href} className="hidden min-h-12 shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-[var(--button-primary-bg)] px-5 text-sm font-semibold text-[color:var(--button-primary-fg)] transition-[background-color,transform] duration-[var(--duration-press)] hover:bg-[var(--button-primary-hover)] active:scale-[0.98] min-[1200px]:inline-flex xl:px-6">{action.label}</Link> : null}
               <Button ref={menuButton} variant="secondary" className="min-w-11 px-3 min-[1200px]:hidden" aria-expanded={open} aria-controls="editorial-navigation-menu" onClick={() => setOpen(true)}>
                 <List className="size-5" aria-hidden="true" />
                 <span className="hidden min-[520px]:inline">Menu</span>
@@ -165,7 +166,7 @@ export function FloatingEditorialNavbar({
             </div>
             <div className="mt-auto grid gap-3 pt-8">
               {walletSlot ?? <WalletControl fullWidth />}
-              {action ? <a href={action.href} onClick={() => selectAnchor(action.href)} className="inline-flex min-h-12 items-center justify-center rounded-full bg-[var(--button-primary-bg)] px-6 text-sm font-semibold text-[color:var(--button-primary-fg)]">{action.label}</a> : null}
+              {action ? <Link href={action.href} onClick={() => selectAnchor(action.href)} className="inline-flex min-h-12 items-center justify-center rounded-full bg-[var(--button-primary-bg)] px-6 text-sm font-semibold text-[color:var(--button-primary-fg)]">{action.label}</Link> : null}
             </div>
           </div>
         </Drawer>

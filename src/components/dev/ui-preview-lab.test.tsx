@@ -63,7 +63,7 @@ describe("UiPreviewLab", () => {
     renderLab("preview-confirmation");
     const generate = screen.getByRole("button", { name: "Generate unsigned preview" });
     expect(generate).toBeDisabled();
-    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("checkbox", { name: /I understand the exact cost/i }));
     expect(generate).toBeEnabled();
     await user.click(generate);
     expect(screen.getByLabelText("Interface state")).toHaveValue("generating-preview");
