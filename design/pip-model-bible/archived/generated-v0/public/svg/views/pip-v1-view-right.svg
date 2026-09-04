@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Pip right view</title>
+  <desc id="desc">Pip the Pangolin, a borderless electric-lime two-dimensional GoalGuard mascot with restrained cel shading.</desc>
+  
+  <defs>
+    <filter id="contact-shadow" x="-30%" y="-80%" width="160%" height="260%">
+      <feGaussianBlur stdDeviation="12" />
+    </filter>
+    <filter id="small-shadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="5" />
+    </filter>
+  </defs>
+  <g id="tail" data-layer="tail"></g>
+<g id="shadows" data-layer="shadows"></g>
+<g id="body" data-layer="body"><g >
+    <ellipse cx="514" cy="882" rx="260" ry="24" fill="#0B0C0A" opacity="0.12" filter="url(#contact-shadow)" />
+    <path d="M448 635C305 632 156 684 80 765C55 792 66 827 102 839C199 859 292 819 392 748C428 722 456 683 448 635Z" fill="#C9F52B" />
+    <path d="M426 635C312 638 183 688 96 775C143 759 221 734 370 724Z" fill="#171816" />
+    <path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#2B2D28" transform="translate(414 660) rotate(-58) scale(1.02)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(349 679) rotate(-66) scale(0.98)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#2B2D28" transform="translate(282 704) rotate(-72) scale(0.9)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(219 738) rotate(-78) scale(0.8)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#2B2D28" transform="translate(163 777) rotate(-83) scale(0.68)" />
+    <path d="M382 414C430 367 579 366 634 418C706 487 718 649 662 762C629 827 568 850 499 846C421 842 358 802 338 728C307 613 321 486 382 414Z" fill="#C9F52B" />
+    <path d="M379 211C415 139 563 128 627 181C665 213 680 258 726 279C770 299 785 337 758 365C728 395 673 389 627 376C599 368 574 386 551 415C525 447 470 445 430 416C371 374 342 286 379 211Z" fill="#C9F52B" />
+    <path d="M382 475C404 448 459 444 480 472C511 553 503 686 457 762C429 753 403 728 388 688C360 615 357 524 382 475Z" fill="#FFFFFF" />
+    <path d="M355 548C347 633 370 716 423 766C389 742 353 719 337 670C320 616 326 574 355 548Z" fill="#0B0C0A" opacity="0.09" />
+    <path d="M404 226C427 175 475 157 520 159C475 193 457 245 466 300C420 296 387 269 404 226Z" fill="#D8F95B" opacity="0.82" />
+    <path d="M443 143C372 154 346 231 354 321C360 402 326 524 350 604C369 662 406 677 435 643C404 504 416 370 455 276C480 216 478 171 443 143Z" fill="#171816" />
+    <path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#2B2D28" transform="translate(432 166) rotate(12) scale(1.08)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(390 213) rotate(-8) scale(1.02)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#2B2D28" transform="translate(369 279) rotate(-22) scale(0.96)" />
+    <path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(365 360) rotate(-30) scale(0.9)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#2B2D28" transform="translate(354 438) rotate(-24) scale(0.86)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(352 516) rotate(-18) scale(0.8)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#2B2D28" transform="translate(368 592) rotate(-14) scale(0.72)" />
+    <path d="M433 510C390 544 390 626 435 654C470 642 489 607 477 565C468 535 453 515 433 510Z" fill="#D8F95B" />
+    <g transform="translate(438 645) rotate(90) scale(0.72)">
+    <ellipse cx="-18" cy="0" rx="10" ry="22" fill="#0B0C0A" transform="rotate(-24 -18 0)" />
+    <ellipse cx="0" cy="-2" rx="10" ry="24" fill="#0B0C0A" />
+    <ellipse cx="18" cy="0" rx="10" ry="22" fill="#0B0C0A" transform="rotate(24 18 0)" />
+  </g>
+    <path d="M394 724C356 768 359 834 387 862C427 876 482 868 493 842C487 806 454 769 440 737Z" fill="#D8F95B" />
+    <path d="M573 727C611 762 625 827 596 858C559 872 510 863 502 838C511 804 534 765 545 738Z" fill="#C9F52B" />
+    <g transform="translate(428 853) rotate(90) scale(0.78)">
+    <ellipse cx="-18" cy="0" rx="10" ry="22" fill="#0B0C0A" transform="rotate(-24 -18 0)" />
+    <ellipse cx="0" cy="-2" rx="10" ry="24" fill="#0B0C0A" />
+    <ellipse cx="18" cy="0" rx="10" ry="22" fill="#0B0C0A" transform="rotate(24 18 0)" />
+  </g><g transform="translate(560 852) rotate(-90) scale(0.72)">
+    <ellipse cx="-18" cy="0" rx="10" ry="22" fill="#0B0C0A" transform="rotate(-24 -18 0)" />
+    <ellipse cx="0" cy="-2" rx="10" ry="24" fill="#0B0C0A" />
+    <ellipse cx="18" cy="0" rx="10" ry="22" fill="#0B0C0A" transform="rotate(24 18 0)" />
+  </g>
+    <ellipse cx="608" cy="279" rx="37" ry="44" fill="#FFFFFF" /><circle cx="618" cy="284" r="18" fill="#0B0C0A" /><circle cx="625" cy="276" r="6" fill="#FFFFFF" />
+    <path d="M578 218Q611 199 642 218" fill="none" stroke="#0B0C0A" stroke-width="12" stroke-linecap="round" />
+    <circle cx="751" cy="326" r="10" fill="#0B0C0A" />
+    <path d="M675 354Q716 378 748 350" fill="none" stroke="#0B0C0A" stroke-width="9" stroke-linecap="round" />
+  </g></g>
+<g id="armour" data-layer="armour"></g>
+<g id="limbs" data-layer="limbs"></g>
+<g id="highlights" data-layer="highlights"></g>
+<g id="marking" data-layer="marking"></g>
+<g id="face" data-layer="face"></g>
+<g id="outlines" data-layer="outlines"></g>
+<g id="accessories" data-layer="accessories"></g>
+</svg>

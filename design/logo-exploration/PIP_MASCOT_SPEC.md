@@ -1,8 +1,10 @@
 # Pip mascot system — selected direction
 
+> **Canonical geometry update (2026-09-03):** `design/pip-model-bible/masters/pip-v1-preferred-turnaround.png` is the visual authority. It replaces the rejected programmatic `pip-v1-01` study. Every posture must preserve the preferred character's proportions, face, fixed armour flow, belly, tail root, and left-flank mark; only expression, arms, and removable state accessories may change. This file remains the product-placement and behavior specification.
+
 **Decision:** Pip the Pangolin in Electric Lime is the selected GoalGuard mascot and production colour direction.
 
-Pip is GoalGuard’s calm pangolin companion. The character makes unfamiliar protection concepts feel approachable while preserving the product’s factual, preview-only boundary.
+Pip is GoalGuard’s calm pangolin companion. The character makes unfamiliar protection concepts feel approachable while preserving the product’s factual, preview-only boundary. Visual consistency with the canonical turnaround takes priority over novelty in any individual pose.
 
 ## Brand role
 
@@ -21,11 +23,11 @@ The three dark scale modules represent bounded protection. The short right-facin
 | Square brand placement | `lockup-stacked.svg` | 120px wide |
 | Marketing or education | `mascot-head.svg` | 48px |
 | Product UI and favicon | `PipMark` / `favicon.svg` | 20px UI; 16px browser favicon |
-| Compact product companion | `PipMascot` size `sm` | 80px tall, simplified head by default |
+| Compact product companion | `PipMascot` size `sm` | 80px tall, restrained crop of the active approved pose |
 | Small staged character | `PipMascot` size `sm`, form `full` | 80–96px tall with a reserved baseline |
 | Full character illustration | `PipMascot` size `md` or `lg` | 128px tall |
 
-Use the compact head for dense explanatory UI. The simplified full form may be used at 80–96px only when its posture is the point and the surrounding layout reserves a clear baseline; it never replaces the micro-mark in navigation.
+Use the compact crop of the active approved pose for dense explanatory UI. The full pose may be used at 80–96px only when the surrounding layout reserves a clear baseline; it never replaces the micro-mark in navigation.
 
 ## Product placement
 
@@ -50,12 +52,12 @@ Use the compact head for dense explanatory UI. The simplified full form may be u
 
 | Pose | Visual cue | Meaning supplied by adjacent text |
 | --- | --- | --- |
-| Listening | Two short sound arcs behind the armour | Goal entry is waiting for the user |
-| Checking | Three restrained activity points | A named backend request is active |
-| Explaining | Three short horizontal explanation lines | The product is clarifying a concept |
-| Safe stop | Coral status disk with exclamation | Nothing moved; a recovery action is available |
-| Attentive | Small document tile with visible lime point | Review exact facts before confirmation |
-| Ready, calmly | One stable lime baseline | The unsigned preview is available to inspect |
+| Listening | Head tilt, hand near cheek, warm attentive eyes | Goal entry is waiting for the user |
+| Checking | Downward gaze, thoughtful brow, hand under chin | A named backend request is active |
+| Explaining | Open palm and conversational expression | The product is clarifying a concept |
+| Safe stop | Raised open palm and calmly concerned brow | Nothing moved; a recovery action is available |
+| Attentive | Focused gaze while holding the plain review tile | Review exact facts before confirmation |
+| Ready, calmly | Settled smile and gentle presenting hand | The unsigned preview is available to inspect |
 
 Expression is never the sole state indicator. The UI must include explicit status text and an appropriate semantic role.
 
@@ -75,8 +77,8 @@ Motion is optional and applies only to transform and opacity.
 | State | Motion | Timing |
 | --- | --- | --- |
 | Listening | Head inclines 2° toward the composer, then settles | 220ms spring on focus entry |
-| Checking | Three activity points crossfade once per actual request stage | 220ms enter, 150ms exit |
-| Explaining | Explanation lines enter with 35ms stagger | 220ms total |
+| Checking | One subtle 1px attention shift on stage entry | 220ms |
+| Explaining | Pose enters with the shared restrained transition | 220ms |
 | Safe stop | Pip enters with an 8px upward translation and fade | 220ms; no shake |
 | Confirmation | Document tile scales from 0.96 to 1 once | 180ms |
 | Demo-ready | One subtle 2px downward nod | 180ms; no loop or confetti |
@@ -105,11 +107,13 @@ This high-contrast duotone draws entirely from existing GoalGuard primitives. El
 - **Meadow Mint:** `#BFE8D0` body, `#173C30` armour, `#C9F52B` purpose point. Mascot-illustration extension only; do not add these colours to core UI without a design-system decision.
 - **Quiet Periwinkle:** `#CFD8FF` body, `#202A4D` armour, `#C9F52B` purpose point. Campaign exploration only; not approved for core product UI.
 
-Use full-colour Electric Lime Pip on white or cool-neutral surfaces and the black-only mark on electric lime. On a near-black product panel, place an expressive full character on a bounded white stage so its black scales and facial features do not reverse or disappear; the reversed white treatment is reserved for compact identity artwork. A full mascot on lime also requires a white illustration stage. Do not use status colours as decoration, recolour individual scales independently, add gradients, rotate the lockup, or place Pip over busy imagery.
+Use full-colour Electric Lime Pip as a transparent cutout on white, cool-neutral, lime, and near-black product surfaces. Full-body artwork may use the shared soft ground ellipse beneath the feet. Cropped artwork has no shadow, preventing its crop boundary from becoming visible. Do not add circular stages, frames, or silhouette shadows. The reversed white treatment is reserved for compact identity artwork. Do not use status colours as decoration, recolour individual scales independently, add gradients, rotate the lockup, or place Pip over busy imagery.
 
 See `pip-colour-harmony.html` and `pip-colour-harmony.png` for the visual comparison.
 
 ## Production component contract
+
+The approved transparent pose exports live in `public/media/pip-v1/poses`. The production component must select the pose that matches the actual workflow state and use adjacent text as the explicit status indicator. Do not add surrounding signal graphics or reconstruct the approved character with new inline SVG anatomy.
 
 If Pip is approved for production, expose one presentation-only component:
 

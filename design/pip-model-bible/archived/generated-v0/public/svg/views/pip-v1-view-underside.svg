@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Pip underside view</title>
+  <desc id="desc">Pip the Pangolin, a borderless electric-lime two-dimensional GoalGuard mascot with restrained cel shading.</desc>
+  
+  <defs>
+    <filter id="contact-shadow" x="-30%" y="-80%" width="160%" height="260%">
+      <feGaussianBlur stdDeviation="12" />
+    </filter>
+    <filter id="small-shadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="5" />
+    </filter>
+  </defs>
+  <g id="tail" data-layer="tail"><path d="M498 628C519 729 578 824 694 876C729 892 765 866 756 830C722 716 647 629 558 584Z" fill="#C9F52B" /></g>
+<g id="shadows" data-layer="shadows"><path d="M425 311C388 421 401 571 480 646C442 575 438 435 475 334Z" fill="#0B0C0A" opacity="0.08" /></g>
+<g id="body" data-layer="body"><ellipse cx="512" cy="442" rx="194" ry="278" fill="#C9F52B" /><path d="M424 132C462 96 562 96 600 132C635 166 629 226 592 260C568 282 545 310 526 339C520 349 504 349 498 339C479 310 456 282 432 260C395 226 389 166 424 132Z" fill="#C9F52B" /><ellipse cx="512" cy="457" rx="131" ry="210" fill="#FFFFFF" /></g>
+<g id="armour" data-layer="armour"></g>
+<g id="limbs" data-layer="limbs"><ellipse cx="326" cy="431" rx="76" ry="35" fill="#D8F95B" transform="rotate(-18 326 431)" /><ellipse cx="698" cy="431" rx="76" ry="35" fill="#C9F52B" transform="rotate(18 698 431)" /><ellipse cx="375" cy="625" rx="91" ry="50" fill="#D8F95B" transform="rotate(-20 375 625)" /><ellipse cx="649" cy="625" rx="91" ry="50" fill="#C9F52B" transform="rotate(20 649 625)" /></g>
+<g id="highlights" data-layer="highlights"><path d="M410 183C438 133 482 124 512 125C468 165 449 224 462 281C421 261 394 218 410 183Z" fill="#D8F95B" opacity="0.8" /></g>
+<g id="marking" data-layer="marking"></g>
+<g id="face" data-layer="face"></g>
+<g id="outlines" data-layer="outlines"></g>
+<g id="accessories" data-layer="accessories"></g>
+</svg>

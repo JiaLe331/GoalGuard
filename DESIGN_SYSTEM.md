@@ -182,7 +182,12 @@ Use three layers: primitive values, semantic aliases, and component tokens. Comp
 
   --pip-body: var(--accent);
   --pip-purpose: var(--accent);
-  --pip-armour: var(--black);
+  --pip-highlight: var(--lime-300);
+  --pip-armour: #1b1d19;
+  --pip-armour-highlight: #292c25;
+  --pip-scale-light: #4a4d43;
+  --pip-soft-shadow: var(--black);
+  --pip-contact-shadow: rgb(11 12 10 / 0.12);
   --pip-outline: var(--black);
   --pip-eye: var(--white);
   --pip-feature: var(--black);
@@ -192,7 +197,6 @@ Use three layers: primitive values, semantic aliases, and component tokens. Comp
   --pip-armour-on-dark: var(--white);
   --pip-outline-on-dark: var(--white);
   --pip-mark-on-lime: var(--black);
-  --pip-stage-on-lime: var(--white);
 }
 ```
 
@@ -443,7 +447,9 @@ All actions define default, hover, pressed, focus-visible, disabled, and loading
 
 ### 9.1 Pip mascot system
 
-Pip the Pangolin is GoalGuard's selected 2D brand companion. The production colourway is Electric Lime: lime body, near-black armour and features on light surfaces, reversed white armour on dark surfaces, and a black-only micro-mark on lime.
+Pip the Pangolin is GoalGuard's selected 2D brand companion. The production colourway is Electric Lime: lime body, white belly, and near-black armour and features on every expressive full-character surface. Reversed white armour is reserved for the compact identity mark on dark surfaces; the black-only micro-mark is used on lime.
+
+The canonical full-character geometry is documented in `design/pip-model-bible/README.md`, and `design/pip-model-bible/masters/pip-v1-preferred-turnaround.png` is the visual authority. Preserve its dimensional 2D rendering, lime anatomy, white belly, dense near-black scales, facial landmarks, feet, tail root, and left-flank purpose mark; pose novelty never overrides character consistency. Do not translate it into a separate flat-vector character or add a black perimeter stroke around the lime anatomy. Product pages use the approved transparent derivatives in `public/media/pip-v1/poses`, selecting the expression and posture that matches the actual state. Present Pip as a transparent cutout. Full-body artwork may use one soft ground ellipse beneath the feet; cropped artwork has no shadow. Do not add circular stages, frames, silhouette shadows, signal lines, activity dots, badges, or decorative baselines around the mascot.
 
 - Use `PipMark` for normal brand identity in the navbar, footer, app icon, and small product-brand placements.
 - Use one expressive `PipMascot` per active view at most. Approved poses are neutral, listening, checking, explaining, attentive, safe-stop, and ready.

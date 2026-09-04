@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Pip attentive pose</title>
+  <desc id="desc">Pip the Pangolin, a borderless electric-lime two-dimensional GoalGuard mascot with restrained cel shading.</desc>
+  
+  <defs>
+    <filter id="contact-shadow" x="-30%" y="-80%" width="160%" height="260%">
+      <feGaussianBlur stdDeviation="12" />
+    </filter>
+    <filter id="small-shadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="5" />
+    </filter>
+  </defs>
+  <g id="tail" data-layer="tail"><ellipse cx="512" cy="879" rx="248" ry="26" fill="#0B0C0A" opacity="0.12" filter="url(#contact-shadow)" /><path d="M584 650C704 633 842 668 922 754C950 784 940 825 900 838C811 861 716 821 625 758C590 734 568 696 584 650Z" fill="#C9F52B" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(632 668) rotate(60) scale(0.98)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(698 687) rotate(67) scale(0.92)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(763 716) rotate(73) scale(0.83)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(824 751) rotate(79) scale(0.74)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(877 788) rotate(84) scale(0.62)" /></g>
+<g id="shadows" data-layer="shadows"><path d="M355 541C387 672 451 752 512 770C433 792 355 750 333 653C320 597 329 561 355 541Z" fill="#0B0C0A" opacity="0.09" /><path d="M420 347Q512 413 604 347Q584 404 512 421Q440 404 420 347Z" fill="#0B0C0A" opacity="0.10" /></g>
+<g id="body" data-layer="body"><path d="M376 399C415 354 609 354 648 399C712 474 729 638 676 754C643 826 581 853 512 853C443 853 381 826 348 754C295 638 312 474 376 399Z" fill="#C9F52B" />
+      <path d="M354 198C389 116 635 116 670 198C694 255 668 318 608 344C575 359 551 386 532 414C523 427 501 427 492 414C473 386 449 359 416 344C356 318 330 255 354 198Z" fill="#C9F52B" />
+      <path d="M398 458C428 423 596 423 626 458C660 533 655 694 603 764C575 802 449 802 421 764C369 694 364 533 398 458Z" fill="#FFFFFF" /></g>
+<g id="armour" data-layer="armour"><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(512 145) rotate(0) scale(1.05)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(455 164) rotate(-28) scale(0.82)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(569 164) rotate(28) scale(0.82)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(408 220) rotate(-34) scale(0.72)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(616 220) rotate(34) scale(0.72)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(390 282) rotate(-28) scale(0.66)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(634 282) rotate(28) scale(0.66)" /><path d="M354 320C319 398 312 527 345 624C364 667 398 677 425 647C392 568 390 446 424 348Z" fill="#171816" />
+    <path d="M670 320C705 398 712 527 679 624C660 667 626 677 599 647C632 568 634 446 600 348Z" fill="#171816" />
+    <path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#2B2D28" transform="translate(378 350) rotate(-32) scale(0.9)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#2B2D28" transform="translate(646 350) rotate(32) scale(0.9)" />
+    <path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(360 430) rotate(-27) scale(0.86)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(664 430) rotate(27) scale(0.86)" />
+    <path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#2B2D28" transform="translate(358 512) rotate(-22) scale(0.8)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#2B2D28" transform="translate(666 512) rotate(22) scale(0.8)" />
+    <path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(372 590) rotate(-17) scale(0.72)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(652 590) rotate(17) scale(0.72)" /></g>
+<g id="limbs" data-layer="limbs"><path d="M402 493C365 520 366 590 414 614L468 580C453 529 435 499 402 493Z" fill="#D8F95B" />
+      <path d="M622 493C659 520 658 590 610 614L556 580C571 529 589 499 622 493Z" fill="#C9F52B" />
+      <g transform="translate(468 580) rotate(90) scale(0.64)">
+    <ellipse cx="-18" cy="0" rx="10" ry="22" fill="#0B0C0A" transform="rotate(-24 -18 0)" />
+    <ellipse cx="0" cy="-2" rx="10" ry="24" fill="#0B0C0A" />
+    <ellipse cx="18" cy="0" rx="10" ry="22" fill="#0B0C0A" transform="rotate(24 18 0)" />
+  </g><g transform="translate(556 580) rotate(-90) scale(0.64)">
+    <ellipse cx="-18" cy="0" rx="10" ry="22" fill="#0B0C0A" transform="rotate(-24 -18 0)" />
+    <ellipse cx="0" cy="-2" rx="10" ry="24" fill="#0B0C0A" />
+    <ellipse cx="18" cy="0" rx="10" ry="22" fill="#0B0C0A" transform="rotate(24 18 0)" />
+  </g><path d="M386 725C352 758 348 831 374 862C406 878 466 873 478 845C478 817 451 789 431 748Z" fill="#D8F95B" /><path d="M638 725C672 758 676 831 650 862C618 878 558 873 546 845C546 817 573 789 593 748Z" fill="#C9F52B" /><g transform="translate(421 854) rotate(90) scale(0.8)">
+    <ellipse cx="-18" cy="0" rx="10" ry="22" fill="#0B0C0A" transform="rotate(-24 -18 0)" />
+    <ellipse cx="0" cy="-2" rx="10" ry="24" fill="#0B0C0A" />
+    <ellipse cx="18" cy="0" rx="10" ry="22" fill="#0B0C0A" transform="rotate(24 18 0)" />
+  </g><g transform="translate(603 854) rotate(-90) scale(0.8)">
+    <ellipse cx="-18" cy="0" rx="10" ry="22" fill="#0B0C0A" transform="rotate(-24 -18 0)" />
+    <ellipse cx="0" cy="-2" rx="10" ry="24" fill="#0B0C0A" />
+    <ellipse cx="18" cy="0" rx="10" ry="22" fill="#0B0C0A" transform="rotate(24 18 0)" />
+  </g></g>
+<g id="highlights" data-layer="highlights"><path d="M388 216C405 169 451 151 481 151C439 183 417 235 423 294C389 280 374 247 388 216Z" fill="#D8F95B" opacity="0.82" /><path d="M371 538C356 600 368 682 407 727C390 647 401 564 426 498C395 501 379 514 371 538Z" fill="#D8F95B" opacity="0.76" /></g>
+<g id="marking" data-layer="marking"><g data-pip-purpose-mark="left-flank" transform="translate(620 690) scale(0.88)">
+    <circle r="34" fill="#D8F95B" opacity="0.92" />
+    <circle r="20" fill="none" stroke="#FFFFFF" stroke-width="8" />
+    <circle r="6" fill="#FFFFFF" />
+  </g></g>
+<g id="face" data-layer="face">
+    <ellipse cx="448" cy="276" rx="37" ry="45" fill="#FFFFFF" />
+    <ellipse cx="576" cy="276" rx="37" ry="45" fill="#FFFFFF" />
+    <circle cx="455" cy="282" r="18" fill="#0B0C0A" />
+    <circle cx="583" cy="282" r="18" fill="#0B0C0A" />
+    <circle cx="461" cy="274" r="6" fill="#FFFFFF" />
+    <circle cx="589" cy="274" r="6" fill="#FFFFFF" />
+    <path d="M414 214Q448 212 478 228" fill="none" stroke="#0B0C0A" stroke-width="12" stroke-linecap="round" />
+    <path d="M546 228Q576 212 610 214" fill="none" stroke="#0B0C0A" stroke-width="12" stroke-linecap="round" />
+    <ellipse cx="512" cy="336" rx="34" ry="24" fill="#D8F95B" />
+    <circle cx="499" cy="337" r="7" fill="#0B0C0A" />
+    <circle cx="525" cy="337" r="7" fill="#0B0C0A" />
+    <path d="M476 356Q512 378 548 356" fill="none" stroke="#0B0C0A" stroke-width="9" stroke-linecap="round" /></g>
+<g id="outlines" data-layer="outlines"></g>
+<g id="accessories" data-layer="accessories"><g filter="url(#small-shadow)"><rect x="438" y="548" width="148" height="185" rx="24" fill="#171816" /><path d="M470 590H550M470 626H530" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" /><circle cx="512" cy="686" r="20" fill="#C9F52B" /></g></g>
+</svg>

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Pip top view</title>
+  <desc id="desc">Pip the Pangolin, a borderless electric-lime two-dimensional GoalGuard mascot with restrained cel shading.</desc>
+  
+  <defs>
+    <filter id="contact-shadow" x="-30%" y="-80%" width="160%" height="260%">
+      <feGaussianBlur stdDeviation="12" />
+    </filter>
+    <filter id="small-shadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="5" />
+    </filter>
+  </defs>
+  <g id="tail" data-layer="tail"><path d="M498 628C519 729 578 824 694 876C729 892 765 866 756 830C722 716 647 629 558 584Z" fill="#C9F52B" /></g>
+<g id="shadows" data-layer="shadows"></g>
+<g id="body" data-layer="body"><ellipse cx="512" cy="442" rx="194" ry="278" fill="#C9F52B" /><path d="M424 132C462 96 562 96 600 132C635 166 629 226 592 260C568 282 545 310 526 339C520 349 504 349 498 339C479 310 456 282 432 260C395 226 389 166 424 132Z" fill="#C9F52B" /></g>
+<g id="armour" data-layer="armour"><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(512 244) rotate(0) scale(0.95)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(470 320) rotate(-12) scale(0.8)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(554 320) rotate(12) scale(0.8)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(452 405) rotate(-10) scale(0.73)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(520 397) rotate(0) scale(0.78)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(588 405) rotate(10) scale(0.73)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(468 488) rotate(-7) scale(0.65)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(532 488) rotate(7) scale(0.65)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(500 565) rotate(0) scale(0.6)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(523 650) rotate(8) scale(0.55)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(560 720) rotate(18) scale(0.5)" /><path d="M0-56C32-50 44-17 0 50C-44-17-32-50 0-56Z" fill="#171816" transform="translate(614 778) rotate(35) scale(0.44)" /></g>
+<g id="limbs" data-layer="limbs"><ellipse cx="326" cy="431" rx="76" ry="35" fill="#D8F95B" transform="rotate(-18 326 431)" /><ellipse cx="698" cy="431" rx="76" ry="35" fill="#C9F52B" transform="rotate(18 698 431)" /><ellipse cx="375" cy="625" rx="91" ry="50" fill="#D8F95B" transform="rotate(-20 375 625)" /><ellipse cx="649" cy="625" rx="91" ry="50" fill="#C9F52B" transform="rotate(20 649 625)" /></g>
+<g id="highlights" data-layer="highlights"><path d="M410 183C438 133 482 124 512 125C468 165 449 224 462 281C421 261 394 218 410 183Z" fill="#D8F95B" opacity="0.8" /></g>
+<g id="marking" data-layer="marking"><g data-pip-purpose-mark="left-flank" transform="translate(654 514) scale(0.65)">
+    <circle r="34" fill="#D8F95B" opacity="0.92" />
+    <circle r="20" fill="none" stroke="#FFFFFF" stroke-width="8" />
+    <circle r="6" fill="#FFFFFF" />
+  </g></g>
+<g id="face" data-layer="face"><ellipse cx="477" cy="202" rx="27" ry="34" fill="#FFFFFF" /><ellipse cx="547" cy="202" rx="27" ry="34" fill="#FFFFFF" /><circle cx="480" cy="205" r="13" fill="#0B0C0A" /><circle cx="550" cy="205" r="13" fill="#0B0C0A" /><circle cx="500" cy="272" r="6" fill="#0B0C0A" /><circle cx="524" cy="272" r="6" fill="#0B0C0A" /></g>
+<g id="outlines" data-layer="outlines"></g>
+<g id="accessories" data-layer="accessories"></g>
+</svg>

@@ -1,0 +1,43 @@
+{
+  "id": "pip-v1",
+  "name": "Pip the Pangolin canonical model bible",
+  "version": "1.2",
+  "status": "preferred-reference-with-approved-pose-runtime",
+  "revisedAt": "2026-09-04",
+  "canonicalVisualReference": "design/pip-model-bible/masters/pip-v1-preferred-turnaround.png",
+  "publicReference": "public/media/pip-v1/reference/pip-v1-01-turnaround.png",
+  "runtimeModel": "src/components/brand/pip-mascot.tsx",
+  "runtimeSourceStrategy": "load one approved transparent derivative per state; use restrained compact cropping with no shadow and one soft ground ellipse for full-body artwork",
+  "rendering": "preserve the canonical dimensional 2D rendering without adding outlines, effects, or alternate character geometry",
+  "priorityRule": "Visual consistency with the canonical turnaround takes priority over pose novelty.",
+  "invariants": [
+    "Same character proportions and landmarks in every posture",
+    "No outer black contour on lime anatomy",
+    "Short nose remains attached to the continuous muzzle plane",
+    "Both hind feet visibly support the body",
+    "Tail remains rooted at the pelvis and acts as a counterweight",
+    "White purpose ring appears on Pip's left flank only",
+    "Dense near-black leaf-scale flow remains fixed across poses",
+    "Only expression, arms, and removable state accessories may vary by pose"
+  ],
+  "publicApi": {
+    "poses": ["neutral", "listening", "checking", "explaining", "attentive", "safe-stop", "ready"],
+    "surfaces": ["light", "dark", "lime"],
+    "sizes": ["sm", "md", "lg"],
+    "forms": ["compact", "full"]
+  },
+  "sourceFiles": [
+    "design/pip-model-bible/masters/pip-v1-preferred-turnaround.png",
+    "public/media/pip-v1/reference/pip-v1-01-turnaround.png",
+    "public/media/pip-v1/poses/pip-v1-pose-neutral.png",
+    "public/media/pip-v1/poses/pip-v1-pose-listening.png",
+    "public/media/pip-v1/poses/pip-v1-pose-checking.png",
+    "public/media/pip-v1/poses/pip-v1-pose-explaining.png",
+    "public/media/pip-v1/poses/pip-v1-pose-attentive.png",
+    "public/media/pip-v1/poses/pip-v1-pose-safe-stop.png",
+    "public/media/pip-v1/poses/pip-v1-pose-ready.png",
+    "src/components/brand/pip-mascot.tsx",
+    "src/styles/tokens.css"
+  ],
+  "supersededArchive": "design/pip-model-bible/archived/generated-v0"
+}
