@@ -28,6 +28,11 @@ Most retail users do not think in strikes, expiries, premiums, or option Greeks.
 
 GoalGuard converts a natural-language life goal into a transparent downside-protection plan. The user sees the goal, deadline, protection cost, downside outcome, council decision, and final trade — not a trading terminal.
 
+The resulting plan may be cash-settled (preferred) or physically-settled (an explicit, clearly
+disclosed fallback used only when no cash-settled option is currently available live). Either way
+the user sees a clear label and plain-language explanation of what settling the position actually
+means for them (§8, §10.1, §12.2).
+
 ### 1.5 Primary value proposition
 **Protect the purpose of the money, not just the asset.**
 
@@ -357,6 +362,8 @@ Must answer:
 - Does the expiry reasonably match the deadline?
 - Does the protection structure match the user’s requested downside tolerance?
 - Is there a clearly better candidate among the supplied alternatives?
+- If `settlementType` is `physical`, is physical (asset-delivery) settlement an appropriate
+  fallback given that no cash-settled option satisfied the goal, not merely whether it is cheaper?
 
 The Strategist does **not** calculate prices or payoff numbers.
 
@@ -371,7 +378,11 @@ Must check:
 - misleading interpretation;
 - strategy introduces risk outside the user’s stated intent;
 - candidate data is incomplete or contradictory;
-- trade assumptions are unsupported.
+- trade assumptions are unsupported;
+- for physical settlement: the wallet’s ETH exposure is sufficient to cover delivery, and
+  expiry/settlement timing risk is disclosed;
+- reject or mark uncertain if physical delivery mechanics are described or implied as a simple
+  cash payout.
 
 The Risk Auditor should be adversarial by design.
 
@@ -384,7 +395,12 @@ Must check:
 - user is not being pushed into speculation;
 - maximum known cost is clearly stated;
 - major limitations are disclosed;
-- the recommendation does not overstate the level of protection.
+- the recommendation does not overstate the level of protection;
+- if `settlementType` is `physical`, a plain-language disclosure is present that the user’s
+  covered ETH may be delivered/exchanged for a different settlement asset rather than a cash
+  top-up — the technical settlement-asset symbol may appear in the disclosure but is not required
+  in the primary summary, and wording must never make physical and cash protection appear
+  identical.
 
 ### 8.3 Independence requirement
 Each council role must receive:
@@ -479,6 +495,16 @@ Ask only for missing information. Do not re-ask information already extracted co
 
 Do not implement speculative calls, short options, spreads, or complex multi-leg strategies in P0.
 
+Within long vanilla ETH puts, both cash-settled and physically-settled variants are in scope.
+Cash settlement is always preferred; physical settlement is used only as an explicit, disclosed
+fallback when no cash-settled candidate satisfies the goal's hard constraints (§10.3, §10.6).
+Verified against the installed Thetanuts SDK and on-chain OptionBook bytecode: both settlement
+types fill through the identical `OptionBook.fillOrder()`/`previewFillOrder()`/`encodeFillOrder()`
+path, with no protocol-level restriction on which collateral token a physically-settled order
+uses. This does not expand scope into calls, spreads, or multi-leg structures — physical
+settlement changes only how a vanilla put's payoff is delivered, not which structures are
+supported.
+
 ### 10.2 Data source
 Use the **current official Thetanuts SDK/repository as the source of truth**. Workshop slides are secondary if implementation details differ.
 
@@ -494,6 +520,8 @@ Do not invent contract addresses or protocol schemas.
 
 ### 10.3 Candidate generation
 
+Candidate generation runs as two sequential settlement-tier passes over the same live order set:
+
 1. Fetch live ETH put opportunities.
 2. Discard invalid/expired/unfillable orders.
 3. Filter expiries close enough to the user deadline.
@@ -501,6 +529,16 @@ Do not invent contract addresses or protocol schemas.
 5. Reject candidates that violate hard user limits.
 6. Rank remaining candidates.
 7. Send top candidate plus 1–2 alternatives to GoalGuard.
+
+**Settlement-tier routing:** steps 1–6 first run restricted to cash-settled (`PUT` implementation,
+USDC collateral) orders. If that pass produces at least one viable candidate, physical settlement
+is never evaluated and never sent to GoalGuard. Only when the cash-settled pass produces zero
+viable candidates does the same evaluation run again restricted to physically-settled
+(`PHYSICAL_PUT` implementation) orders, accepting whatever collateral token the live signed order
+actually specifies (no fixed token is required for physical settlement — see §17.0). A viable
+physical candidate is tagged `settlementType: "physical"` and carries the same deterministic
+scenario/floor calculations as a cash candidate (§10.5); only the settlement-asset disclosure
+differs (§8.2, §12.2).
 
 #### Proposed coverage
 
@@ -529,6 +567,10 @@ Neither mode marks a goal protected in P0.
 ### 10.4 Candidate schema
 
 Use the canonical `ProtectionCandidate` and `ScenarioResult` contracts in Section 17.4.2. All live protocol quantities must preserve both normalized decimal display values and base-unit integer strings where required for execution.
+
+Every candidate carries a `settlementType` field (`"cash"` or `"physical"`, Section 17.3) set
+deterministically by which settlement-tier pass produced it (§10.3). Frontend code must never
+infer settlement behavior from a contract or token address — it branches only on this field.
 
 ### 10.5 Financial calculation rule
 All calculations must come from deterministic code using live protocol values.
@@ -559,12 +601,19 @@ Suggested priorities:
 
 Do not use an LLM to rank raw market orders in P0.
 
+Ranking priorities apply *within* a settlement tier only. Cash-settled candidates are preferred
+outright over physically-settled candidates by construction of the two-pass routing in §10.3 —
+settlement type is never itself a ranking key, and a cheaper or better-floored physical candidate
+never outranks a viable cash candidate, because physical candidates are not evaluated at all
+while a viable cash candidate exists.
+
 ### 10.7 No suitable option
-If no viable order exists:
+"No suitable option" means both the cash-settled and physically-settled passes (§10.3) produced
+zero viable candidates. If no viable order exists in either tier:
 
 - do not fabricate a plan;
 - explain that no suitable live protection is currently available;
-- optionally show the closest rejected candidate and why it failed;
+- optionally show the closest rejected candidates from both tiers and why each failed;
 - P2 may fall back to OptionFactory/RFQ.
 
 ---
@@ -573,6 +622,10 @@ If no viable order exists:
 
 ### 11.1 Execution philosophy
 The user must see the exact proposed trade, but the hackathon deployment must not request a signature or broadcast a transaction.
+
+This policy applies identically regardless of `settlementType`. A physically-settled candidate's
+preview is unsigned and demo-only under the exact same rules as a cash-settled candidate's — there
+is no special-case exception that allows a physical preview to go further toward real execution.
 
 Thetanuts has confirmed that the track has no testnet and currently uses mainnet only. The organizer/sponsor guidance provided on 29 Aug 2026 states that teams may use a very small mainnet amount if they choose, but a real trade is not required and teams that demonstrate the idea and build will still be judged fairly. GoalGuard chooses the no-real-trade path for the hackathon demo.
 
@@ -669,6 +722,13 @@ Show only the most important values first:
 - expiry;
 - council status.
 
+Label the plan **"Cash Protection"** or **"Asset-Delivery Protection"** based on the candidate's
+`settlementType`, with a one-line explanation next to the label. Cash: "you keep your ETH and
+receive a cash top-up." Physical: "your covered ETH may be delivered/exchanged, and you would
+receive a USD-linked settlement asset instead — this is different from a cash payout." Never name
+the raw settlement-token symbol (e.g. an aToken) in this primary copy; it may appear only in the
+expandable protocol details (§12.3).
+
 #### E. GoalGuard Drawer
 Show three role cards:
 
@@ -693,7 +753,13 @@ Must display:
 - what the option protects;
 - clear limitation that protection is evaluated at the option settlement/expiry conditions;
 - wallet/network;
-- final CTA labelled as generating an unsigned preview, not executing a trade.
+- final CTA labelled as generating an unsigned preview, not executing a trade;
+- the same Cash Protection/Asset-Delivery Protection label as the Protection Plan screen (§12.2.D).
+
+When `settlementType` is `physical`, require a second, separate, explicit acknowledgement in
+addition to the general confirmation checkbox: "I understand this position settles by asset
+delivery, not a cash payout, and my ETH may be delivered at settlement." The final preview CTA
+stays disabled until both acknowledgements are checked.
 
 #### G. Demo Preview Ready
 Display:
@@ -712,6 +778,10 @@ Prefer:
 - “Amount you need to preserve” over “notional” in primary UI.
 
 Protocol terminology may appear in expandable technical details.
+
+Never expose a physical candidate's raw settlement-token symbol (e.g. an interest-bearing aToken)
+as unexplained jargon in primary UI copy. Use plain language (“a USD-linked settlement asset”)
+in primary copy; the technical symbol may appear in expandable protocol details.
 
 ### 12.4 Avoid misleading guarantees
 Do not use copy such as:
@@ -920,6 +990,7 @@ The exact request/response schemas and status behavior are normative in Section 
 13. **Record model/request IDs for auditability.**
 14. **Do not expose private chain-of-thought.** Show concise reasons/evidence only.
 15. **Never fabricate transaction success.** No hash, position, or protected status may be shown without verified on-chain execution.
+16. **Physical-settlement disclosures are deterministically enforced, not solely LLM-dependent.** The backend appends a fixed disclosure to every council review when `settlementType` is `physical`, regardless of whether the model already included one, and the UI requires a separate explicit acknowledgement (§12.2.F) before a physical preview can be generated.
 
 ---
 
@@ -943,6 +1014,7 @@ These decisions are normative and override older abbreviated examples in this PR
 - Supabase PostgreSQL is authoritative. Vercel uses the transaction pooler with prepared statements disabled; migrations use `DATABASE_DIRECT_URL`; PGlite is the credential-free repository-test adapter.
 - Vercel hosts the UI and API routes. One Render worker writes a 15-second heartbeat and verifies submitted Base transactions and Thetanuts buyer positions. Signing preparation stops with `503 TRADE_MONITOR_UNAVAILABLE` when the heartbeat is older than 45 seconds.
 - Primary approved-state UI wording is “Council checks passed.” A confirmed result is “Protection position active,” not a guarantee that the real-world goal cannot lose value.
+- (updated 2026-09-04) `ProtectionCandidate` additionally carries `settlementType: "cash" | "physical"` (§17.3). Candidate generation runs cash-settled orders first; physical-settled orders are evaluated only when zero cash-settled candidates are viable (§10.3). Verified directly against the installed Thetanuts SDK source, on-chain OptionBook bytecode, and a live unmodified `previewFillOrder()`/`encodeFillOrder()` call: both settlement types fill through the identical OptionBook path, and no protocol-level rule restricts which collateral token a physically-settled order may use — GoalGuard accepts whatever collateral token the live signed order specifies rather than requiring a fixed token. The deterministic scenario/floor formulas (§10.5) are unchanged for physical candidates; only the settlement-asset disclosure differs. Physical-settlement council disclosures are deterministically backstopped by the backend, not solely LLM-dependent (§16).
 
 ### 17.1 Contract ownership and naming rules
 
@@ -1021,6 +1093,7 @@ export type GoalStatus =
 
 export type CandidateSource = "optionbook" | "optionfactory";
 export type OptionType = "put";
+export type SettlementType = "cash" | "physical";
 export type CandidateStatus = "viable" | "rejected" | "selected" | "stale";
 
 export type CouncilRole =
@@ -1109,6 +1182,7 @@ export interface ProtectionCandidate {
   protocolOrderId: string | null;
   underlyingAsset: SupportedAsset;
   optionType: OptionType;
+  settlementType: SettlementType;
   strikeUsd: DecimalString;
   expiry: ISODateTime;
   settlementTokenAddress: EvmAddress;
@@ -1149,6 +1223,7 @@ Constraints:
 - `selected` is unique per goal. Selecting one candidate atomically demotes any previous selection to `viable` or `stale`.
 - At least the `down`, `flat`, and `up` scenario keys must be present exactly once.
 - `protocolOrderId` is required for `optionbook`; it may be `null` for an uncreated `optionfactory` quote.
+- `settlementType` is `"cash"` only for candidates built from a `PUT`-implementation order with USDC collateral, and `"physical"` only for candidates built from a `PHYSICAL_PUT`-implementation order (any collateral token the signed order specifies — no fixed token is required for physical settlement, verified against on-chain OptionBook behavior; §17.0).
 - `marketAsOf` is the timestamp of the live data used to calculate the candidate. Execution must reject a stale candidate according to the configured quote-validity window.
 
 #### 17.4.3 Gonka inference
@@ -1327,6 +1402,7 @@ Indexes: `(status, updated_at)` and `(deadline)`.
 | `protocol_order_id` | TEXT | Yes | Required for OptionBook |
 | `underlying_asset` | ENUM/TEXT | No | `ETH` |
 | `option_type` | ENUM/TEXT | No | `put` |
+| `settlement_type` | ENUM/TEXT | No | `SettlementType` |
 | `strike_usd` | DECIMAL/TEXT | No | `> 0` |
 | `expiry` | TIMESTAMP/TEXT | No | UTC |
 | `settlement_token_address` | CHAR(42)/TEXT | No | Valid EVM address |
@@ -1981,6 +2057,7 @@ A user can complete this flow without understanding options jargon:
 - [ ] Council disagreement blocks the final preview.
 - [ ] UI never claims guaranteed protection beyond actual option conditions.
 - [ ] UI never claims a transaction or protected position exists when only a preview was generated.
+- [ ] Physical settlement previews carry an explicit additional acknowledgement and are never presented as equivalent to cash protection.
 
 ---
 
