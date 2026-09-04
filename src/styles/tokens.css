@@ -98,7 +98,12 @@
   /* Pip mascot component colors */
   --pip-body: var(--accent);
   --pip-purpose: var(--accent);
-  --pip-armour: var(--black);
+  --pip-highlight: var(--lime-300);
+  --pip-armour: #1b1d19;
+  --pip-armour-highlight: #292c25;
+  --pip-scale-light: #4a4d43;
+  --pip-soft-shadow: var(--black);
+  --pip-contact-shadow: rgb(11 12 10 / 0.12);
   --pip-outline: var(--black);
   --pip-eye: var(--white);
   --pip-feature: var(--black);
@@ -108,7 +113,6 @@
   --pip-armour-on-dark: var(--white);
   --pip-outline-on-dark: var(--white);
   --pip-mark-on-lime: var(--black);
-  --pip-stage-on-lime: var(--white);
 
   /* Elevation */
   --shadow-header: 0 1px 0 rgb(11 12 10 / 0.07);

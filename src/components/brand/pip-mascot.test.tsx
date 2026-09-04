@@ -6,14 +6,15 @@ import { PipMark, PipMascot, type PipPose } from "./pip-mascot";
 const poses: PipPose[] = ["neutral", "listening", "checking", "explaining", "attentive", "safe-stop", "ready"];
 
 describe("Pip brand artwork", () => {
-  it("renders every approved pose with a distinct expression or signal and no focus target", () => {
+  it("renders every approved pose as distinct unframed artwork with no focus target", () => {
     const { container, rerender } = render(<PipMascot pose="neutral" />);
     for (const pose of poses) {
       rerender(<PipMascot pose={pose} />);
       const mascot = container.querySelector(`[data-pip-pose="${pose}"]`);
       expect(mascot).toBeInTheDocument();
       expect(mascot).toHaveAttribute("data-pip-expression");
-      if (pose !== "neutral") expect(mascot?.querySelector(`[data-pip-accessory="${pose}"]`)).toBeInTheDocument();
+      expect(mascot?.querySelector("[data-pip-pose-source]")).toHaveAttribute("data-pip-pose-source", `/media/pip-v1/poses/pip-v1-pose-${pose}.png`);
+      expect(mascot?.querySelector("[data-pip-accessory]")).not.toBeInTheDocument();
       expect(container.querySelector("button, a, [tabindex]")).not.toBeInTheDocument();
     }
   });
@@ -27,16 +28,38 @@ describe("Pip brand artwork", () => {
     expect(container.querySelector('[data-pip-artwork="full"]')).toHaveClass("h-20", "w-24");
   });
 
-  it("applies real surface colors and exposes active request state", () => {
+  it("uses a natural ground shadow only when the full body is visible", () => {
     const { container, rerender } = render(<PipMascot pose="checking" surface="light" />);
     expect(container.querySelector('[data-pip-surface="light"]')).toHaveAttribute("data-pip-active", "false");
-    expect(container.querySelector('[data-pip-region="armour"]')).toHaveAttribute("fill", "var(--pip-armour)");
+    expect(container.querySelector('[data-pip-artwork-layer="true"]')).not.toHaveClass("bg-white", "rounded-full", "ring-1");
+    expect(container.querySelector('[data-pip-ground-shadow="true"]')).toBeInTheDocument();
     rerender(<PipMascot pose="checking" surface="dark" active />);
     expect(container.querySelector('[data-pip-surface="dark"]')).toHaveAttribute("data-pip-active", "true");
-    expect(container.querySelector('[data-pip-region="armour"]')).toHaveAttribute("fill", "var(--pip-armour-on-dark)");
-    rerender(<PipMascot pose="neutral" surface="lime" />);
+    expect(container.querySelector('[data-pip-ground-shadow="true"]')).toBeInTheDocument();
+    rerender(<PipMascot pose="neutral" surface="lime" size="sm" />);
     expect(container.querySelector('[data-pip-surface="lime"]')).toBeInTheDocument();
-    expect(container.querySelector("svg > circle")).toHaveAttribute("fill", "var(--pip-stage-on-lime)");
+    expect(container.querySelector('[data-pip-ground-shadow="true"]')).not.toBeInTheDocument();
+    expect(container.querySelector('[data-pip-artwork-layer="true"]')).not.toHaveClass("bg-white", "rounded-full", "ring-1");
+  });
+
+  it("uses the approved preferred-v1 pose set for every mascot state", () => {
+    const { container, rerender } = render(<PipMascot pose="neutral" form="full" />);
+
+    for (const pose of poses) {
+      rerender(<PipMascot pose={pose} form="full" />);
+      expect(container.querySelector('[data-pip-model="preferred-v1-pose-set"]')).toBeInTheDocument();
+      expect(container.querySelector("[data-pip-pose-source]")).toHaveAttribute("data-pip-pose-source", `/media/pip-v1/poses/pip-v1-pose-${pose}.png`);
+      expect(container.querySelector("img")).toHaveAttribute("src", expect.stringContaining(`pip-v1-pose-${pose}.png`));
+    }
+  });
+
+  it("keeps every pose free of supplemental state graphics", () => {
+    const { container, rerender } = render(<PipMascot pose="neutral" form="full" />);
+    for (const pose of poses) {
+      rerender(<PipMascot pose={pose} form="full" />);
+      expect(container.querySelector("[data-pip-accessory], [data-pip-activity-point]")).not.toBeInTheDocument();
+    }
+    expect(container.querySelector('[data-pip-canonical-view="pose-specific"]')).toBeInTheDocument();
   });
 
   it("keeps decorative artwork silent and labels meaningful artwork", () => {
