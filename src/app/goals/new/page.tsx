@@ -1,4 +1,5 @@
 import { GoalComposer } from "@/components/goals/goal-composer";
+import { RecentGoalsList } from "@/components/goals/recent-goals-list";
 import { FloatingEditorialNavbar } from "@/components/navigation/floating-editorial-navbar";
 import { StageShell } from "@/components/workflow/workflow-primitives";
 
@@ -12,6 +13,7 @@ export default function NewGoalPage() {
         <StageShell step={1} eyebrow="Define goal" title="What are you protecting?">
           <div className="mx-auto max-w-3xl rounded-[1.5rem] bg-[var(--surface-raised)] p-5 text-[color:var(--foreground)] shadow-[var(--shadow-float-strong)] sm:rounded-[1.75rem] sm:p-7">
             <GoalComposer />
+            <RecentGoalsList />
           </div>
         </StageShell>
       </main>

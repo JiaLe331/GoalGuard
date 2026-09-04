@@ -9,8 +9,15 @@ describe("ScenarioComparison", () => {
     const { container } = render(<ScenarioComparison scenarios={fixturePublicCandidate.scenarios} settlementType={fixturePublicCandidate.settlementType} strikeUsd={fixturePublicCandidate.strikeUsd} />);
     expect(screen.getByRole("list", { name: /estimated value after protection/i })).toBeInTheDocument();
     expect(screen.getAllByRole("listitem")).toHaveLength(fixturePublicCandidate.scenarios.length);
-    expect(screen.getByText("Market down")).toBeVisible();
+    expect(screen.getByText(/Market down/)).toBeVisible();
     expect(container.querySelector("table")).not.toBeInTheDocument();
+  });
+
+  it("shows the real ETH price move each scenario represents, derived from its settlement price", () => {
+    render(<ScenarioComparison scenarios={fixturePublicCandidate.scenarios} settlementType={fixturePublicCandidate.settlementType} strikeUsd={fixturePublicCandidate.strikeUsd} />);
+    expect(screen.getByText(/Market down \(ETH -\d+%\)/)).toBeVisible();
+    expect(screen.getByText(/Market flat \(ETH 0%\)/)).toBeVisible();
+    expect(screen.getByText(/Market up \(ETH \+\d+%\)/)).toBeVisible();
   });
 
   it("shows a cash top-up composition line for every scenario when cash-settled", () => {

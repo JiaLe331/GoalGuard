@@ -65,6 +65,18 @@ describe("PostgresGoalGuardRepository", () => {
     expect(forced.attempt).toBe(2);
     await expect(repository.getLatestDecisionRecord(fixtureCandidate.id, owner)).resolves.toEqual({ decision: forced, inputHash });
   });
+  it("surfaces only the most recent council attempt's inferences, not a stale completed one", async () => {
+    await repository.createGoal(fixtureGoal, owner);
+    await repository.updateGoalStatus(fixtureGoal.id, owner, "searching");
+    await repository.replaceCandidates(fixtureGoal.id, owner, [fixtureCandidate]);
+    for (const review of fixtureDecision.reviews) await repository.saveInference(inferenceFor(review));
+    const retryStrategist: GonkaInference = { ...inferenceFor(fixtureDecision.reviews[0]!), id: "40000000-0000-4000-8000-000000000004", requestId: "gonka-retry-1", createdAt: "2026-08-31T13:00:00.000Z", completedAt: "2026-08-31T13:00:20.000Z" };
+    await repository.saveInference(retryStrategist);
+    const current = await repository.getCurrentCouncilAttemptInferences(fixtureGoal.id, fixtureCandidate.id, owner);
+    expect(current).toHaveLength(1);
+    expect(current[0]).toMatchObject({ id: retryStrategist.id, purpose: "strategist_review" });
+  });
+
   it("atomically replaces an active preview only when the candidate and decision are current", async () => {
     await repository.createGoal(fixtureGoal, owner);
     await repository.updateGoalStatus(fixtureGoal.id, owner, "searching");

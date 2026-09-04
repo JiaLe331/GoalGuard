@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { CoverageModeSchema, GoalTypeSchema, InferencePurposeSchema, InferenceStatusSchema, SupportedAssetSchema } from "./enums";
+import { CouncilRoleSchema, CouncilVerdictSchema, CoverageModeSchema, GoalTypeSchema, InferencePurposeSchema, InferenceStatusSchema, SupportedAssetSchema } from "./enums";
 import {
   CouncilDecisionSchema,
   GoalSchema,
@@ -122,6 +122,34 @@ export const ReviewCandidateResponseSchema = z.object({
     decision: CouncilDecisionSchema,
     inferences: z.array(InferenceSummarySchema).length(3),
   }).strict(),
+  meta: ApiMetaSchema,
+}).strict();
+
+export const GetCouncilReviewStatusRequestSchema = z.object({
+  goalId: UUIDSchema,
+  candidateId: UUIDSchema,
+}).strict();
+
+// A role's live status while the council is still in-flight. "waiting"/"running" carry no
+// gonka_inferences row yet -- see PostgresGoalGuardRepository.getCurrentCouncilAttemptInferences.
+export const CouncilRoleStatusSchema = z.enum(["waiting", "running", "succeeded", "failed"]);
+
+export const CouncilRoleProgressSchema = z.object({
+  role: CouncilRoleSchema,
+  status: CouncilRoleStatusSchema,
+  model: z.string().trim().min(1).nullable(),
+  requestId: z.string().trim().min(1).nullable(),
+  startedAt: ISODateTimeSchema.nullable(),
+  completedAt: ISODateTimeSchema.nullable(),
+  latencyMs: z.number().int().nonnegative().nullable(),
+  verdict: CouncilVerdictSchema.nullable(),
+  summary: z.string().trim().min(1).max(1000).nullable(),
+  concerns: z.array(z.string().trim().min(1).max(500)),
+  errorMessage: z.string().trim().min(1).nullable(),
+}).strict();
+
+export const GetCouncilReviewStatusResponseSchema = z.object({
+  data: z.object({ roles: z.array(CouncilRoleProgressSchema).length(3) }).strict(),
   meta: ApiMetaSchema,
 }).strict();
 
@@ -269,6 +297,8 @@ export type CandidateRejection = z.infer<typeof CandidateRejectionSchema>;
 export type GenerateCandidatesResponse = z.infer<typeof GenerateCandidatesResponseSchema>;
 export type ReviewCandidateRequest = z.infer<typeof ReviewCandidateRequestSchema>;
 export type ReviewCandidateResponse = z.infer<typeof ReviewCandidateResponseSchema>;
+export type CouncilRoleProgress = z.infer<typeof CouncilRoleProgressSchema>;
+export type GetCouncilReviewStatusResponse = z.infer<typeof GetCouncilReviewStatusResponseSchema>;
 export type PreviewTradeRequest = z.infer<typeof PreviewTradeRequestSchema>;
 export type AllowanceRequirement = z.infer<typeof AllowanceRequirementSchema>;
 export type PreparedTransaction = z.infer<typeof PreparedTransactionSchema>;
