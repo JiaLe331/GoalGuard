@@ -1,0 +1,2 @@
+ALTER TABLE "protection_candidates" ADD COLUMN "settlement_type" text NOT NULL;--> statement-breakpoint
+ALTER TABLE "protection_candidates" ADD CONSTRAINT "candidates_settlement_type_check" CHECK ("settlement_type" IN ('cash', 'physical'));

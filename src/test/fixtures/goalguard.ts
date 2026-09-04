@@ -50,6 +50,7 @@ export const fixtureCandidate: ProtectionCandidate = {
   protocolOrderId: "test-order-1",
   underlyingAsset: "ETH",
   optionType: "put",
+  settlementType: "cash",
   strikeUsd: "2800",
   expiry: "2099-09-30T08:00:00.000Z",
   settlementTokenAddress: "0x1111111111111111111111111111111111111111",
@@ -78,6 +79,17 @@ export const fixtureCandidate: ProtectionCandidate = {
   updatedAt: "2026-08-31T12:00:00.000Z",
 };
 export const fixturePublicCandidate = publicCandidate(fixtureCandidate);
+
+export const fixturePhysicalCandidate: ProtectionCandidate = {
+  ...fixtureCandidate,
+  id: "7b3e798c-e0e8-4ab5-9e37-d4526424eb8f",
+  protocolOrderId: "test-physical-order-1",
+  settlementType: "physical",
+  settlementTokenAddress: "0x4444444444444444444444444444444444444444",
+  settlementTokenSymbol: "aBasUSDC",
+  settlementTokenDecimals: 6,
+};
+export const fixturePublicPhysicalCandidate = publicCandidate(fixturePhysicalCandidate);
 
 const review = (role: "strategist" | "risk_auditor" | "consumer_advocate", index: number) => ({
   schemaVersion: 1 as const,
