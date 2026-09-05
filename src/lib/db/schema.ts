@@ -135,3 +135,15 @@ export const tradeRequestIdempotency = pgTable.withRLS("trade_request_idempotenc
 export const workerHeartbeats = pgTable.withRLS("worker_heartbeats", {
   workerName: text("worker_name").primaryKey(), instanceId: uuid("instance_id").notNull(), lastSeenAt: utcTimestamp("last_seen_at").notNull(),
 });
+
+export const marketSnapshots = pgTable.withRLS("market_snapshots", {
+  capturedAt: utcTimestamp("captured_at").primaryKey(),
+  ethSpotUsd: text("eth_spot_usd").notNull(),
+  optionCount: integer("option_count").notNull(),
+  medianIvBps: integer("median_iv_bps"),
+  costPer100Usd30d: text("cost_per_100_usd_30d"),
+}, (table) => [
+  check("market_snapshots_option_count_check", sql`${table.optionCount} >= 0`),
+  check("market_snapshots_iv_check", sql`${table.medianIvBps} IS NULL OR ${table.medianIvBps} >= 0`),
+  index("market_snapshots_captured_at_idx").on(table.capturedAt),
+]);

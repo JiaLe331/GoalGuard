@@ -17,3 +17,5 @@ services:
         sync: false
       - key: TRADE_WORKER_NAME
         value: trade-monitor
+      - key: MARKET_SNAPSHOT_MS
+        value: 900000

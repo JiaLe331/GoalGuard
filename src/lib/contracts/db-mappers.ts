@@ -3,6 +3,7 @@ import {
   CouncilReviewSchema,
   GoalSchema,
   GonkaInferenceSchema,
+  MarketSnapshotSchema,
   ProtectionCandidateSchema,
   TradeSchema,
   type CouncilDecision,
@@ -17,6 +18,7 @@ import {
   councilReviews,
   goals,
   gonkaInferences,
+  marketSnapshots,
   protectionCandidates,
   trades,
 } from "@/lib/db/schema";
@@ -27,6 +29,7 @@ type InferenceRow = typeof gonkaInferences.$inferSelect;
 type DecisionRow = typeof councilDecisions.$inferSelect;
 type ReviewRow = typeof councilReviews.$inferSelect;
 type TradeRow = typeof trades.$inferSelect;
+type MarketSnapshotRow = typeof marketSnapshots.$inferSelect;
 
 export interface GoalReadReferences {
   parseInferenceId?: string | null;
@@ -194,4 +197,12 @@ export function tradeToRow(trade: Trade, expectation: TradeExecutionExpectation)
     expectedValueBaseUnits: expectation.valueBaseUnits,
     verificationDeadline: expectation.verificationDeadline,
   };
+}
+
+export function marketSnapshotFromRow(row: MarketSnapshotRow) {
+  return MarketSnapshotSchema.parse({ ...row, capturedAt: iso(row.capturedAt) });
+}
+
+export function marketSnapshotToRow(snapshot: import("./entities").MarketSnapshot): typeof marketSnapshots.$inferInsert {
+  return MarketSnapshotSchema.parse(snapshot);
 }

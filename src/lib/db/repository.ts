@@ -2,12 +2,12 @@ import { and, desc, eq, inArray, lte } from "drizzle-orm";
 
 import {
   candidateFromRow, candidateToRow, decisionFromRows, decisionToRows, goalFromRow, goalToRow,
-  inferenceToRow, tradeFromRow, tradeToRow, type TradeExecutionExpectation,
+  inferenceToRow, marketSnapshotFromRow, marketSnapshotToRow, tradeFromRow, tradeToRow, type TradeExecutionExpectation,
 } from "@/lib/contracts/db-mappers";
-import type { CouncilDecision, Goal, GoalStatus, GonkaInference, ProtectionCandidate, Trade, TradeStatus, UUID } from "@/lib/contracts";
+import type { CouncilDecision, Goal, GoalStatus, GonkaInference, MarketSnapshot, ProtectionCandidate, Trade, TradeStatus, UUID } from "@/lib/contracts";
 
 import { getDatabase, type GoalGuardDatabase } from "./client";
-import { councilDecisions, councilReviews, goals, gonkaInferences, protectionCandidates, tradeRequestIdempotency, trades, workerHeartbeats } from "./schema";
+import { councilDecisions, councilReviews, goals, gonkaInferences, marketSnapshots, protectionCandidates, tradeRequestIdempotency, trades, workerHeartbeats } from "./schema";
 
 export type TradeIdempotencyOperation = "preview" | "execute" | "submission";
 export type TradeIdempotencyClaim =
@@ -39,6 +39,8 @@ export interface GoalGuardRepository {
   createTrade(trade: Trade, expectation: TradeExecutionExpectation, ownerSessionHash: string): Promise<Trade>;
   getTrade(id: UUID, ownerSessionHash: string): Promise<Trade | null>;
   transitionTrade(id: UUID, ownerSessionHash: string, from: TradeStatus[], to: TradeStatus): Promise<Trade>;
+  saveMarketSnapshot(snapshot: MarketSnapshot): Promise<MarketSnapshot>;
+  listMarketSnapshots(limit?: number): Promise<MarketSnapshot[]>;
 }
 
 const goalTransitions: Record<GoalStatus, GoalStatus[]> = {
@@ -246,6 +248,17 @@ export class PostgresGoalGuardRepository implements GoalGuardRepository {
 
   async heartbeat(workerName: string, instanceId: string, at = new Date().toISOString()) {
     await this.db.insert(workerHeartbeats).values({ workerName, instanceId, lastSeenAt: at }).onConflictDoUpdate({ target: workerHeartbeats.workerName, set: { instanceId, lastSeenAt: at } });
+  }
+
+  async saveMarketSnapshot(snapshot: MarketSnapshot) {
+    const row = marketSnapshotToRow(snapshot);
+    await this.db.insert(marketSnapshots).values(row).onConflictDoUpdate({ target: marketSnapshots.capturedAt, set: row });
+    return snapshot;
+  }
+
+  async listMarketSnapshots(limit = 100) {
+    const rows = await this.db.select().from(marketSnapshots).orderBy(desc(marketSnapshots.capturedAt)).limit(limit);
+    return rows.map(marketSnapshotFromRow);
   }
 
   async isWorkerHealthy(workerName = "trade-monitor", maxAgeMs = 45_000) {

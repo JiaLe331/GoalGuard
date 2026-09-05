@@ -27,6 +27,7 @@ export const ServerEnvironmentSchema = z.object({
   TRADE_WORKER_NAME: z.string().trim().min(1).default("trade-monitor"),
   TRADE_WORKER_POLL_MS: z.coerce.number().int().min(1000).default(5000),
   TRADE_WORKER_HEARTBEAT_MS: z.coerce.number().int().min(1000).default(15000),
+  MARKET_SNAPSHOT_MS: z.coerce.number().int().min(60_000).default(900_000),
 }).strip();
 
 export function readServerEnvironment(environment: NodeJS.ProcessEnv = process.env) {

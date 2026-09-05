@@ -15,6 +15,7 @@ import {
   underlyingFromContractBaseUnits,
   usdFromPriceBaseUnits,
 } from "./units";
+import { impliedVolatilityBps } from "./iv";
 
 const decimal = (value: Decimal.Value) => new Decimal(value).toFixed();
 const GLOBAL_PREVIEW_CAP_USD = new Decimal(3);
@@ -210,15 +211,6 @@ function evaluateOrdersForPass(orders: ThetanutsOrder[], pass: SettlementPass, p
     viable.push({ schemaVersion: 1, id: randomUUID(), goalId: params.goal.id, source: "optionbook", protocolOrderId: id, underlyingAsset: "ETH", optionType: "put", settlementType: pass.settlementType, impliedVolatilityBps: impliedVolatilityBps(order.rawApiData?.greeks?.iv), strikeUsd: decimal(strike), expiry: new Date(expiryMs).toISOString(), settlementTokenAddress: getAddress(collateralAddress!), settlementTokenSymbol: collateralToken.symbol, settlementTokenDecimals: collateralToken.decimals, premiumAmountBaseUnits: preview.totalCollateral.toString(), premiumUsd: decimal(premium), quantityBaseUnits: preview.numContracts.toString(), quantityUnderlying: decimal(quantity), maxPremiumLossUsd: decimal(premium), estimatedFloorUsd: decimal(coverageMode === "proportional_demo" ? new Decimal(scenarios[0]!.netProtectedValueUsd) : worstFloor), deadlineGapHours: Math.max(0, gapHours), goalCoverageBps: coverageBps, coverageMode, availableQuantityBaseUnits: preview.maxContracts.toString(), status: "viable", rejectionReasons: [], protocolRaw: serializeOrder(order), scenarios, marketAsOf: params.marketAsOf, createdAt: now, updatedAt: now });
   }
   return { viable, rejected };
-}
-
-function impliedVolatilityBps(value: number | undefined): number | null {
-  if (value === undefined || !Number.isFinite(value) || value <= 0) return null;
-  // The pricing API convention is decimal volatility (0.65 = 65%). Accept a
-  // percentage-shaped value as a compatibility fallback without exposing the
-  // raw payload to the browser.
-  const percentage = value <= 5 ? value * 100 : value;
-  return Math.round(percentage * 100);
 }
 
 function rankViable(viable: ProtectionCandidate[]): ProtectionCandidate[] {
