@@ -183,8 +183,11 @@ export function CouncilCard({ review, label }: { review: CouncilReview; label: s
 // Unlike CouncilCard (which requires a fully-formed CouncilReview), this renders "waiting" and
 // "running" states backed only by real signals -- an actual gonka_inferences row's presence/
 // absence and a real elapsed-second count -- never an invented completion percentage.
-export function CouncilRoleProgressCard({ progress, label, elapsedSeconds }: { progress: CouncilRoleProgress; label: string; elapsedSeconds: number | null }) {
+export function CouncilRoleProgressCard({ progress, label, elapsedSeconds, compact = false }: { progress: CouncilRoleProgress; label: string; elapsedSeconds: number | null; compact?: boolean }) {
   const [copied, setCopied] = useState(false);
+  // A model summary runs to several hundred characters, which is fine across a full-width grid
+  // but makes a fixed-width rail unusably tall. The full text stays available in the drawer.
+  const summaryClamp = compact ? " line-clamp-4" : "";
   if (progress.status === "waiting") {
     return (
       <article className="min-w-0 rounded-[var(--radius-card)] border-l-4 border-[var(--border)] bg-[var(--surface-subtle)] p-5 opacity-60 sm:p-6">
@@ -226,7 +229,7 @@ export function CouncilRoleProgressCard({ progress, label, elapsedSeconds }: { p
         <div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-[0.12em]">{progress.verdict ?? "done"}</p><h3 className="mt-1 text-2xl font-semibold tracking-[-0.04em]">{label}</h3></div>
         <VerdictIcon className="size-6" style={{ color: statusColor }} weight={progress.verdict === "approve" ? "fill" : "regular"} aria-hidden="true" />
       </div>
-      {progress.summary ? <p className="mt-4 text-sm leading-6 text-[color:var(--foreground-soft)]">{progress.summary}</p> : null}
+      {progress.summary ? <p className={"mt-4 text-sm leading-6 text-[color:var(--foreground-soft)]" + summaryClamp}>{progress.summary}</p> : null}
       <div className="mt-5 border-t border-[var(--border)] pt-4">
         <p className="text-xs text-[color:var(--foreground-soft)]">Model · {progress.model}{progress.latencyMs !== null ? ` · completed in ${(progress.latencyMs / 1000).toFixed(1)}s` : ""}</p>
         {progress.requestId ? (
