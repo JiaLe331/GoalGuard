@@ -6,6 +6,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { ProtectionStressTest } from "@/components/workflow/protection-stress-test";
 import { CouncilCard, MetricCard, ScenarioComparison } from "@/components/workflow/workflow-primitives";
 import type { CouncilDecision, Goal, GoalType, PublicProtectionCandidate, Trade } from "@/lib/contracts";
 import { formatDate, formatPercentFromBps, formatUsd } from "@/lib/frontend/format";
@@ -36,7 +37,7 @@ function decisionTone(decision: CouncilDecision) {
 }
 
 function decisionLabel(decision: CouncilDecision) {
-  if (decision.status === "approved") return "Approved by 3 checks";
+  if (decision.status === "approved") return `Approved by ${decision.approvedReviewCount} of 3 checks`;
   if (decision.status === "disputed") return "Review disputed";
   return "Plan blocked";
 }
@@ -47,24 +48,6 @@ function tradeLabel(status: Trade["status"]) {
     : status === "awaiting_signature"
       ? "Awaiting signature"
       : status.charAt(0).toUpperCase() + status.slice(1);
-}
-
-export function MarketEmptyState({ onOpenPlan }: { onOpenPlan: () => void }) {
-  return (
-    <Card className="p-6 sm:p-9">
-      <div className="flex items-start gap-4">
-        <span className="grid size-12 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[color:var(--accent-soft-foreground)]">
-          <ChartLine className="size-6" aria-hidden="true" />
-        </span>
-        <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--foreground-soft)]">Market waiting</p>
-          <h2 className="mt-2 text-3xl font-semibold tracking-[-0.05em]">Live cost of safety appears after a search.</h2>
-          <p className="mt-3 max-w-2xl leading-6 text-[color:var(--foreground-soft)]">GoalGuard needs your amount, deadline, and loss limit before it can compare real protection quotes. Nothing is being guessed while the market is empty.</p>
-          <Button className="mt-6" onClick={onOpenPlan}>Open your plan <ArrowRight aria-hidden="true" /></Button>
-        </div>
-      </div>
-    </Card>
-  );
 }
 
 export function CandidateReviewPanel({ goal, candidate }: { goal: Goal; candidate: PublicProtectionCandidate }) {
@@ -87,7 +70,7 @@ export function CandidateReviewPanel({ goal, candidate }: { goal: Goal; candidat
         <MetricCard label="Estimated floor" value={formatUsd(candidate.estimatedFloorUsd)} tone="accent" />
         <MetricCard label="Coverage" value={formatPercentFromBps(candidate.goalCoverageBps)} />
       </div>
-      <Alert className="mt-6" tone="info" title="No action is needed yet">The plan can only continue after all three checks return a safe result. GoalGuard will stop safely if any hard constraint fails.</Alert>
+      <Alert className="mt-6" tone="info" title="No action is needed yet">The plan continues only if at least two of the three checks approve and none reject. Any rejection is a hard stop, and a lone reviewer&apos;s doubt travels on with the plan as a disclosure.</Alert>
     </Card>
   );
 }
@@ -112,7 +95,7 @@ export function ScenarioTabPanel({ goal, candidate, onOpenPlan }: { goal: Goal |
   }
 
   return (
-    <section aria-labelledby="workspace-scenarios-title" className="grid gap-5">
+    <section aria-labelledby="workspace-scenarios-title" className="grid grid-cols-[minmax(0,1fr)] gap-5">
       <Card className="p-5 sm:p-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
@@ -128,6 +111,10 @@ export function ScenarioTabPanel({ goal, candidate, onOpenPlan }: { goal: Goal |
           <MetricCard label="Estimated floor" value={formatUsd(candidate.estimatedFloorUsd)} tone="accent" />
           <MetricCard label="Coverage" value={formatPercentFromBps(candidate.goalCoverageBps)} />
         </div>
+      </Card>
+
+      <Card className="p-5 sm:p-8">
+        <ProtectionStressTest goal={goal} candidate={candidate} />
       </Card>
 
       <Card className="p-5 sm:p-8">
@@ -169,7 +156,7 @@ export function AuditTabPanel({ goal, candidate, decision, trade, stale, onOpenP
   }
 
   return (
-    <section aria-labelledby="workspace-audit-title" className="grid gap-5">
+    <section aria-labelledby="workspace-audit-title" className="grid grid-cols-[minmax(0,1fr)] gap-5">
       <Card className="p-5 sm:p-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
@@ -211,10 +198,12 @@ export function AuditTabPanel({ goal, candidate, decision, trade, stale, onOpenP
           <div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--foreground-soft)]">Independent records</p><h3 id="workspace-review-records-title" className="mt-2 text-2xl font-semibold tracking-[-0.04em]">Three council voices</h3></div>
           <p className="text-xs text-[color:var(--foreground-soft)]">Created {formatDate(decision.createdAt)}</p>
         </div>
-        <div className="mt-4 grid gap-4 lg:grid-cols-3">{decision.reviews.map((review) => <CouncilCard key={review.id} review={review} label={roleLabels[review.role]} />)}</div>
+        {/* Full width, one per row: each card splits itself horizontally, so the reasoning gets
+            a readable measure instead of a 200px column. */}
+        <div className="mt-4 grid gap-4">{decision.reviews.map((review) => <CouncilCard key={review.id} review={review} label={roleLabels[review.role]} />)}</div>
       </section>
 
-      {decision.blockedReasons.length ? <Alert tone={decision.status === "disputed" ? "warning" : "error"} title="Council concern">{decision.blockedReasons.join(" ")}</Alert> : null}
+      {decision.blockedReasons.length ? <Alert tone={decision.status === "blocked" ? "error" : "warning"} title={decision.status === "approved" ? "Noted by a dissenting reviewer" : "Council concern"}>{decision.blockedReasons.join(" ")}</Alert> : null}
 
       {trade ? (
         <Card className="p-5 sm:p-7">

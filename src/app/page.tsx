@@ -98,7 +98,7 @@ export default function Home() {
                 <p className="text-xs font-bold uppercase tracking-[0.1em] text-[color:var(--foreground-muted)]">01 · Define</p>
                 <h3 className="mt-4 text-2xl font-semibold tracking-[-0.04em]">Make the purpose measurable</h3>
                 <p className="mt-4 max-w-md text-[color:var(--foreground-soft)]">Confirm the amount, deadline, acceptable loss, and maximum cost. Nothing reaches the market until those guardrails are clear.</p>
-                <Link href="/goals/new" className="mt-auto inline-flex min-h-11 w-fit items-center gap-2 pt-6 text-sm font-semibold underline-offset-4 hover:underline">Start with your goal<ArrowRight className="size-4" aria-hidden="true" /></Link>
+                <Link href="/dashboard" className="mt-auto inline-flex min-h-11 w-fit items-center gap-2 pt-6 text-sm font-semibold underline-offset-4 hover:underline">Start with your goal<ArrowRight className="size-4" aria-hidden="true" /></Link>
               </div>
               <HowItWorksIllustration variant="goal" />
             </article>
@@ -193,7 +193,7 @@ export default function Home() {
         <section className="px-5 py-28 text-center lg:py-40">
           <h2 className="section-heading mx-auto max-w-3xl">Start with what the money is for.</h2>
           <p className="mx-auto mt-5 max-w-xl text-lg text-[color:var(--foreground-soft)]">Define the goal first. Every protection decision follows from there.</p>
-          <Link href="/goals/new" className="mt-8 inline-flex min-h-14 items-center gap-2 rounded-full bg-[var(--button-primary-bg)] px-8 text-sm font-semibold text-[color:var(--button-primary-fg)] transition-[background-color,transform] duration-[var(--duration-press)] hover:bg-[var(--button-primary-hover)] active:scale-[0.98]">Build my protection plan<ArrowRight className="size-4" aria-hidden="true" /></Link>
+          <Link href="/dashboard" className="mt-8 inline-flex min-h-14 items-center gap-2 rounded-full bg-[var(--button-primary-bg)] px-8 text-sm font-semibold text-[color:var(--button-primary-fg)] transition-[background-color,transform] duration-[var(--duration-press)] hover:bg-[var(--button-primary-hover)] active:scale-[0.98]">Build my protection plan<ArrowRight className="size-4" aria-hidden="true" /></Link>
         </section>
       </main>
 

@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Drawer } from "@/components/ui/drawer";
 import { Field } from "@/components/ui/field";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { ProtectionStressTest } from "@/components/workflow/protection-stress-test";
 import { CouncilCard, CouncilRoleProgressCard, MetricCard, ScenarioComparison, UnsignedTransactionCard } from "@/components/workflow/workflow-primitives";
 import { UpdateGoalRequestSchema, type ApiMeta, type CouncilDecision, type CouncilRoleProgress, type Goal, type GoalType, type JsonValue, type PublicProtectionCandidate, type Trade, type TradePreview, type UpdateGoalRequest } from "@/lib/contracts";
 import { describeCandidateDifference, formatBaseUnits, formatCountdown, formatDate, formatPercentFromBps, formatUsd, secondsUntil, shortenAddress } from "@/lib/frontend/format";
@@ -315,6 +316,11 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
               <div className="mt-6"><ScenarioComparison scenarios={candidate.scenarios} settlementType={candidate.settlementType} strikeUsd={candidate.strikeUsd} /></div>
             </section>
           ) : null}
+          {showScenarios ? (
+            <section className="mt-6 rounded-[var(--radius-card)] bg-[var(--surface-subtle)] p-5 sm:p-7">
+              <ProtectionStressTest goal={goal} candidate={candidate} />
+            </section>
+          ) : null}
           <div className="mt-8">
             <Accordion title="Protocol facts">
               <dl className="grid gap-4 sm:grid-cols-2">
@@ -337,6 +343,9 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
           <Button className="mt-5 w-full" variant="secondary" onClick={onOpenCouncil}>Open council review</Button>
         </Card>
         {!approved ? <div className={`grid items-center gap-2 ${suppressMascot ? "grid-cols-1" : "grid-cols-[auto_minmax(0,1fr)]"}`}>{suppressMascot ? null : <NiulaiMascot pose="safe-stop" size="sm" />}<Alert tone={decision.status === "disputed" ? "warning" : "error"} title={decision.status === "disputed" ? "Council needs another look" : "This plan cannot proceed"}>{decision.blockedReasons[0] ?? "Open the council review to see the concern before refreshing live options."}</Alert></div> : null}
+        {/* A majority-approved plan still carries the dissenting reviewer's concern: approval is
+            not a reason to hide the doubt that a minority of the council put on record. */}
+        {approved && decision.blockedReasons.length ? <Alert tone="warning" title="Noted by a dissenting reviewer">{decision.blockedReasons.join(" ")}</Alert> : null}
         <div className="grid gap-3">
           <Button onClick={onContinue} disabled={!approved || busy}>{cta}<ArrowRight aria-hidden="true" /></Button>
           {decision.status === "disputed" ? <Button variant="secondary" onClick={onRetryReview} disabled={busy}>Ask the council to re-review this candidate</Button> : null}
@@ -355,7 +364,7 @@ export function CouncilDrawer({ decision, open, onClose }: { decision: CouncilDe
         <p className="min-w-0 text-sm leading-6 text-[color:var(--foreground-soft)]">Three Gonka roles independently check plan fit, risk, and clarity. Their request IDs make the review traceable.</p>
       </div>
       <div className="grid gap-4">{decision.reviews.map((review) => <CouncilCard key={review.id} review={review} label={roleLabels[review.role]} />)}</div>
-      <div className="mt-5"><Alert tone={decision.status === "approved" ? "success" : decision.status === "disputed" ? "warning" : "error"} title={"Council result: " + decision.status}>{decision.status === "approved" ? "All " + decision.approvedReviewCount + " checks approved this plan." : decision.blockedReasons.length ? decision.blockedReasons.join(" ") : decision.approvedReviewCount + " of 3 checks approved this plan; the rest raised concerns."}</Alert></div>
+      <div className="mt-5"><Alert tone={decision.status === "approved" ? "success" : decision.status === "disputed" ? "warning" : "error"} title={"Council result: " + decision.status}>{decision.status === "approved" ? (decision.approvedReviewCount === 3 ? "All 3 checks approved this plan." : decision.approvedReviewCount + " of 3 checks approved this plan; the concern raised by the remaining reviewer stays on the record.") : decision.blockedReasons.length ? decision.blockedReasons.join(" ") : decision.approvedReviewCount + " of 3 checks approved this plan; the rest raised concerns."}</Alert></div>
     </Drawer>
   );
 }

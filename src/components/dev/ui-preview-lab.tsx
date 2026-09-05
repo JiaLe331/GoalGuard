@@ -217,7 +217,7 @@ export function UiPreviewLab({ initialState, samples }: { initialState: UiPrevie
   return (
     <>
       <a href="#preview-content" className="skip-link">Skip to previewed interface</a>
-      <FloatingEditorialNavbar variant="workflow" contextLabel={`${frame.eyebrow} · ${frame.title}`} statusLabel="Local interface lab" walletSlot={<span className="hidden min-h-11 items-center rounded-full bg-[var(--accent-soft)] px-4 text-xs font-bold uppercase tracking-[0.08em] text-[color:var(--accent-soft-foreground)] min-[520px]:inline-flex">Sample data</span>} />
+      <FloatingEditorialNavbar variant="workflow" contextLabel={`${frame.eyebrow} · ${frame.title}`} walletSlot={<span className="hidden min-h-11 items-center rounded-full bg-[var(--accent-soft)] px-4 text-xs font-bold uppercase tracking-[0.08em] text-[color:var(--accent-soft-foreground)] min-[520px]:inline-flex">Sample data</span>} />
 
       <main id="preview-content" tabIndex={-1} className="min-h-screen outline-none">
         <div className="reading-shell pt-6 sm:pt-8">

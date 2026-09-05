@@ -6,8 +6,9 @@ import { useEffect, useState } from "react";
 import { NiulaiChatRail, resolveNiulaiChatState, type NiulaiProcessingStage } from "@/components/brand/niulai-chat-rail";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { roleLabels } from "@/components/workflow/workflow-panels";
-import { CouncilCard, CouncilRoleProgressCard } from "@/components/workflow/workflow-primitives";
+import { CouncilRoleProgressCard } from "@/components/workflow/workflow-primitives";
 import type { CouncilDecision, CouncilRoleProgress, Goal, PublicProtectionCandidate } from "@/lib/contracts";
 import type { WorkflowStage } from "@/lib/frontend/workflow";
 
@@ -26,8 +27,14 @@ function planActionLabel(walletStatus: WalletStatus) {
 }
 
 function consensusCopy(decision: CouncilDecision) {
-  if (decision.status === "approved") return "All three independent checks approved this candidate. Review the deterministic plan facts before continuing.";
-  if (decision.status === "disputed") return "The council needs another look before this candidate can continue. Ask for a fresh review or find another live option.";
+  if (decision.status === "approved") {
+    return decision.blockedReasons.length
+      ? `${decision.approvedReviewCount} of 3 independent checks approved this candidate. The remaining reviewer's concern stays attached to the plan and is kept in the audit trail.`
+      : "All three independent checks approved this candidate. Review the deterministic plan facts before continuing.";
+  }
+  // Surface the actual concern, not just the label. The rail is the only council output visible
+  // on the Market, Plan and Scenarios tabs, so "disputed" without a reason is not much of an answer.
+  if (decision.status === "disputed") return decision.blockedReasons[0] ?? "The council needs another look before this candidate can continue.";
   return decision.blockedReasons[0] ?? "The council found a hard stop. Read the saved verdicts before finding another live option.";
 }
 
@@ -54,10 +61,68 @@ function PlanRailActions({ decision, busy, walletStatus, onContinue, onRefresh, 
   );
 }
 
+// Named roles rather than a sentence about "three reviewers": the council is a headline feature,
+// and before a review runs the rail is the only place that says who actually does the checking.
+const idleRoster = [
+  { role: "strategist", job: "Does this option fit the stated goal?" },
+  { role: "risk_auditor", job: "What breaks in the downside case?" },
+  { role: "consumer_advocate", job: "Is the trade-off stated plainly?" },
+] as const;
+
+function IdleCouncilRoster() {
+  return (
+    <div className="mt-3">
+      <ul className="grid gap-2">
+        {idleRoster.map((entry) => (
+          <li key={entry.role} className="rounded-[var(--radius-card)] bg-[var(--surface-subtle)] p-3">
+            <div className="flex items-center justify-between gap-2">
+              <p className="min-w-0 truncate text-sm font-semibold">{roleLabels[entry.role]}</p>
+              <span className="size-2 shrink-0 rounded-full bg-[var(--border-strong)]" aria-hidden="true" />
+            </div>
+            <p className="mt-1 text-xs leading-5 text-[color:var(--foreground-soft)]">{entry.job}</p>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-3 text-xs leading-5 text-[color:var(--foreground-soft)]">
+        Three independent Gonka reviews run on every candidate. Each verdict is saved with its model and request ID.
+      </p>
+    </div>
+  );
+}
+
+const verdictPresentation = {
+  approve: { tone: "ready", label: "Approve" },
+  uncertain: { tone: "warning", label: "Uncertain" },
+  reject: { tone: "error", label: "Reject" },
+} as const;
+
+/**
+ * The decided rail is the same three rows as the idle roster, now carrying verdicts.
+ *
+ * Deliberately a summary, not the verdicts themselves: the Audit tab already prints every
+ * review in full, and the rail sits beside it on screen. Repeating the reasoning in both places
+ * made the same three paragraphs appear twice at once. The full text stays one click away.
+ */
+function DecidedCouncilRoster({ decision }: { decision: CouncilDecision }) {
+  return (
+    <ul className="mt-3 grid gap-2">
+      {decision.reviews.map((review) => {
+        const verdict = verdictPresentation[review.verdict];
+        return (
+          <li key={review.id} className="flex items-center justify-between gap-2 rounded-[var(--radius-card)] bg-[var(--surface-subtle)] p-3">
+            <p className="min-w-0 truncate text-sm font-semibold">{roleLabels[review.role]}</p>
+            <StatusBadge tone={verdict.tone} label={verdict.label} />
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 // Right rail: Niu Lai's live presence plus whatever the council currently has to say. Council
 // state is read straight from the same poll the workspace already runs -- nothing here is
 // simulated, and when there is nothing real to report it says so.
-export function CouncilRail({ stage, councilProgress, reviewStartedAt, decision, planStale, onOpenCouncil, goal = null, candidate = null, busy = false, walletStatus = "other", onContinue, onRefresh, onRetryReview }: {
+export function CouncilRail({ stage, councilProgress, reviewStartedAt, decision, planStale, onOpenCouncil, goal = null, candidate = null, busy = false, walletStatus = "other", readOnly = false, onContinue, onRefresh, onRetryReview }: {
   stage: WorkflowStage;
   councilProgress: CouncilRoleProgress[] | null;
   reviewStartedAt: number | null;
@@ -68,6 +133,8 @@ export function CouncilRail({ stage, councilProgress, reviewStartedAt, decision,
   candidate?: PublicProtectionCandidate | null;
   busy?: boolean;
   walletStatus?: WalletStatus;
+  /** The shared demo goal: readable by anyone, writable by nobody but its author. */
+  readOnly?: boolean;
   onContinue?: () => void;
   onRefresh?: () => void;
   onRetryReview?: () => void;
@@ -90,7 +157,7 @@ export function CouncilRail({ stage, councilProgress, reviewStartedAt, decision,
     processing: stage in processingStages,
   });
   const showPlanActions = Boolean(
-    decision && goal && candidate && onContinue && onRefresh && onRetryReview
+    !readOnly && decision && goal && candidate && onContinue && onRefresh && onRetryReview
       && ["plan_approved", "plan_disputed", "plan_blocked"].includes(stage),
   );
 
@@ -122,23 +189,25 @@ export function CouncilRail({ stage, councilProgress, reviewStartedAt, decision,
                 These verdicts describe a previous version of this goal. Find live protection again to get a current review.
               </Alert>
             ) : null}
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--foreground-soft)]">Full verdicts</p>
-              <div className="mt-3 grid gap-3">
-                {decision.reviews.map((review) => <CouncilCard key={review.id} review={review} label={roleLabels[review.role]} />)}
-              </div>
-            </div>
+            <DecidedCouncilRoster decision={decision} />
             <Alert className="mt-5" tone={decision.status === "approved" ? "success" : decision.status === "disputed" ? "warning" : "error"} title={`Council result: ${decision.status}`}>
               {consensusCopy(decision)}
             </Alert>
             {showPlanActions && decision && onContinue && onRefresh && onRetryReview ? (
               <PlanRailActions decision={decision} busy={busy} walletStatus={walletStatus} onContinue={onContinue} onRefresh={onRefresh} onRetryReview={onRetryReview} />
-            ) : <Button variant="secondary" className="mt-3 w-full" onClick={onOpenCouncil}>Open full review</Button>}
+            ) : (
+              <>
+                {readOnly ? (
+                  <p className="mt-4 text-xs leading-5 text-[color:var(--foreground-soft)]">
+                    This is a shared example goal, so it is read-only here. Start your own goal to run a live review.
+                  </p>
+                ) : null}
+                <Button variant="secondary" className="mt-3 w-full" onClick={onOpenCouncil}>Open full review</Button>
+              </>
+            )}
           </div>
         ) : (
-          <p className="mt-3 text-sm leading-6 text-[color:var(--foreground-soft)]">
-            Three Gonka reviewers check plan fit, downside risk, and clarity once a live option is found.
-          </p>
+          <IdleCouncilRoster />
         )}
       </section>
     </div>

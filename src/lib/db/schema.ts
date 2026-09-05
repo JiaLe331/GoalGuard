@@ -142,6 +142,9 @@ export const marketSnapshots = pgTable.withRLS("market_snapshots", {
   optionCount: integer("option_count").notNull(),
   medianIvBps: integer("median_iv_bps"),
   costPer100Usd30d: text("cost_per_100_usd_30d"),
+  // The goal-free protection chain at a $100 reference notional. Nullable so rows captured
+  // before this column existed stay readable and are not mistaken for an empty market.
+  chain: jsonb("chain").$type<unknown>(),
 }, (table) => [
   check("market_snapshots_option_count_check", sql`${table.optionCount} >= 0`),
   check("market_snapshots_iv_check", sql`${table.medianIvBps} IS NULL OR ${table.medianIvBps} >= 0`),

@@ -9,6 +9,7 @@ const firstSnapshot: MarketSnapshot = {
   optionCount: 58,
   medianIvBps: 6500,
   costPer100Usd30d: "2.1",
+  chain: null,
 };
 
 describe("market service", () => {

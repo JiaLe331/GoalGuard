@@ -1,6 +1,6 @@
 "use client";
 
-import { List, ShieldCheck } from "@phosphor-icons/react";
+import { List } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
@@ -19,7 +19,7 @@ const defaultLinks: readonly EditorialNavLink[] = [
   { label: "Live foundations", href: "#live-foundations" },
 ];
 
-const defaultPrimaryAction: EditorialNavLink = { label: "Build a plan", href: "/goals/new" };
+const defaultPrimaryAction: EditorialNavLink = { label: "Open workspace", href: "/dashboard" };
 
 export function GoalGuardBrand({ href = "#top" }: { href?: string }) {
   return (
@@ -30,22 +30,12 @@ export function GoalGuardBrand({ href = "#top" }: { href?: string }) {
   );
 }
 
-function StatusLabel({ label, compact = false }: { label: string; compact?: boolean }) {
-  return (
-    <span className="inline-flex min-h-11 min-w-0 items-center gap-2 whitespace-nowrap text-xs font-bold uppercase tracking-[0.08em] text-[color:var(--foreground-soft)]">
-      <ShieldCheck className="size-4 shrink-0" aria-hidden="true" />
-      <span className={compact ? "hidden min-[860px]:inline" : "truncate"}>{label}</span>
-    </span>
-  );
-}
-
 export type FloatingEditorialNavbarProps = {
   variant?: EditorialNavbarVariant;
   brand?: ReactNode;
   brandHref?: string;
   links?: readonly EditorialNavLink[];
   activeHref?: EditorialNavLink["href"];
-  statusLabel?: string;
   contextLabel?: string;
   walletSlot?: ReactNode;
   primaryAction?: EditorialNavLink | null;
@@ -59,7 +49,6 @@ export function FloatingEditorialNavbar({
   brandHref,
   links,
   activeHref,
-  statusLabel = "Preview only",
   contextLabel,
   walletSlot,
   primaryAction,
@@ -138,7 +127,6 @@ export function FloatingEditorialNavbar({
         )}
 
         <div className="ml-auto flex shrink-0 items-center justify-end gap-2.5 sm:gap-3">
-          <span className={(variant === "marketing" ? "hidden min-[768px]:inline-flex" : "hidden min-[860px]:inline-flex") + " pr-1"}><StatusLabel label={statusLabel} compact={variant === "workflow"} /></span>
           <ThemeSelector compact />
           {variant === "workflow" ? (
             <>
@@ -168,7 +156,7 @@ export function FloatingEditorialNavbar({
       {variant === "marketing" ? (
         <Drawer open={open} title="Explore GoalGuard" onClose={close} labelledId={mobileMenuId} restoreFocusRef={menuButton}>
           <div className="flex min-h-[calc(100dvh-10rem)] flex-col">
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-control)] bg-[var(--accent-soft)] px-4 py-2 text-[color:var(--accent-soft-foreground)]"><StatusLabel label={statusLabel} /><ThemeSelector /></div>
+            <div className="mb-5 flex flex-wrap items-center justify-end gap-3 rounded-[var(--radius-control)] bg-[var(--accent-soft)] px-4 py-2 text-[color:var(--accent-soft-foreground)]"><ThemeSelector /></div>
             <div className="grid">
               {navLinks.map((link, index) => (
                 <a key={link.href} href={link.href} onClick={() => selectAnchor(link.href)} className="flex min-h-16 items-center justify-between border-b border-[var(--border)] text-lg font-medium">
@@ -188,10 +176,9 @@ export function FloatingEditorialNavbar({
       {variant === "workflow" ? (
         <Drawer open={open} title="Goal workspace menu" onClose={close} labelledId={mobileMenuId} restoreFocusRef={menuButton}>
           <div className="flex min-h-[calc(100dvh-10rem)] flex-col">
-            <div className="mb-5 rounded-[var(--radius-control)] bg-[var(--accent-soft)] px-4 py-3 text-[color:var(--accent-soft-foreground)]">
-              <StatusLabel label={statusLabel} />
-              {contextLabel ? <p className="mt-1 text-sm leading-5 text-[color:var(--accent-soft-foreground)]">{contextLabel}</p> : null}
-            </div>
+            {contextLabel ? (
+              <p className="mb-5 rounded-[var(--radius-control)] bg-[var(--accent-soft)] px-4 py-3 text-sm leading-5 text-[color:var(--accent-soft-foreground)]">{contextLabel}</p>
+            ) : null}
             <nav aria-label="Goals" className="min-w-0">
               {mobileDrawerContent ?? <p className="text-sm leading-6 text-[color:var(--foreground-soft)]">Your goals and connected services will appear here.</p>}
             </nav>

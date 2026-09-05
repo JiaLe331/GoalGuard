@@ -114,5 +114,8 @@ export async function captureMarketSnapshot(
     optionCount: orders.length,
     medianIvBps: index.medianIvBps,
     costPer100Usd30d: index.costPer100Usd30d,
+    // The chain behind the aggregates was already built above; persisting it lets the workspace
+    // show a real protection market before any goal exists, without a second Thetanuts read.
+    chain,
   });
 }

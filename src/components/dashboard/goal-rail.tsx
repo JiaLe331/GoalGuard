@@ -7,8 +7,17 @@ import { RecentGoalsList } from "@/components/goals/recent-goals-list";
 import { IntegrationStatus } from "@/components/integrations/integration-status";
 import { MarketStrip } from "@/components/market/market-strip";
 import { StatusBadge } from "@/components/ui/status-badge";
-import type { Goal, GoalType } from "@/lib/contracts";
+import type { Goal, GoalStatus, GoalType } from "@/lib/contracts";
 import { formatUsd } from "@/lib/frontend/format";
+
+/** A read-only goal any visitor may open, resolved on the server (see lib/server/demo-goal). */
+export interface DemoGoalSummary {
+  id: string;
+  goalType: GoalType;
+  customGoalLabel: string | null;
+  protectedValueUsd: string;
+  status: GoalStatus;
+}
 
 const goalLabels: Record<GoalType, string> = {
   rent: "Rent",
@@ -29,7 +38,10 @@ const activeLabel = {
 // Left rail: what you are working on, what you worked on before, and whether the services this
 // depends on are actually up. Deliberately reuses RecentGoalsList and IntegrationStatus rather
 // than restating either.
-export function GoalRail({ goal }: { goal: Goal | null }) {
+export function GoalRail({ goal, demoGoal = null }: { goal: Goal | null; demoGoal?: DemoGoalSummary | null }) {
+  // Shown whenever the demo goal is not already the one open, so a visitor with no history of
+  // their own still has a real, fully-reviewed goal to look at rather than an empty rail.
+  const showDemoGoal = demoGoal !== null && demoGoal.id !== goal?.id;
   return (
     <div className="flex flex-col gap-5">
       <Link
@@ -47,6 +59,20 @@ export function GoalRail({ goal }: { goal: Goal | null }) {
             <p className="mt-0.5 text-sm tabular-nums text-[color:var(--foreground-soft)]">{formatUsd(goal.protectedValueUsd)}</p>
             <div className="mt-2.5"><StatusBadge tone={activeTone[goal.status]} label={activeLabel[goal.status]} /></div>
           </div>
+        </section>
+      ) : null}
+
+      {showDemoGoal ? (
+        <section aria-label="Example goal">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--foreground-soft)]">Example goal</p>
+          <Link
+            href={`/goals/${demoGoal.id}`}
+            className="mt-2 flex min-h-11 items-center justify-between gap-3 rounded-[var(--radius-card)] border border-dashed border-[var(--border-strong)] px-3 py-2.5 text-sm transition-colors hover:bg-[var(--surface-subtle)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
+          >
+            <span className="min-w-0 truncate font-medium">{demoGoal.customGoalLabel ?? goalLabels[demoGoal.goalType]}</span>
+            <span className="shrink-0 tabular-nums text-[color:var(--foreground-soft)]">{formatUsd(demoGoal.protectedValueUsd)}</span>
+          </Link>
+          <p className="mt-1.5 text-xs leading-5 text-[color:var(--foreground-soft)]">A finished council review you can open on any device.</p>
         </section>
       ) : null}
 

@@ -40,7 +40,7 @@ async function installWorkflowFixtures(page: Page, preview = previewTradeRespons
     const request = route.request();
     const path = new URL(request.url()).pathname;
     if (path === "/api/integrations/status") return json(route, { data: { database: { status: "ready" }, gonka: { status: "ready", model: "gonka-model-a", requestId: "gonka-ready" }, thetanuts: { status: "ready", chainId: 8453, activeEthPutCount: 3, marketAsOf: fixtureMeta.timestamp } }, meta: fixtureMeta });
-    if (path === "/api/market/summary") return json(route, { data: { snapshot: { capturedAt: fixtureMeta.timestamp, ethSpotUsd: "3000", optionCount: 58, medianIvBps: 6500, costPer100Usd30d: "2.1" } }, meta: fixtureMeta });
+    if (path === "/api/market/summary") { const snapshot = { capturedAt: fixtureMeta.timestamp, ethSpotUsd: "3000", optionCount: 58, medianIvBps: 6500, costPer100Usd30d: "2.1", chain: null }; return json(route, { data: { snapshot, series: [snapshot] }, meta: fixtureMeta }); }
     if (path === "/api/goals/parse") return json(route, parseGoalResponse);
     if (path.endsWith(parseGoalResponse.data.goal!.id) && request.method() === "GET") return json(route, getDraftGoalResponse);
     if (path.endsWith(parseGoalResponse.data.goal!.id) && request.method() === "PATCH") return json(route, updateGoalResponse);

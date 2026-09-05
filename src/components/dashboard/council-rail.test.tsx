@@ -6,7 +6,7 @@ import { fixtureBlockedDecision, fixtureDecision, fixtureDisputedDecision, fixtu
 import { CouncilRail } from "./council-rail";
 
 describe("CouncilRail", () => {
-  it("shows every saved verdict and hoists the approved plan action", async () => {
+  it("summarises each verdict and hoists the approved plan action", async () => {
     const user = userEvent.setup();
     const onContinue = vi.fn();
     const onRefresh = vi.fn();
@@ -27,11 +27,16 @@ describe("CouncilRail", () => {
       />,
     );
 
-    expect(screen.getByText("Full verdicts")).toBeVisible();
-    expect(screen.getByRole("heading", { name: "Strategist" })).toBeVisible();
-    expect(screen.getByRole("heading", { name: "Risk Auditor" })).toBeVisible();
-    expect(screen.getByRole("heading", { name: "Consumer Advocate" })).toBeVisible();
+    expect(screen.getByText("Strategist")).toBeVisible();
+    expect(screen.getByText("Risk Auditor")).toBeVisible();
+    expect(screen.getByText("Consumer Advocate")).toBeVisible();
+    expect(screen.getAllByText("Approve")).toHaveLength(3);
     expect(screen.getByText("Next safe step")).toBeVisible();
+
+    // The Audit tab prints the reviews in full and sits beside this rail, so the rail must stay a
+    // summary -- repeating each review's prose here put the same paragraphs on screen twice.
+    expect(screen.queryByText(fixtureDecision.reviews[0]!.summary)).not.toBeInTheDocument();
+    expect(screen.queryByText("Full verdicts")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /connect wallet to continue/i }));
     expect(onContinue).toHaveBeenCalledOnce();
@@ -56,7 +61,9 @@ describe("CouncilRail", () => {
       />,
     );
 
+    // A summary rail still has to say why, or "disputed" is a label with no answer behind it.
     expect(screen.getByText("The deadline gap needs clearer disclosure.")).toBeVisible();
+    expect(screen.getByText("Uncertain")).toBeVisible();
     expect(screen.getByRole("button", { name: /ask the council to re-review/i })).toBeVisible();
     expect(screen.getByRole("button", { name: "Plan cannot continue" })).toBeDisabled();
 
@@ -76,6 +83,7 @@ describe("CouncilRail", () => {
       />,
     );
     expect(screen.getByText("The candidate violates a hard user constraint.")).toBeVisible();
+    expect(screen.getByText("Reject")).toBeVisible();
     expect(screen.getByRole("button", { name: "Plan cannot continue" })).toBeDisabled();
     expect(screen.queryByRole("button", { name: /re-review/i })).not.toBeInTheDocument();
   });

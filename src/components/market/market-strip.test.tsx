@@ -10,10 +10,11 @@ const snapshot = {
   optionCount: 58,
   medianIvBps: 6500,
   costPer100Usd30d: "2.1",
+  chain: null,
 };
 
 function marketResponse(value: typeof snapshot | null) {
-  return new Response(JSON.stringify({ data: { snapshot: value }, meta: fixtureMeta }), {
+  return new Response(JSON.stringify({ data: { snapshot: value, series: value ? [value] : [] }, meta: fixtureMeta }), {
     status: 200,
     headers: { "Content-Type": "application/json" },
   });

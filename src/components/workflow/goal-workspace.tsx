@@ -15,9 +15,9 @@ import { CouncilRail } from "@/components/dashboard/council-rail";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { GoalRail } from "@/components/dashboard/goal-rail";
 import { CenterTabPanel, CenterTabs, type CenterTab } from "@/components/dashboard/center-tabs";
-import { AuditTabPanel, CandidateReviewPanel, InlineWorkflowError, MarketEmptyState, ScenarioTabPanel } from "@/components/dashboard/center-tab-panels";
+import { AuditTabPanel, CandidateReviewPanel, InlineWorkflowError, ScenarioTabPanel } from "@/components/dashboard/center-tab-panels";
 import { MarketOverview } from "@/components/market/market-overview";
-import { StageProgress } from "@/components/workflow/workflow-primitives";
+import { ProtectionMarketPanel } from "@/components/market/protection-market-panel";
 import {
   ActiveProtectionPanel,
   CouncilDrawer,
@@ -28,10 +28,10 @@ import {
   ReadOnlyTradePanel,
 } from "@/components/workflow/workflow-panels";
 import type { CouncilRoleProgress, UpdateGoalRequest } from "@/lib/contracts";
+import type { DemoGoalSummary } from "@/components/dashboard/goal-rail";
 import { ApiClientError, goalGuardApi } from "@/lib/frontend/api-client";
 import {
   clearPreviewRetry,
-  readActiveGoalId,
   readPreviewRetry,
   saveRecentGoal,
   savePreviewRetry,
@@ -54,7 +54,7 @@ function stagePresentation(stage: WorkflowStage) {
   return { step: 1, eyebrow: "Safe stop", title: "GoalGuard needs your attention" };
 }
 
-export function GoalWorkspace({ goalId }: { goalId: string }) {
+export function GoalWorkspace({ goalId = null, demoGoal = null }: { goalId?: string | null; demoGoal?: DemoGoalSummary | null }) {
   const router = useRouter();
   const wallet = useWallet();
   const [state, dispatch] = useReducer(workflowReducer, initialWorkflowState);
@@ -78,11 +78,15 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
   }, []);
 
   const hydrate = useCallback(async (signal?: AbortSignal) => {
-    if (readActiveGoalId() !== goalId) {
-      fail(new ApiClientError("This goal is not available in this browser.", "NOT_FOUND", false), "new_goal");
+    // The goal-free workspace (/dashboard) has nothing to hydrate: the market board and the rails
+    // stand on their own, and a goal only arrives once the visitor creates or opens one.
+    if (goalId === null) {
       setHydrating(false);
       return;
     }
+    // Ownership is decided by the server's session cookie, not by this browser's localStorage.
+    // An earlier localStorage gate here rejected goals the server would happily have returned --
+    // a cleared cache or a shared link became "not available in this browser".
     try {
       const response = await goalGuardApi.getGoal(goalId, signal);
       dispatch({ type: "hydrate", response });
@@ -161,6 +165,7 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
   }, [state.stage, wallet.address, wallet.chainId]);
 
   const saveGoal = useCallback(async (value: UpdateGoalRequest) => {
+    if (goalId === null) return;
     setBusy(true);
     try {
       const response = await goalGuardApi.updateGoal(goalId, value);
@@ -170,6 +175,7 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
   }, [fail, goalId]);
 
   const findAndReview = useCallback(async (value?: UpdateGoalRequest, refresh = false) => {
+    if (goalId === null) return;
     setBusy(true);
     try {
       let goal = state.goal;
@@ -195,7 +201,7 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
   }, [fail, goalId, state.goal, state.selectedCandidate]);
 
   const retryReview = useCallback(async () => {
-    if (!state.selectedCandidate) return;
+    if (goalId === null || !state.selectedCandidate) return;
     setBusy(true);
     dispatch({ type: "review_started" });
     try {
@@ -244,6 +250,10 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
     router.push("/goals/new");
   }
 
+  // The shared demo goal is readable by any visitor but owned by one session, so its write
+  // actions would 404 for everyone else. Hide them rather than offer a button that cannot work.
+  const demoReadOnly = demoGoal !== null && demoGoal.id === goalId;
+
   const presentation = stagePresentation(state.stage);
   const renderStage = (surface: "center" | "drawer" = "center") => {
     if (surface === "drawer") {
@@ -269,14 +279,13 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
       <a href="#workflow-content" className="skip-link">Skip to current step</a>
       <FloatingEditorialNavbar
         variant="workflow"
-        contextLabel={`${presentation.eyebrow} · ${presentation.title}`}
+        contextLabel={state.goal ? `${presentation.eyebrow} · ${presentation.title}` : "Protection workspace · Live market"}
         walletSlot={<WalletControl compact />}
-        mobileDrawerContent={<GoalRail goal={state.goal} />}
+        mobileDrawerContent={<GoalRail goal={state.goal} demoGoal={demoGoal} />}
       />
       <DashboardShell
-        left={<GoalRail goal={state.goal} />}
-        right={<CouncilRail stage={state.stage} councilProgress={councilProgress} reviewStartedAt={reviewStartedAt} decision={state.decision} planStale={state.planStale} goal={state.goal} candidate={state.selectedCandidate} busy={busy} walletStatus={wallet.status === "connected" ? "connected" : wallet.status === "wrong-network" ? "wrong-network" : "other"} onContinue={() => void beginPreview()} onRefresh={() => void findAndReview(undefined, true)} onRetryReview={() => void retryReview()} onOpenCouncil={() => setCouncilOpen(true)} />}
-        progress={<StageProgress step={presentation.step} />}
+        left={<GoalRail goal={state.goal} demoGoal={demoGoal} />}
+        right={<CouncilRail stage={state.stage} councilProgress={councilProgress} reviewStartedAt={reviewStartedAt} decision={state.decision} planStale={state.planStale} goal={state.goal} candidate={state.selectedCandidate} busy={busy} readOnly={demoReadOnly} walletStatus={wallet.status === "connected" ? "connected" : wallet.status === "wrong-network" ? "wrong-network" : "other"} onContinue={() => void beginPreview()} onRefresh={() => void findAndReview(undefined, true)} onRetryReview={() => void retryReview()} onOpenCouncil={() => setCouncilOpen(true)} />}
       >
         <div id="workflow-content" ref={focusTarget} tabIndex={-1} data-focus-target="programmatic" className="outline-none">
           <div className="sr-only"><p>{presentation.eyebrow}</p><h1>{presentation.title}</h1></div>
@@ -284,7 +293,11 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
           <CenterTabs activeTab={centerTab} onTabChange={setCenterTab} />
           <div className="mt-5">
             <CenterTabPanel tab="market" activeTab={centerTab}>
-              {state.market && state.goal ? <MarketOverview goal={state.goal} market={state.market} selectedCandidate={state.selectedCandidate} stale={state.planStale} /> : <MarketEmptyState onOpenPlan={() => setCenterTab("plan")} />}
+              {/* A goal-scoped search re-prices the chain against the real protected value; until
+                  then the goal-free board is the honest, and far more useful, default. */}
+              {state.market && state.goal
+                ? <MarketOverview goal={state.goal} market={state.market} selectedCandidate={state.selectedCandidate} stale={state.planStale} />
+                : <ProtectionMarketPanel onCreateGoal={() => router.push("/goals/new")} />}
             </CenterTabPanel>
             <CenterTabPanel tab="plan" activeTab={centerTab}>{renderStage()}</CenterTabPanel>
             <CenterTabPanel tab="scenarios" activeTab={centerTab}><ScenarioTabPanel goal={state.goal} candidate={state.selectedCandidate} onOpenPlan={() => setCenterTab("plan")} /></CenterTabPanel>

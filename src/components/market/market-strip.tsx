@@ -71,7 +71,7 @@ export function MarketStrip() {
           {[0, 1, 2, 3].map((item) => <div key={item} className="h-7 animate-pulse rounded-[var(--radius-control)] bg-[var(--surface-hover)] motion-reduce:animate-none" />)}
         </div>
       ) : error ? (
-        <Alert className="mt-3 p-3 text-xs leading-5" tone="error" title="Market unavailable">
+        <Alert className="mt-3" compact tone="error" title="Market unavailable">
           <p>{error}</p>
           <Button variant="secondary" className="mt-3 min-h-11 px-3 text-xs" onClick={() => { void refresh(); }}>Retry snapshot</Button>
         </Alert>

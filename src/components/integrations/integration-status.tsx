@@ -80,7 +80,9 @@ export function IntegrationStatus({ compact = false }: { compact?: boolean } = {
               <li key={item} className="h-6 animate-pulse rounded-full bg-[var(--surface-hover)] motion-reduce:animate-none" />
             )) : items.map((item) => (
               <li key={item.name} className="flex min-h-7 items-center justify-between gap-2 text-sm">
-                <span className="min-w-0 truncate text-[color:var(--foreground-soft)]">{item.name}</span>
+                {/* Name and state only. The rail is narrow enough that a model id truncates to
+                    noise; the full description stays on the landing page's readiness section. */}
+                <span className="min-w-0 truncate font-medium text-[color:var(--foreground)]">{item.name}</span>
                 <StatusBadge label={labels[item.status] ?? item.status} tone={toneFor(item.status)} />
               </li>
             ))}

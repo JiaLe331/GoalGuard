@@ -23,7 +23,7 @@ test("renders the honest GoalGuard P0 entry shell", async ({ page }) => {
   await expect(page.getByRole("button", { name: /pause examples/i })).toHaveCount(0);
   await expect(page.getByRole("textbox")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Rent" })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: /build my protection plan/i }).first()).toHaveAttribute("href", "/goals/new");
+  await expect(page.getByRole("link", { name: /build my protection plan/i }).first()).toHaveAttribute("href", "/dashboard");
   await expect(page.getByRole("heading", { name: /from your goal to a plan you can actually inspect/i })).toBeVisible();
   await expect(page.getByRole("heading", { name: /clear advantages without hidden custody/i })).toBeVisible();
   await expect(page.getByRole("navigation", { name: /primary navigation/i })).toBeVisible();
@@ -45,7 +45,7 @@ test("renders the honest GoalGuard P0 entry shell", async ({ page }) => {
   await expectNoSeriousAccessibilityViolations(page);
 });
 
-test("opens the real goal composer from the landing preview", async ({ page }) => {
+test("opens the live workspace from the landing preview, with the composer one step away", async ({ page }) => {
   let parseRequests = 0;
   await page.route("**/api/goals/parse", (route) => {
     parseRequests += 1;
@@ -54,6 +54,14 @@ test("opens the real goal composer from the landing preview", async ({ page }) =
   await page.goto("/");
   expect(parseRequests).toBe(0);
   await page.locator("#goal-preview").getByRole("link", { name: /build my protection plan/i }).click();
+
+  // The landing page hands over to the workspace, not to step one of a form: the market board is
+  // the first thing on screen, and creating a goal is an action available from inside it.
+  await page.waitForURL(/\/dashboard$/);
+  await expect(page.getByRole("heading", { name: "Cost of safety" }).first()).toBeVisible();
+  expect(parseRequests).toBe(0);
+
+  await page.getByRole("link", { name: /new goal/i }).first().click();
   await page.waitForURL(/\/goals\/new$/);
   expect(parseRequests).toBe(0);
   await expect(page.getByRole("textbox", { name: /describe your protection goal/i })).toBeVisible();
@@ -115,7 +123,7 @@ test("keeps the landing interface usable without horizontal overflow across the 
       await expect(orbit).toHaveCSS("transform", before);
     }
     if (width === 1280) {
-      const desktopAction = page.getByRole("navigation", { name: "Primary navigation" }).getByRole("link", { name: "Build a plan" }).first();
+      const desktopAction = page.getByRole("navigation", { name: "Primary navigation" }).getByRole("link", { name: "Open workspace" }).first();
       await expect(desktopAction).toBeVisible();
       const actionLayout = await desktopAction.evaluate((element) => ({
         height: element.getBoundingClientRect().height,

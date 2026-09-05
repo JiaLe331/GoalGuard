@@ -32,7 +32,7 @@ describe("PostgresGoalGuardRepository", () => {
   });
   it("tracks a fresh worker heartbeat without exposing it through public entities", async () => { expect(await repository.isWorkerHealthy()).toBe(false); await repository.heartbeat("trade-monitor", "10000000-0000-4000-8000-000000000001"); expect(await repository.isWorkerHealthy()).toBe(true); });
   it("round-trips anonymous market snapshots in capture order", async () => {
-    const snapshot: MarketSnapshot = { capturedAt: "2026-09-01T00:00:00.000Z", ethSpotUsd: "3000", optionCount: 58, medianIvBps: 6500, costPer100Usd30d: "2.1" };
+    const snapshot: MarketSnapshot = { capturedAt: "2026-09-01T00:00:00.000Z", ethSpotUsd: "3000", optionCount: 58, medianIvBps: 6500, costPer100Usd30d: "2.1", chain: null };
     await expect(repository.saveMarketSnapshot(snapshot)).resolves.toEqual(snapshot);
     await expect(repository.listMarketSnapshots()).resolves.toEqual([snapshot]);
   });

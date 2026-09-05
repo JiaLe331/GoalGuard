@@ -141,18 +141,30 @@ export function CouncilCard({ review, label }: { review: CouncilReview; label: s
   const statusColor = review.verdict === "approve" ? "var(--positive)" : review.verdict === "uncertain" ? "var(--accent)" : "var(--negative)";
   const VerdictIcon = review.verdict === "approve" ? CheckCircle : review.verdict === "uncertain" ? Question : XCircle;
   return (
-    <article className="min-w-0 rounded-[var(--radius-card)] border-l-4 bg-[var(--surface-subtle)] p-5 sm:p-6" style={{ borderColor: statusColor }}>
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-[0.12em]">{review.verdict}</p><h3 className="mt-1 text-2xl font-semibold tracking-[-0.04em]">{label}</h3></div>
-        <VerdictIcon className="size-6" style={{ color: statusColor }} weight={review.verdict === "approve" ? "fill" : "regular"} aria-hidden="true" />
+    // Identity and provenance on the left, reasoning on the right. Stacking these cards full
+    // width and splitting them horizontally keeps the summary at a readable measure: three
+    // side-by-side columns left roughly five words per line in the workspace's centre panel.
+    <article className="grid min-w-0 gap-x-6 gap-y-4 rounded-[var(--radius-card)] border-l-4 bg-[var(--surface-subtle)] p-5 sm:grid-cols-[13rem_minmax(0,1fr)] sm:p-6" style={{ borderColor: statusColor }}>
+      <div className="min-w-0">
+        <div className="flex items-start justify-between gap-3 sm:justify-start">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em]">{review.verdict}</p>
+            <h3 className="mt-1 text-2xl font-semibold tracking-[-0.04em]">{label}</h3>
+          </div>
+          <VerdictIcon className="size-6 shrink-0" style={{ color: statusColor }} weight={review.verdict === "approve" ? "fill" : "regular"} aria-hidden="true" />
+        </div>
+        <p className="mt-4 text-xs leading-5 text-[color:var(--foreground-soft)]">Model · {review.model}</p>
+        <div className="mt-2 flex items-center gap-2">
+          <code className="min-w-0 flex-1 truncate text-xs tabular-nums">{review.requestId}</code>
+          <Button variant="ghost" className="px-3" aria-label={"Copy " + label + " Gonka request ID"} onClick={async () => { await navigator.clipboard.writeText(review.requestId); setCopied(true); window.setTimeout(() => setCopied(false), 1500); }}><Copy aria-hidden="true" />{copied ? "Copied" : "Copy"}</Button>
+        </div>
       </div>
-      <p className="mt-4 text-sm leading-6 text-[color:var(--foreground-soft)]">{review.summary}</p>
-      {review.concerns.length ? <div className="mt-4"><p className="text-xs font-semibold">Concerns</p><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[color:var(--foreground-soft)]">{review.concerns.map((item) => <li key={item}>{item}</li>)}</ul></div> : null}
-      <div className="mt-5 border-t border-[var(--border)] pt-4">
-        <p className="text-xs text-[color:var(--foreground-soft)]">Model · {review.model}</p>
-        <div className="mt-2 flex items-center gap-2"><code className="min-w-0 flex-1 truncate text-xs tabular-nums">{review.requestId}</code><Button variant="ghost" className="px-3" aria-label={"Copy " + label + " Gonka request ID"} onClick={async () => { await navigator.clipboard.writeText(review.requestId); setCopied(true); window.setTimeout(() => setCopied(false), 1500); }}><Copy aria-hidden="true" />{copied ? "Copied" : "Copy"}</Button></div>
+
+      <div className="min-w-0 border-t border-[var(--border)] pt-4 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0">
+        <p className="text-sm leading-6 text-[color:var(--foreground-soft)]">{review.summary}</p>
+        {review.concerns.length ? <div className="mt-4"><p className="text-xs font-semibold">Concerns</p><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[color:var(--foreground-soft)]">{review.concerns.map((item) => <li key={item}>{item}</li>)}</ul></div> : null}
+        {review.requiredDisclosures.length ? <ul className="mt-4 space-y-1 text-xs leading-5 text-[color:var(--foreground-soft)]">{review.requiredDisclosures.map((item) => <li key={item}>Disclosure: {item}</li>)}</ul> : null}
       </div>
-      {review.requiredDisclosures.length ? <ul className="mt-4 space-y-1 text-xs leading-5 text-[color:var(--foreground-soft)]">{review.requiredDisclosures.map((item) => <li key={item}>Disclosure: {item}</li>)}</ul> : null}
     </article>
   );
 }

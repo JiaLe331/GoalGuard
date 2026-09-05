@@ -4,6 +4,9 @@ import { uiPreviewStates } from "../src/lib/frontend/ui-preview";
 import { expectNoSeriousAccessibilityViolations } from "./accessibility";
 
 test("previews every post-goal interface state without backend or wallet traffic", async ({ page }) => {
+  // The lab fades each state in. Without this, axe can sample a half-opaque element and report a
+  // contrast failure for colours that pass once the animation settles (measured 6.1:1 and 7.1:1).
+  await page.emulateMedia({ reducedMotion: "reduce" });
   const apiRequests: string[] = [];
   page.on("request", (request) => {
     if (new URL(request.url()).pathname.startsWith("/api/")) apiRequests.push(request.url());

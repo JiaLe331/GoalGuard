@@ -5,6 +5,7 @@ import {
   CouncilDecisionSchema,
   GoalSchema,
   MarketSnapshotSchema,
+  ProtectionChainEntrySchema,
   PublicProtectionCandidateSchema,
   TradeSchema,
 } from "./entities";
@@ -92,22 +93,6 @@ export const GenerateCandidatesRequestSchema = z.object({
   goalId: UUIDSchema,
   refresh: z.boolean().optional(),
   coverageMode: CoverageModeSchema.optional(),
-}).strict();
-
-// A small, ephemeral view of every viable order. It deliberately excludes the
-// persistence/audit fields and the raw protocol payload.
-export const ProtectionChainEntrySchema = z.object({
-  protocolOrderId: z.string().trim().min(1),
-  strikeUsd: DecimalStringSchema,
-  expiry: ISODateTimeSchema,
-  premiumUsd: DecimalStringSchema,
-  estimatedFloorUsd: DecimalStringSchema,
-  impliedVolatilityBps: z.number().int().nonnegative().nullable(),
-  goalCoverageBps: z.number().int().min(0).max(10000),
-  settlementType: z.enum(["cash", "physical"]),
-  availableQuantityBaseUnits: BaseUnitStringSchema,
-  settlementTokenSymbol: z.string().trim().min(1).max(16),
-  settlementTokenDecimals: z.number().int().min(0).max(255),
 }).strict();
 
 export const CandidateRejectionSchema = z.object({
@@ -309,8 +294,13 @@ export const IntegrationStatusResponseSchema = z.object({
 
 // The dashboard rail receives only the small worker-owned market snapshot. Raw Thetanuts orders
 // and protocol payloads remain server-only; a missing snapshot is an honest empty state.
+// `series` is the same worker-owned snapshots in ascending capture order, so the workspace can
+// draw the recent trend without a second round trip. Newest last; empty until the worker has run.
 export const MarketSummaryResponseSchema = z.object({
-  data: z.object({ snapshot: MarketSnapshotSchema.nullable() }).strict(),
+  data: z.object({
+    snapshot: MarketSnapshotSchema.nullable(),
+    series: z.array(MarketSnapshotSchema),
+  }).strict(),
   meta: ApiMetaSchema,
 }).strict();
 
@@ -323,7 +313,6 @@ export type UpdateGoalRequest = z.infer<typeof UpdateGoalRequestSchema>;
 export type UpdateGoalResponse = z.infer<typeof UpdateGoalResponseSchema>;
 export type GenerateCandidatesRequest = z.infer<typeof GenerateCandidatesRequestSchema>;
 export type CandidateRejection = z.infer<typeof CandidateRejectionSchema>;
-export type ProtectionChainEntry = z.infer<typeof ProtectionChainEntrySchema>;
 export type GenerateCandidatesResponse = z.infer<typeof GenerateCandidatesResponseSchema>;
 export type ReviewCandidateRequest = z.infer<typeof ReviewCandidateRequestSchema>;
 export type ReviewCandidateResponse = z.infer<typeof ReviewCandidateResponseSchema>;

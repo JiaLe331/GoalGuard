@@ -3,19 +3,9 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { fixtureDecision, fixtureGoal, fixturePublicCandidate } from "@/test/fixtures/goalguard";
-import { AuditTabPanel, CandidateReviewPanel, InlineWorkflowError, MarketEmptyState, ScenarioTabPanel } from "./center-tab-panels";
+import { AuditTabPanel, CandidateReviewPanel, InlineWorkflowError, ScenarioTabPanel } from "./center-tab-panels";
 
 describe("center tab panels", () => {
-  it("shows a safe empty state before market data exists", async () => {
-    const user = userEvent.setup();
-    const onOpenPlan = vi.fn();
-    render(<MarketEmptyState onOpenPlan={onOpenPlan} />);
-
-    expect(screen.getByRole("heading", { name: /live cost of safety appears/i })).toBeVisible();
-    await user.click(screen.getByRole("button", { name: /open your plan/i }));
-    expect(onOpenPlan).toHaveBeenCalledOnce();
-  });
-
   it("moves scenario comparison into its dedicated view", () => {
     render(<ScenarioTabPanel goal={fixtureGoal} candidate={fixturePublicCandidate} onOpenPlan={vi.fn()} />);
 
@@ -37,7 +27,7 @@ describe("center tab panels", () => {
     render(<AuditTabPanel goal={fixtureGoal} candidate={fixturePublicCandidate} decision={fixtureDecision} trade={null} stale={false} onOpenPlan={vi.fn()} />);
 
     expect(screen.getByRole("heading", { name: /why this plan has this status/i })).toBeVisible();
-    expect(screen.getByText("Approved by 3 checks")).toBeVisible();
+    expect(screen.getByText("Approved by 3 of 3 checks")).toBeVisible();
     expect(screen.getByRole("heading", { name: "Strategist" })).toBeVisible();
     expect(screen.getByRole("heading", { name: "Risk Auditor" })).toBeVisible();
     expect(screen.getByRole("heading", { name: "Consumer Advocate" })).toBeVisible();

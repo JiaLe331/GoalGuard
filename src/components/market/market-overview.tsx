@@ -1,27 +1,19 @@
 "use client";
 
-import { ChartLine, ShieldCheck, WarningCircle } from "@phosphor-icons/react";
+import { ShieldCheck, WarningCircle } from "@phosphor-icons/react";
 import Decimal from "decimal.js";
 
 import { Accordion } from "@/components/ui/accordion";
 import { Alert } from "@/components/ui/alert";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { ProtectionChainCard } from "@/components/market/protection-chain";
 import { MetricCard } from "@/components/workflow/workflow-primitives";
 import type { Goal, ProtectionChainEntry, PublicProtectionCandidate } from "@/lib/contracts";
-import { formatBaseUnits, formatDate, formatPercentFromBps, formatUsd } from "@/lib/frontend/format";
+import { formatDate, formatPercentFromBps, formatUsd } from "@/lib/frontend/format";
 import { groupRejections } from "@/lib/frontend/market";
 import { deriveProtectionIndex } from "@/lib/thetanuts/protection-index";
 import type { MarketContext } from "@/lib/frontend/workflow";
-
-function expiryGroups(chain: readonly ProtectionChainEntry[]) {
-  const grouped = new Map<string, ProtectionChainEntry[]>();
-  for (const entry of chain) {
-    const key = entry.expiry.slice(0, 10);
-    grouped.set(key, [...(grouped.get(key) ?? []), entry]);
-  }
-  return [...grouped.entries()].sort(([left], [right]) => left.localeCompare(right));
-}
 
 function rejectionDetails(entry: { strikeUsd: string | null; expiry: string | null; premiumUsd: string | null }) {
   const details = [
@@ -76,22 +68,9 @@ function FloorGauge({ spotUsd, candidate }: { spotUsd: string; candidate: Protec
   );
 }
 
-function ChainRow({ entry }: { entry: ProtectionChainEntry }) {
-  return (
-    <div className="grid min-w-0 grid-cols-2 gap-x-4 gap-y-3 rounded-[var(--radius-card)] border border-[var(--border)] bg-[var(--surface-raised)] p-4 sm:grid-cols-[1fr_1fr_1fr_1fr_1.2fr_1.3fr] sm:items-center sm:gap-3">
-      <div><p className="text-xs text-[color:var(--foreground-soft)]">Strike</p><p className="mt-1 font-semibold tabular-nums">{formatUsd(entry.strikeUsd)}</p></div>
-      <div><p className="text-xs text-[color:var(--foreground-soft)]">Cost</p><p className="mt-1 font-semibold tabular-nums">{formatUsd(entry.premiumUsd)}</p></div>
-      <div><p className="text-xs text-[color:var(--foreground-soft)]">Floor</p><p className="mt-1 font-semibold tabular-nums">{formatUsd(entry.estimatedFloorUsd)}</p></div>
-      <div><p className="text-xs text-[color:var(--foreground-soft)]">Coverage</p><p className="mt-1 font-semibold tabular-nums">{formatPercentFromBps(entry.goalCoverageBps)}</p></div>
-      <div><p className="text-xs text-[color:var(--foreground-soft)]">Depth</p><p className="mt-1 truncate font-semibold tabular-nums">{formatBaseUnits(entry.availableQuantityBaseUnits, entry.settlementTokenDecimals)} {entry.settlementTokenSymbol}</p></div>
-      <div><p className="text-xs text-[color:var(--foreground-soft)]">IV · settlement</p><p className="mt-1 font-semibold tabular-nums">{entry.impliedVolatilityBps === null ? "—" : formatPercentFromBps(entry.impliedVolatilityBps)} · {entry.settlementType}</p></div>
-    </div>
-  );
-}
-
 export function MarketOverview({ goal, market, selectedCandidate, stale = false }: { goal: Goal; market: MarketContext; selectedCandidate?: PublicProtectionCandidate | null; stale?: boolean }) {
   const index = deriveProtectionIndex({ chain: market.chain, protectedValueUsd: goal.protectedValueUsd, marketAsOf: market.marketAsOf });
-  const groups = expiryGroups(market.chain);
+
   const rejections = groupRejections(market.rejected);
   const selectedChainEntry = selectedCandidate?.protocolOrderId
     ? market.chain.find((entry) => entry.protocolOrderId === selectedCandidate.protocolOrderId) ?? market.chain[0]
@@ -118,23 +97,12 @@ export function MarketOverview({ goal, market, selectedCandidate, stale = false 
         </div>
       </Card>
 
-      <Card className="mt-5 p-5 sm:p-6">
-        <div className="flex items-start gap-3">
-          <ChartLine className="mt-0.5 size-5 shrink-0 text-[color:var(--accent)]" aria-hidden="true" />
-          <div><h2 className="font-semibold tracking-[-0.02em]">Protection chain</h2><p className="mt-1 text-sm leading-6 text-[color:var(--foreground-soft)]">Every row is a live, fillable way to protect this goal. Cost and floor are shown as safety outcomes, not trading returns.</p></div>
-        </div>
-        {groups.length ? (
-          <div className="mt-5 space-y-5">
-            {groups.map(([expiry, entries]) => (
-              <section key={expiry} aria-labelledby={`market-expiry-${expiry}`}>
-                <div className="mb-2 flex items-center justify-between gap-3"><h3 id={`market-expiry-${expiry}`} className="text-sm font-semibold">Expires {formatDate(entries[0]!.expiry)}</h3><span className="text-xs text-[color:var(--foreground-soft)]">{entries.length} option{entries.length === 1 ? "" : "s"}</span></div>
-                <div className="space-y-2">{entries.map((entry) => <ChainRow key={entry.protocolOrderId} entry={entry} />)}</div>
-              </section>
-            ))}
-          </div>
-        ) : (
-          <div className="mt-5 rounded-[var(--radius-card)] border border-dashed border-[var(--border)] p-5 text-sm leading-6 text-[color:var(--foreground-soft)]">No fillable options survived the current protection constraints.</div>
-        )}
+      <ProtectionChainCard
+        className="mt-5"
+        chain={market.chain}
+        title="Protection chain"
+        description="Every row is a live, fillable way to protect this goal. Cost and floor are shown as safety outcomes, not trading returns."
+      >
         {rejections.length ? (
           <div className="mt-5">
             <Accordion title={`${market.rejected.length} quote${market.rejected.length === 1 ? "" : "s"} filtered out`}>
@@ -153,7 +121,7 @@ export function MarketOverview({ goal, market, selectedCandidate, stale = false 
             </Accordion>
           </div>
         ) : null}
-      </Card>
+      </ProtectionChainCard>
 
       {selectedChainEntry ? <FloorGauge spotUsd={market.ethSpotUsd} candidate={selectedChainEntry} /> : (
         <Alert className="mt-5" tone="info" title="Floor gauge will appear with a fillable quote"><span className="inline-flex items-center gap-2"><WarningCircle aria-hidden="true" />The live market did not provide a candidate to compare with ETH spot.</span></Alert>
