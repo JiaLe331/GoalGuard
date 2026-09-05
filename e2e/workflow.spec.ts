@@ -80,6 +80,29 @@ async function openPreviewConfirmation(page: Page) {
   await page.getByRole("checkbox").check();
 }
 
+test("keeps the goal workflow available while switching center views", async ({ page }) => {
+  await installWorkflowFixtures(page);
+  await completeToPlan(page);
+
+  await expect(page.getByRole("tab", { name: "Market" })).toBeVisible();
+  await expect(page.getByRole("tab", { name: "Plan" })).toHaveAttribute("aria-selected", "true");
+
+  await page.getByRole("tab", { name: "Market" }).click();
+  await expect(page.getByRole("heading", { name: "Cost of safety" })).toBeVisible();
+  await expect(page.getByText("Protection chain")).toBeVisible();
+
+  await page.getByRole("tab", { name: "Scenarios" }).click();
+  await expect(page.getByRole("heading", { name: "What the protection changes" })).toBeVisible();
+  await expect(page.getByText("Estimated net value after cost")).toBeVisible();
+
+  await page.getByRole("tab", { name: "Audit" }).click();
+  await expect(page.getByRole("heading", { name: /why this plan has this status/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Strategist" })).toBeVisible();
+
+  await page.getByRole("tab", { name: "Plan" }).click();
+  await expect(page.getByRole("heading", { name: /a protection plan for rent/i })).toBeVisible();
+});
+
 test("completes the contract-wired frontend through a preview-only trade", async ({ page }) => {
   const log = await installWorkflowFixtures(page);
   await completeToPlan(page);
