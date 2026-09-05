@@ -12,7 +12,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "worker": "tsx src/worker/trade-monitor.ts",
+    "worker": "tsx --conditions=react-server src/worker/trade-monitor.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
@@ -26,6 +26,8 @@
     "smoke:gonka": "tsx --conditions=react-server scripts/smoke-gonka.ts",
     "smoke:thetanuts": "tsx scripts/smoke-thetanuts.ts",
     "smoke:workflow": "tsx scripts/smoke-workflow.ts",
+    "telegram:setup": "tsx --conditions=react-server scripts/setup-telegram.ts",
+    "telegram:check": "tsx --conditions=react-server scripts/check-telegram.ts",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build"
   },
   "dependencies": {

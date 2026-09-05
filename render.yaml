@@ -15,6 +15,20 @@ services:
         sync: false
       - key: THETANUTS_REFERRER_ADDRESS
         sync: false
+      - key: TELEGRAM_NOTIFICATIONS_ENABLED
+        value: "false"
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_BOT_USERNAME
+        sync: false
+      - key: TELEGRAM_WEBHOOK_SECRET
+        sync: false
+      - key: TELEGRAM_LINK_TTL_SECONDS
+        value: "600"
+      - key: TELEGRAM_REMINDER_SCAN_MS
+        value: "60000"
+      - key: TELEGRAM_NOTIFICATION_BATCH_SIZE
+        value: "20"
       - key: TRADE_WORKER_NAME
         value: trade-monitor
       - key: MARKET_SNAPSHOT_MS

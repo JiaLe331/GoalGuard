@@ -4,6 +4,8 @@ GoalGuard is a goal-first ETH downside-protection product for MUBA Hacks 2026. A
 
 The normative product and data-contract specification is [goalguard_prd.md](./goalguard_prd.md).
 
+The optional Telegram notification companion is specified in [docs/telegram-bot-integration-plan.md](./docs/telegram-bot-integration-plan.md) and operated with [docs/telegram-operations.md](./docs/telegram-operations.md). It never creates, approves, signs, submits, or executes a trade.
+
 ## Implemented P0
 
 - Next.js 16 App Router UI and same-origin API routes for goal parsing/editing, candidate generation, council review, unsigned trade preview, and canonical hydration.
@@ -15,6 +17,10 @@ The normative product and data-contract specification is [goalguard_prd.md](./go
 - Render trade monitor with heartbeat, transaction/receipt/position verification, idempotent state transitions, and graceful shutdown.
 - Vercel and Render deployment descriptors, Vitest coverage, and a contract-wired Playwright workflow.
 
+## Optional Telegram companion
+
+Telegram is an optional notification surface for website-created goals. The web session remains authoritative, and the core workflow continues safely when Telegram is disabled or unavailable. The implemented V1 supports a one-time private-chat link, lifecycle notifications, reminders, safe commands, preferences, and a leased Render outbox.
+
 ## Architecture
 
 ```text
@@ -24,10 +30,10 @@ Browser wallet + Next.js UI
 Vercel Next.js API
   ├─ Gonka Router (goal parse + 3 independent reviews)
   ├─ Thetanuts SDK / Base RPC (market, balances, unsigned calldata)
-  └─ Supabase PostgreSQL (authoritative records)
+  └─ Supabase PostgreSQL (authoritative records + Telegram outbox)
           ^
           │ dormant future compatibility only
-Render trade monitor (not part of the demo flow)
+Render trade monitor (trade verification + Telegram delivery)
 ```
 
 Browser storage holds only a draft, active goal ID, and retry metadata. Supabase records remain the source of truth. The server never receives a private key.
@@ -47,11 +53,11 @@ pnpm db:migrate
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Missing integrations are reported safely. The submitted and demonstrated build is preview-only.
+Open [http://localhost:3000](http://localhost:3000). Missing integrations are reported safely. The submitted and demonstrated build is preview-only. Telegram is disabled by default; provision it only after the deployed HTTPS app and database are ready.
 
 ### Preview the complete frontend without backend credentials
 
-While `pnpm dev` is running, open [http://localhost:3000/dev/ui-preview](http://localhost:3000/dev/ui-preview). This development-only interface lab renders the real production panels with canonical sample data, including approved/disputed/blocked plans, the council drawer, preview confirmation, the demo-ready result, error states, insufficient wallet readiness, and reload recovery.
+While `pnpm dev` is running, open [http://localhost:3000/dev/ui-preview](http://localhost:3000/dev/ui-preview). This development-only interface lab renders the real production panels with canonical sample data, including approved/disputed/blocked plans, the council drawer, preview confirmation, the demo-ready result, error states, insufficient wallet readiness, reload recovery, and all Telegram connection states.
 
 The lab is deliberately local-only: it does not call backend routes, request a wallet, write browser storage, request a signature, or broadcast a transaction. It is not linked from the product navigation, is marked `noindex`, and returns 404 in production.
 
@@ -71,6 +77,9 @@ The lab is deliberately local-only: it does not call backend routes, request a w
 | `GOALGUARD_SMOKE_APP_URL`, `GOALGUARD_SMOKE_WALLET_ADDRESS`, `GOALGUARD_SMOKE_GOAL_MESSAGE` | Optional local real-integration workflow smoke configuration; the wallet value is a public address only. |
 | `DATABASE_URL` | Supabase transaction-pooler URL for Vercel and Render. |
 | `DATABASE_DIRECT_URL` | Direct/session URL used only by migration tooling. |
+| `TELEGRAM_NOTIFICATIONS_ENABLED` | Optional Telegram companion switch; defaults to `false`. |
+| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, `TELEGRAM_WEBHOOK_SECRET` | Server-only Telegram Bot API configuration. |
+| `TELEGRAM_LINK_TTL_SECONDS`, `TELEGRAM_REMINDER_SCAN_MS`, `TELEGRAM_NOTIFICATION_BATCH_SIZE` | Link and worker scheduling limits. |
 | `TRADE_WORKER_NAME`, `TRADE_WORKER_POLL_MS`, `TRADE_WORKER_HEARTBEAT_MS` | Render monitor configuration. |
 
 Never put credentials or signing keys in `NEXT_PUBLIC_*` variables.
@@ -93,6 +102,8 @@ pnpm db:studio
 pnpm smoke:gonka
 pnpm smoke:thetanuts
 pnpm smoke:workflow
+pnpm telegram:setup
+pnpm telegram:check
 ```
 
 `smoke:workflow` requires the local app to be running against the hosted development database. It records only safe IDs and timestamps, verifies a real goal-to-unsigned-preview path, and expects execution and submission to stop with `EXECUTION_DISABLED`.
@@ -100,6 +111,8 @@ pnpm smoke:workflow
 Generate and inspect schema migrations together. Apply migrations once with `DATABASE_DIRECT_URL`; neither Vercel routes nor the Render worker migrate at startup.
 
 Follow [docs/supabase-deployment.md](./docs/supabase-deployment.md) to keep the Data API/browser roles closed and configure pooled versus migration connections.
+
+Follow [docs/telegram-operations.md](./docs/telegram-operations.md) for BotFather provisioning, Vercel/Render secret placement, webhook setup and rotation, disabling, unlink behavior, delivery limits, and incident response.
 
 ## Safety boundaries
 

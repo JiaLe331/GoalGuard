@@ -1,6 +1,6 @@
 # GoalGuard development progress
 
-Last verified: **2026-09-02**. `goalguard_prd.md`, especially Section 17 and its P0 implementation decisions, remains normative.
+Last verified: **2026-09-05**. `goalguard_prd.md`, especially Section 17 and its P0 implementation decisions, remains normative.
 
 | Milestone | Status | Evidence | Remaining external gate |
 |---|---|---|---|
@@ -11,6 +11,7 @@ Last verified: **2026-09-02**. `goalguard_prd.md`, especially Section 17 and its
 | M5 Trade preview | In progress | Current-record checks, request idempotency, fresh-order comparison, balances/allowance/exposure, SDK calldata, fingerprints, premium/referral gates, and unsigned preview foundations exist. | Complete the demo-only terminal preview path; no execution acceptance is required or authorized. |
 | M6 Product polish | In progress | Plain-language state wording, wallet readiness, referral disclosure, responsive UI, unit/component tests, and approved preview browser path. | Complete the expanded browser error/recovery matrix and manual device/accessibility QA. |
 | M7 Submission readiness | In progress | Updated PRD, README, environment template, Vercel/Render descriptors, migration, and local validation commands. | Deploy, scan history for secrets, capture preview-only sponsor evidence, and prepare submission assets. |
+| M8 Telegram companion | Implementation ready | Private one-time linking, webhook commands, public preference API, lifecycle/reminder outbox, leased Render delivery, setup/check scripts, GoalRail controls, static UI states, operations runbook, and automated coverage. | Configure a test bot and deployed HTTPS Vercel/Render environment; run opt-in setup/check and manual smoke flow. |
 
 ## Safety state
 
@@ -31,4 +32,6 @@ pnpm test:e2e
 
 Live `smoke:*` commands remain opt-in and read-only. No burner-wallet transaction is an acceptance gate for this demo-only build.
 
-The credential-free suite now covers structured Gonka parsing, council cache/failure behavior, deterministic strategy calculations, PostgreSQL idempotency, and worker verification. `pnpm smoke:workflow` is the local hosted-Supabase read-only check for the real goal-to-unsigned-preview path.
+The credential-free suite now covers structured Gonka parsing, council cache/failure behavior, deterministic strategy calculations, PostgreSQL idempotency, worker verification, and Telegram linking/delivery boundaries. `pnpm smoke:workflow` is the local hosted-Supabase read-only check for the real goal-to-unsigned-preview path.
+
+Latest local verification: `pnpm lint`, `pnpm typecheck`, `pnpm test` (55 files, 279 tests), `pnpm exec next build --webpack`, and the home/UI-preview/workflow Playwright suites (14 tests) pass. The default Turbopack build and the full visual Playwright run remain blocked by local worker/mascot asset environment issues; live sponsor and Telegram setup commands remain opt-in and credential-gated.

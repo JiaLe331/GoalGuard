@@ -18,6 +18,7 @@
 
 - Use `pnpm`; keep `pnpm-lock.yaml` synchronized with `package.json`.
 - Run `pnpm install`, copy `.env.example` to `.env.local`, then run `pnpm db:migrate`.
+- Telegram is opt-in: after an HTTPS deployment exists, configure the server-only values and run `pnpm telegram:setup`, then verify with `pnpm telegram:check`; neither command belongs in startup, migration, build, or test workflows.
 - Never commit `.env*`, database credentials, API keys, private keys, or wallet secrets.
 
 ## Validation
