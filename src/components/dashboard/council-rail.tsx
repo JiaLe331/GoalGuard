@@ -66,6 +66,7 @@ export function CouncilRail({ stage, councilProgress, reviewStartedAt, decision,
                 progress={progress}
                 label={roleLabels[progress.role]}
                 elapsedSeconds={progress.status === "running" ? elapsedSeconds : null}
+                compact
               />
             ))}
           </div>
