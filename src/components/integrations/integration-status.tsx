@@ -21,7 +21,7 @@ function toneFor(status: string): StatusTone {
   return "error";
 }
 
-export function IntegrationStatus() {
+export function IntegrationStatus({ compact = false }: { compact?: boolean } = {}) {
   const [data, setData] = useState<StatusData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,6 +57,40 @@ export function IntegrationStatus() {
       ...data.thetanuts,
     },
   ] : [];
+
+  if (compact) {
+    return (
+      <section aria-label="Service readiness">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--foreground-soft)]">Services</p>
+          <button
+            type="button"
+            className="min-h-8 rounded-full px-2 text-xs font-semibold text-[color:var(--foreground-soft)] hover:text-[color:var(--foreground)] disabled:opacity-50"
+            onClick={() => void refresh()}
+            disabled={loading}
+          >
+            {loading ? "Checking…" : "Refresh"}
+          </button>
+        </div>
+        {error ? (
+          <p className="mt-2 text-xs text-[color:var(--foreground-soft)]" role="alert">{error}</p>
+        ) : (
+          <ul className="mt-2 space-y-1" aria-busy={loading}>
+            {loading && !data ? [0, 1, 2].map((item) => (
+              <li key={item} className="h-6 animate-pulse rounded-full bg-[var(--surface-hover)] motion-reduce:animate-none" />
+            )) : items.map((item) => (
+              <li key={item.name} className="flex min-h-7 items-center justify-between gap-2 text-sm">
+                {/* Name and state only. The rail is narrow enough that a model id truncates to
+                    noise; the full description stays on the landing page's readiness section. */}
+                <span className="min-w-0 truncate font-medium text-[color:var(--foreground)]">{item.name}</span>
+                <StatusBadge label={labels[item.status] ?? item.status} tone={toneFor(item.status)} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    );
+  }
 
   return (
     <section aria-labelledby="readiness-heading">

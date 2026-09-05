@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Drawer } from "@/components/ui/drawer";
 import { FloatingEditorialNavbar } from "@/components/navigation/floating-editorial-navbar";
 import { NiulaiChatPreview } from "@/components/dev/niulai-chat-preview";
 import {
@@ -149,7 +150,7 @@ export function UiPreviewLab({ initialState, samples }: { initialState: UiPrevie
     }
     if (state === "searching") return <ActiveProtectionPanel stage="searching_candidates" />;
     if (state === "reviewing") return <ActiveProtectionPanel stage="reviewing_candidate" />;
-    if (["plan-approved", "plan-disputed", "plan-blocked", "council-drawer", "reload-after-preview"].includes(state)) {
+    if (["plan-approved", "plan-disputed", "plan-blocked", "council-drawer", "reload-after-preview", "preview-confirmation", "generating-preview"].includes(state)) {
       const decision = state === "plan-disputed" ? samples.disputedDecision : state === "plan-blocked" ? samples.blockedDecision : samples.decision;
       return (
         <>
@@ -172,26 +173,31 @@ export function UiPreviewLab({ initialState, samples }: { initialState: UiPrevie
             onOpenCouncil={() => { setCouncilOpen(true); selectState("council-drawer"); }}
           />
           <CouncilDrawer decision={decision} open={councilOpen} onClose={() => { setCouncilOpen(false); selectState("plan-approved"); }} />
+          <Drawer
+            open={state === "preview-confirmation" || state === "generating-preview"}
+            title={state === "generating-preview" ? "Preview progress" : "Confirm unsigned preview"}
+            labelledId="preview-confirmation-drawer"
+            closeInstantly
+            onClose={() => { if (state === "preview-confirmation") selectState("plan-approved"); }}
+          >
+            {state === "preview-confirmation" ? (
+              <PreviewConfirmationPanel
+                goal={goal}
+                candidate={samples.candidate}
+                walletAddress={previewWallet}
+                acknowledged={acknowledged}
+                physicalSettlementAcknowledged={physicalAcknowledged}
+                busy={false}
+                onAcknowledged={setAcknowledged}
+                onPhysicalSettlementAcknowledged={setPhysicalAcknowledged}
+                onBack={() => selectState("plan-approved")}
+                onGenerate={() => { if (acknowledged && (samples.candidate.settlementType !== "physical" || physicalAcknowledged)) selectState("generating-preview"); }}
+              />
+            ) : <ActiveProtectionPanel stage="generating_preview" />}
+          </Drawer>
         </>
       );
     }
-    if (state === "preview-confirmation") {
-      return (
-        <PreviewConfirmationPanel
-          goal={goal}
-          candidate={samples.candidate}
-          walletAddress={previewWallet}
-          acknowledged={acknowledged}
-          physicalSettlementAcknowledged={physicalAcknowledged}
-          busy={false}
-          onAcknowledged={setAcknowledged}
-          onPhysicalSettlementAcknowledged={setPhysicalAcknowledged}
-          onBack={() => selectState("plan-approved")}
-          onGenerate={() => { if (acknowledged && (samples.candidate.settlementType !== "physical" || physicalAcknowledged)) selectState("generating-preview"); }}
-        />
-      );
-    }
-    if (state === "generating-preview") return <ActiveProtectionPanel stage="generating_preview" />;
     if (state === "demo-ready" || state === "insufficient-wallet") {
       return (
         <DemoPreviewReadyPanel
@@ -211,7 +217,7 @@ export function UiPreviewLab({ initialState, samples }: { initialState: UiPrevie
   return (
     <>
       <a href="#preview-content" className="skip-link">Skip to previewed interface</a>
-      <FloatingEditorialNavbar variant="workflow" contextLabel={`${frame.eyebrow} · ${frame.title}`} statusLabel="Local interface lab" walletSlot={<span className="hidden min-h-11 items-center rounded-full bg-[var(--accent-soft)] px-4 text-xs font-bold uppercase tracking-[0.08em] text-[color:var(--accent-soft-foreground)] min-[520px]:inline-flex">Sample data</span>} />
+      <FloatingEditorialNavbar variant="workflow" contextLabel={`${frame.eyebrow} · ${frame.title}`} walletSlot={<span className="hidden min-h-11 items-center rounded-full bg-[var(--accent-soft)] px-4 text-xs font-bold uppercase tracking-[0.08em] text-[color:var(--accent-soft-foreground)] min-[520px]:inline-flex">Sample data</span>} />
 
       <main id="preview-content" tabIndex={-1} className="min-h-screen outline-none">
         <div className="reading-shell pt-6 sm:pt-8">

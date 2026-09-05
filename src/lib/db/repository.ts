@@ -2,12 +2,12 @@ import { and, desc, eq, inArray, lte } from "drizzle-orm";
 
 import {
   candidateFromRow, candidateToRow, decisionFromRows, decisionToRows, goalFromRow, goalToRow,
-  inferenceToRow, tradeFromRow, tradeToRow, type TradeExecutionExpectation,
+  inferenceToRow, marketSnapshotFromRow, marketSnapshotToRow, tradeFromRow, tradeToRow, type TradeExecutionExpectation,
 } from "@/lib/contracts/db-mappers";
-import type { CouncilDecision, Goal, GoalStatus, GonkaInference, ProtectionCandidate, Trade, TradeStatus, UUID } from "@/lib/contracts";
+import type { CouncilDecision, Goal, GoalStatus, GonkaInference, MarketSnapshot, ProtectionCandidate, Trade, TradeStatus, UUID } from "@/lib/contracts";
 
 import { getDatabase, type GoalGuardDatabase } from "./client";
-import { councilDecisions, councilReviews, goals, gonkaInferences, protectionCandidates, tradeRequestIdempotency, trades, workerHeartbeats } from "./schema";
+import { councilDecisions, councilReviews, goals, gonkaInferences, marketSnapshots, protectionCandidates, tradeRequestIdempotency, trades, workerHeartbeats } from "./schema";
 
 export type TradeIdempotencyOperation = "preview" | "execute" | "submission";
 export type TradeIdempotencyClaim =
@@ -28,6 +28,7 @@ export interface TradeVerificationRecord {
 export interface GoalGuardRepository {
   createGoal(goal: Goal, ownerSessionHash: string): Promise<Goal>;
   getGoal(id: UUID, ownerSessionHash: string): Promise<Goal | null>;
+  getGoalOwnerHash(id: UUID): Promise<string | null>;
   updateGoal(id: UUID, ownerSessionHash: string, values: Pick<Goal, "goalType" | "customGoalLabel" | "underlyingAsset" | "protectedValueUsd" | "deadline" | "maxLossBps" | "maxPremiumUsd">): Promise<Goal>;
   updateGoalStatus(id: UUID, ownerSessionHash: string, status: GoalStatus): Promise<Goal>;
   replaceCandidates(goalId: UUID, ownerSessionHash: string, candidates: ProtectionCandidate[]): Promise<void>;
@@ -39,6 +40,8 @@ export interface GoalGuardRepository {
   createTrade(trade: Trade, expectation: TradeExecutionExpectation, ownerSessionHash: string): Promise<Trade>;
   getTrade(id: UUID, ownerSessionHash: string): Promise<Trade | null>;
   transitionTrade(id: UUID, ownerSessionHash: string, from: TradeStatus[], to: TradeStatus): Promise<Trade>;
+  saveMarketSnapshot(snapshot: MarketSnapshot): Promise<MarketSnapshot>;
+  listMarketSnapshots(limit?: number): Promise<MarketSnapshot[]>;
 }
 
 const goalTransitions: Record<GoalStatus, GoalStatus[]> = {
@@ -75,6 +78,19 @@ export class PostgresGoalGuardRepository implements GoalGuardRepository {
   async getGoal(id: UUID, ownerSessionHash: string) {
     const rows = await this.db.select().from(goals).where(and(eq(goals.id, id), eq(goals.ownerSessionHash, ownerSessionHash))).limit(1);
     return rows[0] ? this.hydrateGoal(rows[0]) : null;
+  }
+
+  /**
+   * The owner hash of a goal, without requiring the caller to already be that owner.
+   *
+   * This is the one deliberate hole in session scoping and it exists for the read-only demo goal:
+   * resolving its owner lets every downstream read stay owner-scoped as written, instead of
+   * spreading an "unscoped" variant across getCandidate, getDecision and getTrade. Only call it
+   * for an id the server itself nominated -- never for one taken from a request.
+   */
+  async getGoalOwnerHash(id: UUID) {
+    const rows = await this.db.select({ ownerSessionHash: goals.ownerSessionHash }).from(goals).where(eq(goals.id, id)).limit(1);
+    return rows[0]?.ownerSessionHash ?? null;
   }
 
   async updateGoal(id: UUID, ownerSessionHash: string, values: Pick<Goal, "goalType" | "customGoalLabel" | "underlyingAsset" | "protectedValueUsd" | "deadline" | "maxLossBps" | "maxPremiumUsd">) {
@@ -246,6 +262,17 @@ export class PostgresGoalGuardRepository implements GoalGuardRepository {
 
   async heartbeat(workerName: string, instanceId: string, at = new Date().toISOString()) {
     await this.db.insert(workerHeartbeats).values({ workerName, instanceId, lastSeenAt: at }).onConflictDoUpdate({ target: workerHeartbeats.workerName, set: { instanceId, lastSeenAt: at } });
+  }
+
+  async saveMarketSnapshot(snapshot: MarketSnapshot) {
+    const row = marketSnapshotToRow(snapshot);
+    await this.db.insert(marketSnapshots).values(row).onConflictDoUpdate({ target: marketSnapshots.capturedAt, set: row });
+    return snapshot;
+  }
+
+  async listMarketSnapshots(limit = 100) {
+    const rows = await this.db.select().from(marketSnapshots).orderBy(desc(marketSnapshots.capturedAt)).limit(limit);
+    return rows.map(marketSnapshotFromRow);
   }
 
   async isWorkerHealthy(workerName = "trade-monitor", maxAgeMs = 45_000) {

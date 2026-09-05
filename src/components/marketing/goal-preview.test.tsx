@@ -13,7 +13,7 @@ describe("GoalPreview", () => {
     render(<GoalPreview />);
 
     expect(screen.getByRole("heading", { name: /start with what the money is for/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /build my protection plan/i })).toHaveAttribute("href", "/goals/new");
+    expect(screen.getByRole("link", { name: /build my protection plan/i })).toHaveAttribute("href", "/dashboard");
     expect(screen.getByText(/examples include protecting rent, tuition, and emergency savings/i)).toHaveClass("sr-only");
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Rent" })).not.toBeInTheDocument();

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { fixtureBlockedDecision, fixtureCandidate, fixtureDecision, fixtureDisputedDecision, fixtureGoal, fixturePhysicalCandidate, fixtureReadyGoal, fixtureTrade, getDraftGoalResponse, previewTradeResponse } from "@/test/fixtures/goalguard";
+import { fixtureBlockedDecision, fixtureCandidate, fixtureDecision, fixtureDisputedDecision, fixtureGoal, fixturePhysicalCandidate, fixtureReadyGoal, fixtureTrade, generateCandidatesResponse, getDraftGoalResponse, previewTradeResponse } from "@/test/fixtures/goalguard";
 import { initialWorkflowState, workflowReducer } from "./workflow";
 
 describe("preview-only workflow reducer", () => {
@@ -59,6 +59,18 @@ describe("preview-only workflow reducer", () => {
     expect(hydrated.stage).toBe("plan_approved");
     expect(hydrated.preview).toBeNull();
     expect(hydrated.notice).toMatch(/never restored/i);
+  });
+
+  it("flags an existing plan as stale when the goal is edited, and clears the flag on fresh results", () => {
+    const reviewed = { ...initialWorkflowState, stage: "plan_approved" as const, goal: fixtureReadyGoal, selectedCandidate: fixtureCandidate, decision: fixtureDecision };
+    const edited = workflowReducer(reviewed, { type: "goal_updated", goal: fixtureReadyGoal });
+    expect(edited.planStale).toBe(true);
+    expect(edited.decision).toBe(fixtureDecision);
+    expect(workflowReducer(edited, { type: "candidates_found", goal: fixtureReadyGoal, candidates: [fixtureCandidate], selected: fixtureCandidate, market: generateCandidatesResponse.data }).planStale).toBe(false);
+  });
+
+  it("does not flag staleness when there was no plan to invalidate", () => {
+    expect(workflowReducer({ ...initialWorkflowState, goal: fixtureGoal }, { type: "goal_updated", goal: fixtureGoal }).planStale).toBe(false);
   });
 
   it("contains no signing or broadcast stage", () => {

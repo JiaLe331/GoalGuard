@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, CheckCircle, Copy, HourglassHigh, Question, ShieldCheck, XCircle } from "@phosphor-icons/react";
+import { CheckCircle, Copy, HourglassHigh, Question, ShieldCheck, XCircle } from "@phosphor-icons/react";
 import Decimal from "decimal.js";
 import { motion, useReducedMotion } from "motion/react";
 import { useState, type ReactNode } from "react";
@@ -21,34 +21,44 @@ function assetCompositionLabel(settlementType: SettlementType, strikeUsd: string
 
 const steps = ["Define goal", "Live options", "Council review", "Confirm preview", "Demo ready"] as const;
 
+export const workflowSteps = steps;
+
+// The dashboard's secondary progress read-out. Same source of truth as StageShell's full tracker,
+// but sized to sit above the workspace rather than to be the page.
+export function StageProgress({ step, className = "" }: { step: number; className?: string }) {
+  return (
+    <div className={"flex flex-wrap items-center gap-x-3 gap-y-2 " + className}>
+      <p className="text-xs font-semibold text-[color:var(--foreground-soft)]">
+        <span className="tabular-nums">Step {step} of {steps.length}</span>
+        <span aria-hidden="true"> · </span>
+        <span className="text-[color:var(--foreground)]">{steps[step - 1]}</span>
+      </p>
+      <ol className="flex min-w-0 flex-1 items-center gap-1.5" aria-label="Goal protection progress">
+        {steps.map((label, index) => {
+          const number = index + 1;
+          const current = number === step;
+          const complete = number < step;
+          return (
+            <li
+              key={label}
+              aria-current={current ? "step" : undefined}
+              className={"h-1.5 min-w-4 flex-1 rounded-full " + (complete ? "bg-[var(--accent)]" : current ? "bg-[var(--surface-strong)]" : "bg-[var(--surface-hover)]")}
+            >
+              <span className="sr-only">{label}{complete ? " (complete)" : current ? " (current)" : ""}</span>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}
+
 export function StageShell({ step, title, eyebrow, children }: { step: number; title: string; eyebrow: string; children: ReactNode }) {
   const reducedMotion = useReducedMotion();
   return (
     <div className="reading-shell py-6 sm:py-10 lg:py-12">
-      <div className="mb-8 rounded-[var(--radius-card)] bg-[var(--surface-subtle)] p-3 sm:p-4">
-        <div className="flex items-center justify-between gap-4 lg:hidden">
-          <div><p className="text-xs font-bold uppercase tracking-[0.1em] text-[color:var(--foreground-muted)]">Step {step} of 5</p><p className="mt-1 font-semibold">{steps[step - 1]}</p></div>
-          <span className="text-xs text-[color:var(--foreground-soft)]">{eyebrow}</span>
-        </div>
-        <ol className="hidden grid-cols-5 lg:grid" aria-label="Goal protection progress">
-          {steps.map((label, index) => {
-            const number = index + 1;
-            const complete = number < step;
-            const current = number === step;
-            const stateClass = current ? "text-[color:var(--foreground)]" : "text-[color:var(--foreground-soft)]";
-            const numberClass = current
-              ? "border-[var(--surface-strong)] bg-[var(--surface-strong)] text-[color:var(--foreground-on-strong)]"
-              : complete
-                ? "border-[var(--accent)] bg-[var(--accent)] text-[color:var(--accent-foreground)]"
-                : "border-[var(--border-strong)] bg-[var(--surface-raised)]";
-            return (
-              <li key={label} aria-current={current ? "step" : undefined} className={"relative flex min-h-12 items-center gap-3 rounded-xl px-3 " + stateClass}>
-                <span className={"grid size-7 shrink-0 place-items-center rounded-full border text-xs font-semibold tabular-nums " + numberClass}>{complete ? <Check className="size-4" aria-hidden="true" /> : number}</span>
-                <span className={current ? "font-semibold" : ""}>{label}</span>
-              </li>
-            );
-          })}
-        </ol>
+      <div className="mb-8 rounded-[var(--radius-card)] bg-[var(--surface-subtle)] px-4 py-3">
+        <StageProgress step={step} />
       </div>
       <motion.section
         className="workflow-stage"
@@ -131,18 +141,30 @@ export function CouncilCard({ review, label }: { review: CouncilReview; label: s
   const statusColor = review.verdict === "approve" ? "var(--positive)" : review.verdict === "uncertain" ? "var(--accent)" : "var(--negative)";
   const VerdictIcon = review.verdict === "approve" ? CheckCircle : review.verdict === "uncertain" ? Question : XCircle;
   return (
-    <article className="min-w-0 rounded-[var(--radius-card)] border-l-4 bg-[var(--surface-subtle)] p-5 sm:p-6" style={{ borderColor: statusColor }}>
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-[0.12em]">{review.verdict}</p><h3 className="mt-1 text-2xl font-semibold tracking-[-0.04em]">{label}</h3></div>
-        <VerdictIcon className="size-6" style={{ color: statusColor }} weight={review.verdict === "approve" ? "fill" : "regular"} aria-hidden="true" />
+    // Identity and provenance on the left, reasoning on the right. Stacking these cards full
+    // width and splitting them horizontally keeps the summary at a readable measure: three
+    // side-by-side columns left roughly five words per line in the workspace's centre panel.
+    <article className="grid min-w-0 gap-x-6 gap-y-4 rounded-[var(--radius-card)] border-l-4 bg-[var(--surface-subtle)] p-5 sm:grid-cols-[13rem_minmax(0,1fr)] sm:p-6" style={{ borderColor: statusColor }}>
+      <div className="min-w-0">
+        <div className="flex items-start justify-between gap-3 sm:justify-start">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em]">{review.verdict}</p>
+            <h3 className="mt-1 text-2xl font-semibold tracking-[-0.04em]">{label}</h3>
+          </div>
+          <VerdictIcon className="size-6 shrink-0" style={{ color: statusColor }} weight={review.verdict === "approve" ? "fill" : "regular"} aria-hidden="true" />
+        </div>
+        <p className="mt-4 text-xs leading-5 text-[color:var(--foreground-soft)]">Model · {review.model}</p>
+        <div className="mt-2 flex items-center gap-2">
+          <code className="min-w-0 flex-1 truncate text-xs tabular-nums">{review.requestId}</code>
+          <Button variant="ghost" className="px-3" aria-label={"Copy " + label + " Gonka request ID"} onClick={async () => { await navigator.clipboard.writeText(review.requestId); setCopied(true); window.setTimeout(() => setCopied(false), 1500); }}><Copy aria-hidden="true" />{copied ? "Copied" : "Copy"}</Button>
+        </div>
       </div>
-      <p className="mt-4 text-sm leading-6 text-[color:var(--foreground-soft)]">{review.summary}</p>
-      {review.concerns.length ? <div className="mt-4"><p className="text-xs font-semibold">Concerns</p><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[color:var(--foreground-soft)]">{review.concerns.map((item) => <li key={item}>{item}</li>)}</ul></div> : null}
-      <div className="mt-5 border-t border-[var(--border)] pt-4">
-        <p className="text-xs text-[color:var(--foreground-soft)]">Model · {review.model}</p>
-        <div className="mt-2 flex items-center gap-2"><code className="min-w-0 flex-1 truncate text-xs tabular-nums">{review.requestId}</code><Button variant="ghost" className="px-3" aria-label={"Copy " + label + " Gonka request ID"} onClick={async () => { await navigator.clipboard.writeText(review.requestId); setCopied(true); window.setTimeout(() => setCopied(false), 1500); }}><Copy aria-hidden="true" />{copied ? "Copied" : "Copy"}</Button></div>
+
+      <div className="min-w-0 border-t border-[var(--border)] pt-4 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0">
+        <p className="text-sm leading-6 text-[color:var(--foreground-soft)]">{review.summary}</p>
+        {review.concerns.length ? <div className="mt-4"><p className="text-xs font-semibold">Concerns</p><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[color:var(--foreground-soft)]">{review.concerns.map((item) => <li key={item}>{item}</li>)}</ul></div> : null}
+        {review.requiredDisclosures.length ? <ul className="mt-4 space-y-1 text-xs leading-5 text-[color:var(--foreground-soft)]">{review.requiredDisclosures.map((item) => <li key={item}>Disclosure: {item}</li>)}</ul> : null}
       </div>
-      {review.requiredDisclosures.length ? <ul className="mt-4 space-y-1 text-xs leading-5 text-[color:var(--foreground-soft)]">{review.requiredDisclosures.map((item) => <li key={item}>Disclosure: {item}</li>)}</ul> : null}
     </article>
   );
 }
@@ -151,8 +173,11 @@ export function CouncilCard({ review, label }: { review: CouncilReview; label: s
 // Unlike CouncilCard (which requires a fully-formed CouncilReview), this renders "waiting" and
 // "running" states backed only by real signals -- an actual gonka_inferences row's presence/
 // absence and a real elapsed-second count -- never an invented completion percentage.
-export function CouncilRoleProgressCard({ progress, label, elapsedSeconds }: { progress: CouncilRoleProgress; label: string; elapsedSeconds: number | null }) {
+export function CouncilRoleProgressCard({ progress, label, elapsedSeconds, compact = false }: { progress: CouncilRoleProgress; label: string; elapsedSeconds: number | null; compact?: boolean }) {
   const [copied, setCopied] = useState(false);
+  // A model summary runs to several hundred characters, which is fine across a full-width grid
+  // but makes a fixed-width rail unusably tall. The full text stays available in the drawer.
+  const summaryClamp = compact ? " line-clamp-4" : "";
   if (progress.status === "waiting") {
     return (
       <article className="min-w-0 rounded-[var(--radius-card)] border-l-4 border-[var(--border)] bg-[var(--surface-subtle)] p-5 opacity-60 sm:p-6">
@@ -194,7 +219,7 @@ export function CouncilRoleProgressCard({ progress, label, elapsedSeconds }: { p
         <div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-[0.12em]">{progress.verdict ?? "done"}</p><h3 className="mt-1 text-2xl font-semibold tracking-[-0.04em]">{label}</h3></div>
         <VerdictIcon className="size-6" style={{ color: statusColor }} weight={progress.verdict === "approve" ? "fill" : "regular"} aria-hidden="true" />
       </div>
-      {progress.summary ? <p className="mt-4 text-sm leading-6 text-[color:var(--foreground-soft)]">{progress.summary}</p> : null}
+      {progress.summary ? <p className={"mt-4 text-sm leading-6 text-[color:var(--foreground-soft)]" + summaryClamp}>{progress.summary}</p> : null}
       <div className="mt-5 border-t border-[var(--border)] pt-4">
         <p className="text-xs text-[color:var(--foreground-soft)]">Model · {progress.model}{progress.latencyMs !== null ? ` · completed in ${(progress.latencyMs / 1000).toFixed(1)}s` : ""}</p>
         {progress.requestId ? (

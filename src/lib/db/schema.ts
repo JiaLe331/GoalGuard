@@ -34,6 +34,7 @@ export const protectionCandidates = pgTable.withRLS("protection_candidates", {
   source: text("source").notNull(), protocolOrderId: text("protocol_order_id"),
   underlyingAsset: text("underlying_asset").notNull(), optionType: text("option_type").notNull(),
   settlementType: text("settlement_type").notNull(),
+  impliedVolatilityBps: integer("implied_volatility_bps"),
   strikeUsd: text("strike_usd").notNull(), expiry: utcTimestamp("expiry").notNull(),
   settlementTokenAddress: varchar("settlement_token_address", { length: 42 }).notNull(),
   settlementTokenSymbol: varchar("settlement_token_symbol", { length: 16 }).notNull(),
@@ -50,6 +51,7 @@ export const protectionCandidates = pgTable.withRLS("protection_candidates", {
 }, (table) => [
   check("candidates_schema_version_check", sql`${table.schemaVersion} = 1`),
   check("candidates_settlement_type_check", sql`${table.settlementType} IN ('cash', 'physical')`),
+  check("candidates_implied_volatility_check", sql`${table.impliedVolatilityBps} IS NULL OR ${table.impliedVolatilityBps} >= 0`),
   check("candidates_token_decimals_check", sql`${table.settlementTokenDecimals} >= 0 AND ${table.settlementTokenDecimals} <= 255`),
   check("candidates_deadline_gap_check", sql`${table.deadlineGapHours} >= 0`),
   check("candidates_coverage_check", sql`${table.goalCoverageBps} >= 0 AND ${table.goalCoverageBps} <= 10000`),
@@ -133,3 +135,18 @@ export const tradeRequestIdempotency = pgTable.withRLS("trade_request_idempotenc
 export const workerHeartbeats = pgTable.withRLS("worker_heartbeats", {
   workerName: text("worker_name").primaryKey(), instanceId: uuid("instance_id").notNull(), lastSeenAt: utcTimestamp("last_seen_at").notNull(),
 });
+
+export const marketSnapshots = pgTable.withRLS("market_snapshots", {
+  capturedAt: utcTimestamp("captured_at").primaryKey(),
+  ethSpotUsd: text("eth_spot_usd").notNull(),
+  optionCount: integer("option_count").notNull(),
+  medianIvBps: integer("median_iv_bps"),
+  costPer100Usd30d: text("cost_per_100_usd_30d"),
+  // The goal-free protection chain at a $100 reference notional. Nullable so rows captured
+  // before this column existed stay readable and are not mistaken for an empty market.
+  chain: jsonb("chain").$type<unknown>(),
+}, (table) => [
+  check("market_snapshots_option_count_check", sql`${table.optionCount} >= 0`),
+  check("market_snapshots_iv_check", sql`${table.medianIvBps} IS NULL OR ${table.medianIvBps} >= 0`),
+  index("market_snapshots_captured_at_idx").on(table.capturedAt),
+]);

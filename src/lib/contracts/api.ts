@@ -4,6 +4,8 @@ import { CouncilRoleSchema, CouncilVerdictSchema, CoverageModeSchema, GoalTypeSc
 import {
   CouncilDecisionSchema,
   GoalSchema,
+  MarketSnapshotSchema,
+  ProtectionChainEntrySchema,
   PublicProtectionCandidateSchema,
   TradeSchema,
 } from "./entities";
@@ -95,6 +97,9 @@ export const GenerateCandidatesRequestSchema = z.object({
 
 export const CandidateRejectionSchema = z.object({
   protocolOrderId: z.string().nullable(),
+  strikeUsd: DecimalStringSchema.nullable(),
+  expiry: ISODateTimeSchema.nullable(),
+  premiumUsd: DecimalStringSchema.nullable(),
   reasons: z.array(z.string().trim().min(1)),
 }).strict();
 
@@ -102,8 +107,10 @@ export const GenerateCandidatesResponseSchema = z.object({
   data: z.object({
     goal: GoalSchema,
     candidates: z.array(PublicProtectionCandidateSchema),
+    chain: z.array(ProtectionChainEntrySchema),
     selectedCandidateId: UUIDSchema.nullable(),
     rejected: z.array(CandidateRejectionSchema),
+    ethSpotUsd: DecimalStringSchema,
     marketAsOf: ISODateTimeSchema,
   }).strict(),
   meta: ApiMetaSchema,
@@ -285,6 +292,18 @@ export const IntegrationStatusResponseSchema = z.object({
   meta: ApiMetaSchema,
 }).strict();
 
+// The dashboard rail receives only the small worker-owned market snapshot. Raw Thetanuts orders
+// and protocol payloads remain server-only; a missing snapshot is an honest empty state.
+// `series` is the same worker-owned snapshots in ascending capture order, so the workspace can
+// draw the recent trend without a second round trip. Newest last; empty until the worker has run.
+export const MarketSummaryResponseSchema = z.object({
+  data: z.object({
+    snapshot: MarketSnapshotSchema.nullable(),
+    series: z.array(MarketSnapshotSchema),
+  }).strict(),
+  meta: ApiMetaSchema,
+}).strict();
+
 export type GoalDraftField = z.infer<typeof GoalDraftFieldSchema>;
 export type GoalDraft = z.infer<typeof GoalDraftSchema>;
 export type InferenceSummary = z.infer<typeof InferenceSummarySchema>;
@@ -315,3 +334,4 @@ export type RecordSubmissionResponse = z.infer<typeof RecordSubmissionResponseSc
 export type GetTradeResponse = z.infer<typeof GetTradeResponseSchema>;
 export type GetGoalResponse = z.infer<typeof GetGoalResponseSchema>;
 export type IntegrationStatusResponse = z.infer<typeof IntegrationStatusResponseSchema>;
+export type MarketSummaryResponse = z.infer<typeof MarketSummaryResponseSchema>;

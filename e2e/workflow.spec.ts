@@ -40,6 +40,7 @@ async function installWorkflowFixtures(page: Page, preview = previewTradeRespons
     const request = route.request();
     const path = new URL(request.url()).pathname;
     if (path === "/api/integrations/status") return json(route, { data: { database: { status: "ready" }, gonka: { status: "ready", model: "gonka-model-a", requestId: "gonka-ready" }, thetanuts: { status: "ready", chainId: 8453, activeEthPutCount: 3, marketAsOf: fixtureMeta.timestamp } }, meta: fixtureMeta });
+    if (path === "/api/market/summary") { const snapshot = { capturedAt: fixtureMeta.timestamp, ethSpotUsd: "3000", optionCount: 58, medianIvBps: 6500, costPer100Usd30d: "2.1", chain: null }; return json(route, { data: { snapshot, series: [snapshot] }, meta: fixtureMeta }); }
     if (path === "/api/goals/parse") return json(route, parseGoalResponse);
     if (path.endsWith(parseGoalResponse.data.goal!.id) && request.method() === "GET") return json(route, getDraftGoalResponse);
     if (path.endsWith(parseGoalResponse.data.goal!.id) && request.method() === "PATCH") return json(route, updateGoalResponse);
@@ -79,6 +80,57 @@ async function openPreviewConfirmation(page: Page) {
   await page.getByRole("button", { name: /continue to unsigned preview/i }).click();
   await page.getByRole("checkbox").check();
 }
+
+test("keeps the goal workflow available while switching center views", async ({ page }) => {
+  await installWorkflowFixtures(page);
+  await completeToPlan(page);
+
+  await expect(page.getByText("Next safe step")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Strategist" })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Goals" }).getByRole("heading", { name: "Cost of safety" })).toBeVisible();
+
+  await expect(page.getByRole("tab", { name: "Market" })).toBeVisible();
+  await expect(page.getByRole("tab", { name: "Plan" })).toHaveAttribute("aria-selected", "true");
+
+  await page.getByRole("tab", { name: "Market" }).click();
+  await expect(page.locator("#workspace-panel-market").getByRole("heading", { name: "Cost of safety" })).toBeVisible();
+  await expect(page.getByText("Protection chain")).toBeVisible();
+
+  await page.getByRole("tab", { name: "Scenarios" }).click();
+  await expect(page.getByRole("heading", { name: "What the protection changes" })).toBeVisible();
+  await expect(page.getByText("Estimated net value after cost")).toBeVisible();
+
+  await page.getByRole("tab", { name: "Audit" }).click();
+  await expect(page.getByRole("heading", { name: /why this plan has this status/i })).toBeVisible();
+  await expect(page.locator("#workspace-panel-audit").getByRole("heading", { name: "Strategist" })).toBeVisible();
+
+  await page.getByRole("tab", { name: "Plan" }).click();
+  await expect(page.getByRole("heading", { name: /a protection plan for rent/i })).toBeVisible();
+});
+
+test("moves the goals and services rail into the workflow menu on phones", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await installWorkflowFixtures(page);
+  await completeToPlan(page);
+
+  const goalsRail = page.getByRole("navigation", { name: "Goals" });
+  await expect(goalsRail).not.toBeVisible();
+
+  const menu = page.getByRole("button", { name: /menu/i });
+  await expect(menu).toBeVisible();
+  await menu.click();
+  const drawer = page.getByRole("dialog", { name: "Goal workspace menu" });
+  await expect(drawer).toBeVisible();
+  await expect(drawer.getByRole("link", { name: "New goal" })).toBeVisible();
+  await expect(drawer.getByRole("region", { name: "Service readiness" })).toBeVisible();
+  await expect(drawer.getByText("Supabase data")).toBeVisible();
+  await drawer.getByRole("button", { name: "Close panel" }).click();
+  await expect(drawer).not.toBeVisible();
+
+  await page.setViewportSize({ width: 1024, height: 768 });
+  await expect(goalsRail).toBeVisible();
+  await expect(menu).not.toBeVisible();
+});
 
 test("completes the contract-wired frontend through a preview-only trade", async ({ page }) => {
   const log = await installWorkflowFixtures(page);

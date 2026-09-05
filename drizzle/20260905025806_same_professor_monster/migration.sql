@@ -1,0 +1,2 @@
+ALTER TABLE "protection_candidates" ADD COLUMN "implied_volatility_bps" integer;--> statement-breakpoint
+ALTER TABLE "protection_candidates" ADD CONSTRAINT "candidates_implied_volatility_check" CHECK ("implied_volatility_bps" IS NULL OR "implied_volatility_bps" >= 0);

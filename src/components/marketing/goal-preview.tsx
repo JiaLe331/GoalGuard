@@ -177,13 +177,13 @@ export function GoalPreview() {
 
       <div className="mt-5 grid gap-3">
         <Link
-          href="/goals/new"
+          href="/dashboard"
           className="inline-flex min-h-13 w-full items-center justify-center gap-2 rounded-full border border-[var(--button-primary-border)] bg-[var(--button-primary-bg)] px-6 text-sm font-semibold text-[color:var(--button-primary-fg)] transition-[background-color,opacity,transform] duration-[var(--duration-press)] hover:bg-[var(--button-primary-hover)] active:scale-[0.98] active:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
         >
           Build my protection plan
           <ArrowRight aria-hidden="true" />
         </Link>
-        <p className="text-center text-xs leading-5 text-[color:var(--foreground-soft)]">You’ll enter your own goal in the next step. No wallet connection is required to begin.</p>
+        <p className="text-center text-xs leading-5 text-[color:var(--foreground-soft)]">Opens the live protection workspace. No wallet connection is required to look around.</p>
       </div>
     </div>
   );

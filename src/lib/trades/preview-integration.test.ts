@@ -194,7 +194,9 @@ describe("B6 unsigned preview integration", () => {
   });
 
   it.each([
-    ["disputed", { consumer_advocate: "uncertain" as const }],
+    // Two uncertain verdicts: consensus needs a two-thirds majority, so this loses it and stays
+    // disputed. A single uncertain verdict is an approval-with-disclosure and does not stop here.
+    ["disputed", { consumer_advocate: "uncertain" as const, strategist: "uncertain" as const }],
     ["blocked", { risk_auditor: "reject" as const }],
   ] as const)("stops a %s council result before construction", async (status, verdicts) => {
     const { candidate, state, decision } = await reviewWith(verdicts);

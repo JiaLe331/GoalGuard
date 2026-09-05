@@ -60,6 +60,13 @@ a[href] {
   outline-offset: 3px;
 }
 
+/* Programmatic focus targets (stage/skip-link landing spots) stay focusable so screen readers
+   announce the new content, but must not paint a ring around a whole region the user never
+   navigated to by keyboard. */
+[data-focus-target="programmatic"]:focus-visible {
+  outline: none;
+}
+
 .font-display,
 .font-sans,
 code,
@@ -171,6 +178,8 @@ pre,
 }
 
 .metric-grid {
+  display: grid;
+  gap: 0.75rem;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
 }
 
@@ -212,6 +221,51 @@ pre,
 
 .balance-text {
   text-wrap: balance;
+}
+
+/* The stress-test slider's own track/fill are drawn behind it (see protection-stress-test.tsx),
+   so only the thumb needs paint here -- the native track stays fully transparent. */
+.stress-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 100%;
+}
+
+.stress-slider::-webkit-slider-runnable-track {
+  height: 0.75rem;
+  background: transparent;
+}
+
+.stress-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-top: -0.4rem;
+  border-radius: var(--radius-pill);
+  background: var(--surface-strong);
+  border: 3px solid var(--accent);
+  cursor: pointer;
+}
+
+.stress-slider::-moz-range-track {
+  height: 0.75rem;
+  background: transparent;
+}
+
+.stress-slider::-moz-range-thumb {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--surface-strong);
+  border: 3px solid var(--accent);
+  cursor: pointer;
+}
+
+.stress-slider:focus-visible::-webkit-slider-thumb,
+.stress-slider:focus-visible::-moz-range-thumb {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }
 
 @keyframes niulai-checking {

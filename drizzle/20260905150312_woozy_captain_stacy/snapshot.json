@@ -1,0 +1,2855 @@
+{
+  "version": "8",
+  "dialect": "postgres",
+  "id": "8c2bde93-3388-4b34-8886-3e7dda5692bc",
+  "prevIds": [
+    "6346e76c-534c-4785-8a8a-ff2ddaf74ecd"
+  ],
+  "ddl": [
+    {
+      "isRlsEnabled": true,
+      "name": "council_decisions",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": true,
+      "name": "council_reviews",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": true,
+      "name": "goals",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": true,
+      "name": "gonka_inferences",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": true,
+      "name": "market_snapshots",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": true,
+      "name": "protection_candidates",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": true,
+      "name": "trade_request_idempotency",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": true,
+      "name": "trades",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": true,
+      "name": "worker_heartbeats",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "council_decisions"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "goal_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "council_decisions"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "candidate_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "council_decisions"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "1",
+      "generated": null,
+      "identity": null,
+      "name": "schema_version",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "council_decisions"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "attempt",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "council_decisions"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "status",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "council_decisions"
+    },
+    {
+      "type": "varchar(32)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "ruleset_version",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "council_decisions"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "approved_review_count",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "council_decisions"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "rejected_review_count",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "council_decisions"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "uncertain_review_count",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "council_decisions"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'[]'",
+      "generated": null,
+      "identity": null,
+      "name": "blocked_reasons_json",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "council_decisions"
+    },
+    {
+      "type": "varchar(64)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "input_hash",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "council_decisions"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "council_decisions"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "council_reviews"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "decision_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "council_reviews"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "inference_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "council_reviews"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "1",
+      "generated": null,
+      "identity": null,
+      "name": "schema_version",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "council_reviews"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "role",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "council_reviews"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "model",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "council_reviews"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "request_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "council_reviews"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "verdict",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "council_reviews"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "confidence_bps",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "council_reviews"
+    },
+    {
+      "type": "varchar(1000)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "summary",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "council_reviews"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'[]'",
+      "generated": null,
+      "identity": null,
+      "name": "concerns_json",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "council_reviews"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'[]'",
+      "generated": null,
+      "identity": null,
+      "name": "required_disclosures_json",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "council_reviews"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "council_reviews"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "goals"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "1",
+      "generated": null,
+      "identity": null,
+      "name": "schema_version",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "goals"
+    },
+    {
+      "type": "varchar(64)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "owner_session_hash",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "goals"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "goal_type",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "goals"
+    },
+    {
+      "type": "varchar(80)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "custom_goal_label",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "goals"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "underlying_asset",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "goals"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "protected_value_usd",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "goals"
+    },
+    {
+      "type": "date",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "deadline",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "goals"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "max_loss_bps",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "goals"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "max_premium_usd",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "goals"
+    },
+    {
+      "type": "varchar(4000)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "original_user_message",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "goals"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "status",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "goals"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "goals"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "goals"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "gonka_inferences"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "goal_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "gonka_inferences"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "candidate_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "gonka_inferences"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "1",
+      "generated": null,
+      "identity": null,
+      "name": "schema_version",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "gonka_inferences"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "purpose",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "gonka_inferences"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "provider",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "gonka_inferences"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "model",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "gonka_inferences"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "request_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "gonka_inferences"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "status",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "gonka_inferences"
+    },
+    {
+      "type": "varchar(64)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "input_hash",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "gonka_inferences"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "latency_ms",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "gonka_inferences"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "error_code",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "gonka_inferences"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "error_message",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "gonka_inferences"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "raw_response_json",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "gonka_inferences"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "gonka_inferences"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "completed_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "gonka_inferences"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "captured_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "market_snapshots"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "eth_spot_usd",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "market_snapshots"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "option_count",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "market_snapshots"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "median_iv_bps",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "market_snapshots"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "cost_per_100_usd_30d",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "market_snapshots"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "chain",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "market_snapshots"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "goal_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "1",
+      "generated": null,
+      "identity": null,
+      "name": "schema_version",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "source",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "protocol_order_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "underlying_asset",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "option_type",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "settlement_type",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "implied_volatility_bps",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "strike_usd",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "expiry",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "varchar(42)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "settlement_token_address",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "varchar(16)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "settlement_token_symbol",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "settlement_token_decimals",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "premium_amount_base_units",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "premium_usd",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "quantity_base_units",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "quantity_underlying",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "max_premium_loss_usd",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "estimated_floor_usd",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "deadline_gap_hours",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "goal_coverage_bps",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'full'",
+      "generated": null,
+      "identity": null,
+      "name": "coverage_mode",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "available_quantity_base_units",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "status",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'[]'",
+      "generated": null,
+      "identity": null,
+      "name": "rejection_reasons_json",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "protocol_raw_json",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "scenarios_json",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "market_as_of",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "type": "varchar(128)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "key",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trade_request_idempotency"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "operation",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trade_request_idempotency"
+    },
+    {
+      "type": "varchar(64)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "owner_session_hash",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trade_request_idempotency"
+    },
+    {
+      "type": "varchar(64)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "request_hash",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trade_request_idempotency"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "status",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trade_request_idempotency"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "trade_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trade_request_idempotency"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "response_json",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trade_request_idempotency"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trade_request_idempotency"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trade_request_idempotency"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "goal_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "candidate_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "council_decision_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "1",
+      "generated": null,
+      "identity": null,
+      "name": "schema_version",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "type": "varchar(128)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "idempotency_key",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "type": "varchar(42)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "wallet_address",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "chain_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "status",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "type": "varchar(64)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "quote_fingerprint",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "preview_expires_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "type": "varchar(42)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "settlement_token_address",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "premium_amount_base_units",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "premium_usd",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "type": "varchar(66)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "tx_hash",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "protocol_position_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "failure_code",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "failure_message",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "type": "varchar(42)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "expected_execution_target",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "type": "varchar(64)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "expected_calldata_hash",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'0'",
+      "generated": null,
+      "identity": null,
+      "name": "expected_value_base_units",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "verification_deadline",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "receipt_block_number",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "receipt_confirmations",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "submitted_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "confirmed_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "worker_name",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "worker_heartbeats"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "instance_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "worker_heartbeats"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "last_seen_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "worker_heartbeats"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "candidate_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "attempt",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "decisions_candidate_attempt_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "council_decisions"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "goal_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "created_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "decisions_goal_created_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "council_decisions"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "candidate_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "created_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "decisions_candidate_created_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "council_decisions"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "decision_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "role",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "reviews_decision_role_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "council_reviews"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "inference_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "reviews_inference_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "council_reviews"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "decision_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "reviews_decision_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "council_reviews"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "owner_session_hash",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "goals_owner_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "goals"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "status",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "updated_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "goals_status_updated_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "goals"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "deadline",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "goals_deadline_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "goals"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "goal_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "purpose",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "created_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "inferences_goal_purpose_created_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "gonka_inferences"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "candidate_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "purpose",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "inferences_candidate_purpose_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "gonka_inferences"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "request_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": "\"request_id\" IS NOT NULL",
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "inferences_request_id_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "gonka_inferences"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "captured_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "market_snapshots_captured_at_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "market_snapshots"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "goal_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "status",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "candidates_goal_status_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "expiry",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "candidates_expiry_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "source",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "protocol_order_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "candidates_source_order_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "goal_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": "\"status\" = 'selected'",
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "candidates_one_selected_per_goal_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "owner_session_hash",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "created_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "trade_idempotency_owner_created_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "trade_request_idempotency"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "trade_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "trade_idempotency_trade_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "trade_request_idempotency"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "idempotency_key",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "trades_idempotency_key_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "tx_hash",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": "\"tx_hash\" IS NOT NULL",
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "trades_tx_hash_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "goal_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "created_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "trades_goal_created_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "wallet_address",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "created_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "trades_wallet_created_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "status",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "updated_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "trades_status_updated_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "goal_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "goals",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "council_decisions_goal_id_goals_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "council_decisions"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "candidate_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "protection_candidates",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "council_decisions_candidate_id_protection_candidates_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "council_decisions"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "decision_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "council_decisions",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "council_reviews_decision_id_council_decisions_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "council_reviews"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "inference_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "gonka_inferences",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "council_reviews_inference_id_gonka_inferences_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "council_reviews"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "goal_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "goals",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "SET NULL",
+      "name": "gonka_inferences_goal_id_goals_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "gonka_inferences"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "candidate_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "protection_candidates",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "SET NULL",
+      "name": "gonka_inferences_candidate_id_protection_candidates_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "gonka_inferences"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "goal_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "goals",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "protection_candidates_goal_id_goals_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "trade_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "trades",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "RESTRICT",
+      "name": "trade_request_idempotency_trade_id_trades_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "trade_request_idempotency"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "goal_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "goals",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "RESTRICT",
+      "name": "trades_goal_id_goals_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "candidate_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "protection_candidates",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "RESTRICT",
+      "name": "trades_candidate_id_protection_candidates_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "council_decision_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "council_decisions",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "RESTRICT",
+      "name": "trades_council_decision_id_council_decisions_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "council_decisions_pkey",
+      "schema": "public",
+      "table": "council_decisions",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "council_reviews_pkey",
+      "schema": "public",
+      "table": "council_reviews",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "goals_pkey",
+      "schema": "public",
+      "table": "goals",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "gonka_inferences_pkey",
+      "schema": "public",
+      "table": "gonka_inferences",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "captured_at"
+      ],
+      "nameExplicit": false,
+      "name": "market_snapshots_pkey",
+      "schema": "public",
+      "table": "market_snapshots",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "protection_candidates_pkey",
+      "schema": "public",
+      "table": "protection_candidates",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "key"
+      ],
+      "nameExplicit": false,
+      "name": "trade_request_idempotency_pkey",
+      "schema": "public",
+      "table": "trade_request_idempotency",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "trades_pkey",
+      "schema": "public",
+      "table": "trades",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "worker_name"
+      ],
+      "nameExplicit": false,
+      "name": "worker_heartbeats_pkey",
+      "schema": "public",
+      "table": "worker_heartbeats",
+      "entityType": "pks"
+    },
+    {
+      "value": "\"schema_version\" = 1",
+      "name": "decisions_schema_version_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "council_decisions"
+    },
+    {
+      "value": "\"attempt\" >= 1",
+      "name": "decisions_attempt_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "council_decisions"
+    },
+    {
+      "value": "\"approved_review_count\" >= 0 AND \"approved_review_count\" <= 3 AND \"rejected_review_count\" >= 0 AND \"rejected_review_count\" <= 3 AND \"uncertain_review_count\" >= 0 AND \"uncertain_review_count\" <= 3",
+      "name": "decisions_counts_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "council_decisions"
+    },
+    {
+      "value": "\"schema_version\" = 1",
+      "name": "reviews_schema_version_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "council_reviews"
+    },
+    {
+      "value": "\"confidence_bps\" >= 0 AND \"confidence_bps\" <= 10000",
+      "name": "reviews_confidence_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "council_reviews"
+    },
+    {
+      "value": "\"schema_version\" = 1",
+      "name": "goals_schema_version_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "goals"
+    },
+    {
+      "value": "\"max_loss_bps\" >= 0 AND \"max_loss_bps\" <= 9999",
+      "name": "goals_max_loss_bps_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "goals"
+    },
+    {
+      "value": "(\"goal_type\" = 'custom' AND \"custom_goal_label\" IS NOT NULL) OR (\"goal_type\" <> 'custom' AND \"custom_goal_label\" IS NULL)",
+      "name": "goals_custom_label_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "goals"
+    },
+    {
+      "value": "\"schema_version\" = 1",
+      "name": "inferences_schema_version_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "gonka_inferences"
+    },
+    {
+      "value": "\"provider\" = 'gonka'",
+      "name": "inferences_provider_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "gonka_inferences"
+    },
+    {
+      "value": "\"latency_ms\" IS NULL OR \"latency_ms\" >= 0",
+      "name": "inferences_latency_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "gonka_inferences"
+    },
+    {
+      "value": "\"option_count\" >= 0",
+      "name": "market_snapshots_option_count_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "market_snapshots"
+    },
+    {
+      "value": "\"median_iv_bps\" IS NULL OR \"median_iv_bps\" >= 0",
+      "name": "market_snapshots_iv_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "market_snapshots"
+    },
+    {
+      "value": "\"schema_version\" = 1",
+      "name": "candidates_schema_version_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "value": "\"settlement_type\" IN ('cash', 'physical')",
+      "name": "candidates_settlement_type_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "value": "\"implied_volatility_bps\" IS NULL OR \"implied_volatility_bps\" >= 0",
+      "name": "candidates_implied_volatility_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "value": "\"settlement_token_decimals\" >= 0 AND \"settlement_token_decimals\" <= 255",
+      "name": "candidates_token_decimals_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "value": "\"deadline_gap_hours\" >= 0",
+      "name": "candidates_deadline_gap_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "value": "\"goal_coverage_bps\" >= 0 AND \"goal_coverage_bps\" <= 10000",
+      "name": "candidates_coverage_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "value": "(\"coverage_mode\" = 'full' AND \"goal_coverage_bps\" = 10000) OR (\"coverage_mode\" = 'proportional_demo' AND \"goal_coverage_bps\" > 0 AND \"goal_coverage_bps\" < 10000)",
+      "name": "candidates_coverage_mode_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "protection_candidates"
+    },
+    {
+      "value": "length(\"key\") BETWEEN 16 AND 128",
+      "name": "trade_idempotency_key_length_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "trade_request_idempotency"
+    },
+    {
+      "value": "\"operation\" IN ('preview', 'execute', 'submission')",
+      "name": "trade_idempotency_operation_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "trade_request_idempotency"
+    },
+    {
+      "value": "\"status\" IN ('in_progress', 'completed')",
+      "name": "trade_idempotency_status_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "trade_request_idempotency"
+    },
+    {
+      "value": "\"schema_version\" = 1",
+      "name": "trades_schema_version_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "value": "\"chain_id\" = 8453",
+      "name": "trades_chain_id_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "trades"
+    },
+    {
+      "value": "length(\"idempotency_key\") BETWEEN 16 AND 128",
+      "name": "trades_idempotency_length_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "trades"
+    }
+  ],
+  "renames": []
+}

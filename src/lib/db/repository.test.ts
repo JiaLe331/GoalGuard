@@ -4,7 +4,7 @@ import { drizzle } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import type { CouncilReview, Goal, GonkaInference } from "@/lib/contracts";
+import type { CouncilReview, Goal, GonkaInference, MarketSnapshot } from "@/lib/contracts";
 import type { GoalGuardDatabase } from "@/lib/db/client";
 import { PostgresGoalGuardRepository, RepositoryConflictError, RepositoryIdempotencyConflictError } from "@/lib/db/repository";
 import { fixtureCandidate, fixtureDecision, fixtureGoal, fixtureTrade } from "@/test/fixtures/goalguard";
@@ -31,6 +31,11 @@ describe("PostgresGoalGuardRepository", () => {
     await expect(repository.getCandidate(fixtureCandidate.id, owner)).resolves.toMatchObject({ goalCoverageBps: 10000, coverageMode: "full" });
   });
   it("tracks a fresh worker heartbeat without exposing it through public entities", async () => { expect(await repository.isWorkerHealthy()).toBe(false); await repository.heartbeat("trade-monitor", "10000000-0000-4000-8000-000000000001"); expect(await repository.isWorkerHealthy()).toBe(true); });
+  it("round-trips anonymous market snapshots in capture order", async () => {
+    const snapshot: MarketSnapshot = { capturedAt: "2026-09-01T00:00:00.000Z", ethSpotUsd: "3000", optionCount: 58, medianIvBps: 6500, costPer100Usd30d: "2.1", chain: null };
+    await expect(repository.saveMarketSnapshot(snapshot)).resolves.toEqual(snapshot);
+    await expect(repository.listMarketSnapshots()).resolves.toEqual([snapshot]);
+  });
   it("replays a completed idempotent trade request and rejects changed input", async () => {
     const key = "10000000-0000-4000-8000-000000000001"; const requestHash = "c".repeat(64); const response = { status: 201, body: { data: { tradeId: "trade-1" } } };
     expect(await repository.claimTradeRequest(key, "preview", owner, requestHash)).toEqual({ status: "claimed" });

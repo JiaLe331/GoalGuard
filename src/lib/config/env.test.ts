@@ -5,7 +5,7 @@ const base = { GONKA_API_KEY: "key", GONKA_BASE_URL: "https://gonka.example", GO
 const env = (value: Record<string, string> = {}): NodeJS.ProcessEnv => ({ NODE_ENV: "test", ...value });
 
 describe("P0 environment safety", () => {
-  it("uses the 168-hour expiry-gap default", () => { expect(readServerEnvironment(env()).MAX_DEADLINE_GAP_HOURS).toBe(168); });
+  it("uses the 168-hour expiry-gap and 15-minute snapshot defaults", () => { expect(readServerEnvironment(env())).toMatchObject({ MAX_DEADLINE_GAP_HOURS: 168, MARKET_SNAPSHOT_MS: 900_000 }); });
   it("treats blank optional integration placeholders as unconfigured", () => {
     const placeholders = env({ GONKA_API_KEY: "", GONKA_BASE_URL: "  ", GONKA_STRATEGIST_MODEL: "", GONKA_RISK_AUDITOR_MODEL: "", GONKA_CONSUMER_ADVOCATE_MODEL: "", THETANUTS_RPC_URL: "", THETANUTS_RPC_FALLBACK_URL: "", THETANUTS_REFERRER_ADDRESS: "" });
     expect(readServerEnvironment(placeholders)).toMatchObject({ GONKA_API_KEY: undefined, GONKA_BASE_URL: undefined, THETANUTS_RPC_URL: undefined, THETANUTS_RPC_FALLBACK_URL: undefined, THETANUTS_REFERRER_ADDRESS: undefined });

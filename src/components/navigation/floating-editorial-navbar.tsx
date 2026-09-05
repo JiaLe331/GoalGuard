@@ -1,6 +1,6 @@
 "use client";
 
-import { List, ShieldCheck } from "@phosphor-icons/react";
+import { List } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
@@ -19,7 +19,7 @@ const defaultLinks: readonly EditorialNavLink[] = [
   { label: "Live foundations", href: "#live-foundations" },
 ];
 
-const defaultPrimaryAction: EditorialNavLink = { label: "Build a plan", href: "/goals/new" };
+const defaultPrimaryAction: EditorialNavLink = { label: "Open workspace", href: "/dashboard" };
 
 export function GoalGuardBrand({ href = "#top" }: { href?: string }) {
   return (
@@ -30,25 +30,17 @@ export function GoalGuardBrand({ href = "#top" }: { href?: string }) {
   );
 }
 
-function StatusLabel({ label, compact = false }: { label: string; compact?: boolean }) {
-  return (
-    <span className="inline-flex min-h-11 min-w-0 items-center gap-2 whitespace-nowrap text-xs font-bold uppercase tracking-[0.08em] text-[color:var(--foreground-soft)]">
-      <ShieldCheck className="size-4 shrink-0" aria-hidden="true" />
-      <span className={compact ? "hidden min-[860px]:inline" : "truncate"}>{label}</span>
-    </span>
-  );
-}
-
 export type FloatingEditorialNavbarProps = {
   variant?: EditorialNavbarVariant;
   brand?: ReactNode;
   brandHref?: string;
   links?: readonly EditorialNavLink[];
   activeHref?: EditorialNavLink["href"];
-  statusLabel?: string;
   contextLabel?: string;
   walletSlot?: ReactNode;
   primaryAction?: EditorialNavLink | null;
+  /** Content for the workflow's phone-sized navigation drawer (normally the goals/services rail). */
+  mobileDrawerContent?: ReactNode;
 };
 
 export function FloatingEditorialNavbar({
@@ -57,10 +49,10 @@ export function FloatingEditorialNavbar({
   brandHref,
   links,
   activeHref,
-  statusLabel = "Preview only",
   contextLabel,
   walletSlot,
   primaryAction,
+  mobileDrawerContent,
 }: FloatingEditorialNavbarProps) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -69,6 +61,7 @@ export function FloatingEditorialNavbar({
   const navLinks = useMemo(() => links ?? (variant === "marketing" ? defaultLinks : []), [links, variant]);
   const action = primaryAction === undefined ? (variant === "marketing" ? defaultPrimaryAction : null) : primaryAction;
   const currentHref = activeHref ?? observedHref;
+  const mobileMenuId = variant === "workflow" ? "workflow-navigation-menu" : "editorial-navigation-menu";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -134,15 +127,23 @@ export function FloatingEditorialNavbar({
         )}
 
         <div className="ml-auto flex shrink-0 items-center justify-end gap-2.5 sm:gap-3">
-          <span className={(variant === "marketing" ? "hidden min-[768px]:inline-flex" : "hidden min-[860px]:inline-flex") + " pr-1"}><StatusLabel label={statusLabel} compact={variant === "workflow"} /></span>
           <ThemeSelector compact />
-          {variant === "workflow" ? (walletSlot ?? <WalletControl compact />) : null}
+          {variant === "workflow" ? (
+            <>
+              {walletSlot ?? <WalletControl compact />}
+              <Button ref={menuButton} variant="secondary" className="min-w-11 px-3 lg:hidden" aria-expanded={open} aria-controls={mobileMenuId} onClick={() => setOpen(true)}>
+                <List className="size-5" aria-hidden="true" />
+                <span className="hidden min-[520px]:inline">Menu</span>
+                <span className="sr-only min-[520px]:hidden">Menu</span>
+              </Button>
+            </>
+          ) : null}
 
           {variant === "marketing" ? (
             <>
               <span className="hidden min-[1200px]:inline-flex">{walletSlot ?? <WalletControl compact />}</span>
               {action ? <Link href={action.href} className="hidden min-h-12 shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-[var(--button-primary-bg)] px-5 text-sm font-semibold text-[color:var(--button-primary-fg)] transition-[background-color,transform] duration-[var(--duration-press)] hover:bg-[var(--button-primary-hover)] active:scale-[0.98] min-[1200px]:inline-flex xl:px-6">{action.label}</Link> : null}
-              <Button ref={menuButton} variant="secondary" className="min-w-11 px-3 min-[1200px]:hidden" aria-expanded={open} aria-controls="editorial-navigation-menu" onClick={() => setOpen(true)}>
+              <Button ref={menuButton} variant="secondary" className="min-w-11 px-3 min-[1200px]:hidden" aria-expanded={open} aria-controls={mobileMenuId} onClick={() => setOpen(true)}>
                 <List className="size-5" aria-hidden="true" />
                 <span className="hidden min-[520px]:inline">Menu</span>
                 <span className="sr-only min-[520px]:hidden">Menu</span>
@@ -153,9 +154,9 @@ export function FloatingEditorialNavbar({
       </nav>
 
       {variant === "marketing" ? (
-        <Drawer open={open} title="Explore GoalGuard" onClose={close} labelledId="editorial-navigation-menu" restoreFocusRef={menuButton}>
+        <Drawer open={open} title="Explore GoalGuard" onClose={close} labelledId={mobileMenuId} restoreFocusRef={menuButton}>
           <div className="flex min-h-[calc(100dvh-10rem)] flex-col">
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-control)] bg-[var(--accent-soft)] px-4 py-2 text-[color:var(--accent-soft-foreground)]"><StatusLabel label={statusLabel} /><ThemeSelector /></div>
+            <div className="mb-5 flex flex-wrap items-center justify-end gap-3 rounded-[var(--radius-control)] bg-[var(--accent-soft)] px-4 py-2 text-[color:var(--accent-soft-foreground)]"><ThemeSelector /></div>
             <div className="grid">
               {navLinks.map((link, index) => (
                 <a key={link.href} href={link.href} onClick={() => selectAnchor(link.href)} className="flex min-h-16 items-center justify-between border-b border-[var(--border)] text-lg font-medium">
@@ -168,6 +169,19 @@ export function FloatingEditorialNavbar({
               {walletSlot ?? <WalletControl fullWidth />}
               {action ? <Link href={action.href} onClick={() => selectAnchor(action.href)} className="inline-flex min-h-12 items-center justify-center rounded-full bg-[var(--button-primary-bg)] px-6 text-sm font-semibold text-[color:var(--button-primary-fg)]">{action.label}</Link> : null}
             </div>
+          </div>
+        </Drawer>
+      ) : null}
+
+      {variant === "workflow" ? (
+        <Drawer open={open} title="Goal workspace menu" onClose={close} labelledId={mobileMenuId} restoreFocusRef={menuButton}>
+          <div className="flex min-h-[calc(100dvh-10rem)] flex-col">
+            {contextLabel ? (
+              <p className="mb-5 rounded-[var(--radius-control)] bg-[var(--accent-soft)] px-4 py-3 text-sm leading-5 text-[color:var(--accent-soft-foreground)]">{contextLabel}</p>
+            ) : null}
+            <nav aria-label="Goals" className="min-w-0">
+              {mobileDrawerContent ?? <p className="text-sm leading-6 text-[color:var(--foreground-soft)]">Your goals and connected services will appear here.</p>}
+            </nav>
           </div>
         </Drawer>
       ) : null}

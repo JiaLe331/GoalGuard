@@ -31,6 +31,7 @@ import {
 } from "./scalars";
 
 const positiveDecimal = DecimalStringSchema.refine((value) => new Decimal(value).greaterThan(0), "Expected a value greater than zero.");
+const nonNegativeDecimal = DecimalStringSchema.refine((value) => new Decimal(value).greaterThanOrEqualTo(0), "Expected a non-negative value.");
 const nonEmptyShortString = z.string().trim().min(1).max(500);
 
 export const GoalSchema = z.object({
@@ -78,6 +79,9 @@ export const ProtectionCandidateSchema = z.object({
   underlyingAsset: SupportedAssetSchema,
   optionType: OptionTypeSchema,
   settlementType: SettlementTypeSchema,
+  // Thetanuts' option-book Greek is promoted as a curated, integer basis-point
+  // value. The raw order payload remains server-only below.
+  impliedVolatilityBps: z.number().int().nonnegative().nullable(),
   strikeUsd: positiveDecimal,
   expiry: ISODateTimeSchema,
   settlementTokenAddress: EvmAddressSchema,
@@ -124,6 +128,40 @@ export const ProtectionCandidateSchema = z.object({
 // protocolRaw is deliberately an internal-only persistence field. Public API
 // responses must be built with this schema so upstream payloads cannot leak.
 export const PublicProtectionCandidateSchema = ProtectionCandidateSchema.omit({ protocolRaw: true });
+
+// A small, ephemeral view of every viable order. It deliberately excludes the
+// persistence/audit fields and the raw protocol payload. Defined here rather than beside the
+// API responses because the market snapshot entity below stores one of these per order.
+export const ProtectionChainEntrySchema = z.object({
+  protocolOrderId: z.string().trim().min(1),
+  strikeUsd: DecimalStringSchema,
+  expiry: ISODateTimeSchema,
+  premiumUsd: DecimalStringSchema,
+  estimatedFloorUsd: DecimalStringSchema,
+  impliedVolatilityBps: z.number().int().nonnegative().nullable(),
+  goalCoverageBps: z.number().int().min(0).max(10000),
+  settlementType: z.enum(["cash", "physical"]),
+  availableQuantityBaseUnits: BaseUnitStringSchema,
+  settlementTokenSymbol: z.string().trim().min(1).max(16),
+  settlementTokenDecimals: z.number().int().min(0).max(255),
+}).strict();
+export type ProtectionChainEntry = z.infer<typeof ProtectionChainEntrySchema>;
+
+/**
+ * Small worker-owned market history; raw order payloads never enter this entity.
+ * `chain` is the goal-free protection chain priced at a $100 reference notional, kept so the
+ * workspace can show a real market without first running a goal-scoped search. Nullable because
+ * rows written before the column existed have no chain, and an absent chain is not an empty one.
+ */
+export const MarketSnapshotSchema = z.object({
+  capturedAt: ISODateTimeSchema,
+  ethSpotUsd: positiveDecimal,
+  optionCount: z.number().int().nonnegative(),
+  medianIvBps: z.number().int().nonnegative().nullable(),
+  costPer100Usd30d: nonNegativeDecimal.nullable(),
+  chain: z.array(ProtectionChainEntrySchema).nullable().default(null),
+}).strict();
+export type MarketSnapshot = z.infer<typeof MarketSnapshotSchema>;
 
 export const GonkaInferenceSchema = z.object({
   schemaVersion: z.literal(1),

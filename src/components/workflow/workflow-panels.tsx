@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Drawer } from "@/components/ui/drawer";
 import { Field } from "@/components/ui/field";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { ProtectionStressTest } from "@/components/workflow/protection-stress-test";
 import { CouncilCard, CouncilRoleProgressCard, MetricCard, ScenarioComparison, UnsignedTransactionCard } from "@/components/workflow/workflow-primitives";
 import { UpdateGoalRequestSchema, type ApiMeta, type CouncilDecision, type CouncilRoleProgress, type Goal, type GoalType, type JsonValue, type PublicProtectionCandidate, type Trade, type TradePreview, type UpdateGoalRequest } from "@/lib/contracts";
 import { describeCandidateDifference, formatBaseUnits, formatCountdown, formatDate, formatPercentFromBps, formatUsd, secondsUntil, shortenAddress } from "@/lib/frontend/format";
@@ -24,7 +25,7 @@ const goalLabels: Record<GoalType, string> = {
   custom: "Custom goal",
 };
 
-const roleLabels = {
+export const roleLabels = {
   strategist: "Strategist",
   risk_auditor: "Risk Auditor",
   consumer_advocate: "Consumer Advocate",
@@ -121,11 +122,11 @@ export function GoalConfirmationForm({ goal, busy, fieldErrors, onSave, onFind }
   const describedBy = (key: string) => firstError(errors, key) ? key + "-description" : undefined;
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
+    <div className="grid gap-6 @[62rem]:grid-cols-[minmax(0,1fr)_22rem]">
       <Card className="p-5 sm:p-8 lg:p-10">
         <div className="max-w-2xl">
           <p className="section-eyebrow text-[color:var(--foreground-muted)]">Define the guardrail</p>
-          <h1 className="mt-4 text-4xl font-semibold leading-[1.02] tracking-[-0.05em] sm:text-5xl">Make the goal exact.</h1>
+          <h1 className="mt-4 text-3xl font-semibold leading-[1.02] tracking-[-0.05em] @[48rem]:text-4xl @[62rem]:text-5xl">Make the goal exact.</h1>
           <p className="mt-4 max-w-xl text-[color:var(--foreground-soft)]">Confirm the amount, deadline, and acceptable downside before GoalGuard checks a live option.</p>
         </div>
 
@@ -215,15 +216,16 @@ export function ActiveProtectionPanel({ stage, councilProgress = null, reviewSta
           <div className="absolute -bottom-44 -left-32 size-[30rem] rounded-full border-[5rem] border-[var(--accent)] opacity-15" aria-hidden="true" />
           <div className="relative">
             <StatusBadge tone="info" label="Live request active" />
-            <h1 className="mt-6 max-w-2xl text-4xl font-semibold leading-[1.02] tracking-[-0.05em] sm:text-5xl">{content[0]}</h1>
+            <h1 className="mt-6 max-w-2xl text-3xl font-semibold leading-[1.02] tracking-[-0.05em] @[48rem]:text-4xl @[62rem]:text-5xl">{content[0]}</h1>
             <p className="mt-4 max-w-xl text-base leading-7 text-[color:var(--text-on-dark-muted)]">{content[1]}</p>
             <div className="mt-6 flex items-center gap-3 text-sm" role="status">
               <HourglassHigh className="size-5 animate-pulse motion-reduce:animate-none" aria-hidden="true" />
-              Each role&rsquo;s status below reflects what Gonka has actually returned so far. No simulated percentage.
+              Each role&rsquo;s status reflects what Gonka has actually returned so far. No simulated percentage.
             </div>
           </div>
         </div>
-        <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        {/* Hidden at xl, where the persistent council rail is the single home for these cards. */}
+        <div className="mt-6 grid gap-4 sm:grid-cols-3 xl:hidden">
           {councilProgress.map((progress) => (
             <CouncilRoleProgressCard key={progress.role} progress={progress} label={roleLabels[progress.role]} elapsedSeconds={progress.status === "running" ? runningElapsedSeconds : null} />
           ))}
@@ -237,7 +239,7 @@ export function ActiveProtectionPanel({ stage, councilProgress = null, reviewSta
       <div className="absolute -bottom-44 -left-32 size-[30rem] rounded-full border-[5rem] border-[var(--accent)] opacity-15" aria-hidden="true" />
       <div className="relative flex flex-col justify-center p-7 sm:p-12 lg:p-16">
         <div><StatusBadge tone="info" label="Live request active" /></div>
-        <h1 className="mt-7 max-w-2xl text-5xl font-semibold leading-[0.98] tracking-[-0.05em] sm:text-6xl">{content[0]}</h1>
+        <h1 className="mt-7 max-w-2xl text-3xl font-semibold leading-[1.02] tracking-[-0.05em] @[48rem]:text-4xl @[62rem]:text-5xl">{content[0]}</h1>
         <p className="mt-6 max-w-xl text-base leading-7 text-[color:var(--text-on-dark-muted)]">{content[1]}</p>
         <div className="mt-9 flex items-center gap-3 text-sm" role="status"><HourglassHigh className="size-5 animate-pulse motion-reduce:animate-none" aria-hidden="true" />Waiting for a truthful backend result. No simulated percentage.</div>
       </div>
@@ -255,7 +257,7 @@ export function ActiveProtectionPanel({ stage, councilProgress = null, reviewSta
   );
 }
 
-export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, busy, walletStatus, suppressMascot = false, onContinue, onRefresh, onRetryReview, onOpenCouncil }: {
+export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, busy, walletStatus, suppressMascot = false, showScenarios = true, hoistRail = false, onContinue, onRefresh, onRetryReview, onOpenCouncil }: {
   goal: Goal;
   candidate: PublicProtectionCandidate;
   alternatives: PublicProtectionCandidate[];
@@ -263,6 +265,9 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
   busy: boolean;
   walletStatus: "connected" | "wrong-network" | "other";
   suppressMascot?: boolean;
+  showScenarios?: boolean;
+  /** On the dashboard, the xl rail owns these actions; keep the fallback aside below xl. */
+  hoistRail?: boolean;
   onContinue: () => void;
   onRefresh: () => void;
   onRetryReview: () => void;
@@ -272,7 +277,7 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
   const cta = walletStatus === "wrong-network" ? "Switch to Base" : walletStatus === "connected" ? "Continue to unsigned preview" : "Connect wallet to continue";
   const isPhysical = candidate.settlementType === "physical";
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_23rem]">
+    <div className={`grid gap-6 @[62rem]:grid-cols-[minmax(0,1fr)_23rem] ${hoistRail ? "xl:grid-cols-1" : ""}`}>
       <Card className="overflow-hidden">
         <div className="p-6 sm:p-9">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -282,7 +287,10 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
             </div>
             <span className="text-xs text-[color:var(--foreground-soft)] tabular-nums">Market {formatDate(candidate.marketAsOf, { hour: "numeric", minute: "2-digit" })}</span>
           </div>
-          <h1 className="mt-6 max-w-3xl text-4xl font-semibold leading-[1.02] tracking-[-0.055em] sm:text-6xl">A protection plan for {goalName(goal)}.</h1>
+          <Alert className="mt-5" tone={approved ? "success" : decision.status === "disputed" ? "warning" : "error"} title={`${decision.approvedReviewCount} of 3 checks passed`}>
+            {approved ? "The council approved this candidate. Review the plan facts before continuing." : decision.status === "disputed" ? "The council needs another look before this plan can continue." : "The council found a hard stop. Read the audit details before trying another option."}
+          </Alert>
+          <h1 className="mt-6 max-w-3xl text-3xl font-semibold leading-[1.05] tracking-[-0.05em] @[48rem]:text-4xl @[62rem]:text-5xl">A protection plan for {goalName(goal)}.</h1>
           <p className="mt-4 max-w-2xl text-[color:var(--foreground-soft)]">A live ETH put limits the selected downside through its displayed expiry. It does not guarantee the full goal after that time.</p>
           <p className="mt-4 max-w-2xl rounded-[var(--radius-card)] bg-[var(--surface-subtle)] p-4 text-sm leading-6 text-[color:var(--foreground-soft)]"><span className="font-semibold text-[color:var(--foreground)]">Why this plan? </span>{whyThisPlan(goal, candidate)}</p>
           <Alert className="mt-4" tone={isPhysical ? "warning" : "info"} title={isPhysical ? "This is asset-delivery protection" : "This is cash protection"}>
@@ -299,13 +307,20 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
             <MetricCard label="Ends" value={formatDate(candidate.expiry)} />
           </div>
           <Alert className="mt-5" tone={candidate.deadlineGapHours > 24 ? "warning" : "info"} title="Deadline alignment">Protection expires {candidate.deadlineGapHours} hour{candidate.deadlineGapHours === 1 ? "" : "s"} from the goal deadline. Settlement conditions apply at expiry.</Alert>
-          <section className="mt-9 rounded-[var(--radius-card)] bg-[var(--surface-subtle)] p-5 sm:p-7" aria-labelledby="scenario-title">
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--foreground-soft)]">Scenario comparison</p><h2 id="scenario-title" className="mt-2 text-3xl font-semibold tracking-[-0.045em]">What the protection changes</h2></div>
-              <p className="text-xs text-[color:var(--foreground-soft)]">Estimated net value after cost</p>
-            </div>
-            <div className="mt-6"><ScenarioComparison scenarios={candidate.scenarios} settlementType={candidate.settlementType} strikeUsd={candidate.strikeUsd} /></div>
-          </section>
+          {showScenarios ? (
+            <section className="mt-9 rounded-[var(--radius-card)] bg-[var(--surface-subtle)] p-5 sm:p-7" aria-labelledby="scenario-title">
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--foreground-soft)]">Scenario comparison</p><h2 id="scenario-title" className="mt-2 text-3xl font-semibold tracking-[-0.045em]">What the protection changes</h2></div>
+                <p className="text-xs text-[color:var(--foreground-soft)]">Estimated net value after cost</p>
+              </div>
+              <div className="mt-6"><ScenarioComparison scenarios={candidate.scenarios} settlementType={candidate.settlementType} strikeUsd={candidate.strikeUsd} /></div>
+            </section>
+          ) : null}
+          {showScenarios ? (
+            <section className="mt-6 rounded-[var(--radius-card)] bg-[var(--surface-subtle)] p-5 sm:p-7">
+              <ProtectionStressTest goal={goal} candidate={candidate} />
+            </section>
+          ) : null}
           <div className="mt-8">
             <Accordion title="Protocol facts">
               <dl className="grid gap-4 sm:grid-cols-2">
@@ -319,14 +334,18 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
           </div>
         </div>
       </Card>
-      <aside className="space-y-4">
-        <Card tone="accent" className="p-6">
+      <aside className={hoistRail ? "space-y-4 xl:hidden" : "space-y-4"}>
+        {/* Hidden at xl, where the persistent council rail already carries the verdict summary. */}
+        <Card tone="accent" className="p-6 xl:hidden">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--foreground-soft)]">Independent review</p>
-          <h2 className="mt-2 text-3xl font-semibold tracking-[-0.045em]">{decision.approvedReviewCount} of 3 checks passed</h2>
+          <h2 className="mt-2 text-3xl font-semibold tracking-[-0.045em]">Council review summary</h2>
           <p className="mt-2 text-sm leading-6 text-[color:var(--foreground-soft)]">Council attempt {decision.attempt}. Reviewers explain and challenge; deterministic financial values stay fixed.</p>
           <Button className="mt-5 w-full" variant="secondary" onClick={onOpenCouncil}>Open council review</Button>
         </Card>
         {!approved ? <div className={`grid items-center gap-2 ${suppressMascot ? "grid-cols-1" : "grid-cols-[auto_minmax(0,1fr)]"}`}>{suppressMascot ? null : <NiulaiMascot pose="safe-stop" size="sm" />}<Alert tone={decision.status === "disputed" ? "warning" : "error"} title={decision.status === "disputed" ? "Council needs another look" : "This plan cannot proceed"}>{decision.blockedReasons[0] ?? "Open the council review to see the concern before refreshing live options."}</Alert></div> : null}
+        {/* A majority-approved plan still carries the dissenting reviewer's concern: approval is
+            not a reason to hide the doubt that a minority of the council put on record. */}
+        {approved && decision.blockedReasons.length ? <Alert tone="warning" title="Noted by a dissenting reviewer">{decision.blockedReasons.join(" ")}</Alert> : null}
         <div className="grid gap-3">
           <Button onClick={onContinue} disabled={!approved || busy}>{cta}<ArrowRight aria-hidden="true" /></Button>
           {decision.status === "disputed" ? <Button variant="secondary" onClick={onRetryReview} disabled={busy}>Ask the council to re-review this candidate</Button> : null}
@@ -345,7 +364,7 @@ export function CouncilDrawer({ decision, open, onClose }: { decision: CouncilDe
         <p className="min-w-0 text-sm leading-6 text-[color:var(--foreground-soft)]">Three Gonka roles independently check plan fit, risk, and clarity. Their request IDs make the review traceable.</p>
       </div>
       <div className="grid gap-4">{decision.reviews.map((review) => <CouncilCard key={review.id} review={review} label={roleLabels[review.role]} />)}</div>
-      <div className="mt-5"><Alert tone={decision.status === "approved" ? "success" : decision.status === "disputed" ? "warning" : "error"} title={"Council result: " + decision.status}>{decision.status === "approved" ? "All " + decision.approvedReviewCount + " checks approved this plan." : decision.blockedReasons.length ? decision.blockedReasons.join(" ") : decision.approvedReviewCount + " of 3 checks approved this plan; the rest raised concerns."}</Alert></div>
+      <div className="mt-5"><Alert tone={decision.status === "approved" ? "success" : decision.status === "disputed" ? "warning" : "error"} title={"Council result: " + decision.status}>{decision.status === "approved" ? (decision.approvedReviewCount === 3 ? "All 3 checks approved this plan." : decision.approvedReviewCount + " of 3 checks approved this plan; the concern raised by the remaining reviewer stays on the record.") : decision.blockedReasons.length ? decision.blockedReasons.join(" ") : decision.approvedReviewCount + " of 3 checks approved this plan; the rest raised concerns."}</Alert></div>
     </Drawer>
   );
 }
@@ -372,7 +391,7 @@ export function PreviewConfirmationPanel({ goal, candidate, walletAddress, ackno
             <StatusBadge label="Final review · no wallet signature" tone="info" />
             <StatusBadge tone={isPhysical ? "warning" : "info"} label={isPhysical ? "Asset-Delivery Protection" : "Cash Protection"} />
           </div>
-          <h1 className="mt-5 text-4xl font-semibold leading-[1.02] tracking-[-0.05em] sm:text-5xl">Confirm the facts before generating an unsigned preview.</h1>
+          <h1 className="mt-5 text-3xl font-semibold leading-[1.02] tracking-[-0.05em] @[48rem]:text-4xl @[62rem]:text-5xl">Confirm the facts before generating an unsigned preview.</h1>
           <p className="mt-3 max-w-3xl text-[color:var(--foreground-soft)]">Back makes no API change. Generate calls the preview endpoint once and returns transaction data for inspection only.</p>
         </div>
         <NiulaiMascot key={acknowledged ? "acknowledged" : "unacknowledged"} pose="attentive" active={acknowledged} size="sm" className="-mr-2 sm:mr-0" />
@@ -428,7 +447,7 @@ export function DemoPreviewReadyPanel({ goal, preview, meta, decision, onStartAn
   const proportional = preview.candidate.coverageMode === "proportional_demo";
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
+    <div className="grid gap-6 @[62rem]:grid-cols-[minmax(0,1fr)_24rem]">
       <Card tone="white" className="overflow-hidden">
         <div className="relative min-h-[22rem] overflow-hidden bg-[var(--surface-strong)] p-6 text-[color:var(--foreground-on-strong)] sm:p-10 min-[700px]:min-h-[24rem]">
           <div data-niulai-copy="demo-ready" className="relative z-10 min-[700px]:max-w-[calc(100%_-_13rem)]">
@@ -436,7 +455,7 @@ export function DemoPreviewReadyPanel({ goal, preview, meta, decision, onStartAn
               <StatusBadge label={expired ? "Preview expired" : "Demo preview ready"} tone={expired ? "warning" : "ready"} />
               {proportional ? <StatusBadge label="Proportional micro-hedge demo" tone="warning" /> : null}
             </div>
-            <h1 className="mt-5 text-4xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl">Protection Plan Ready <span className="text-[color:var(--accent)]">(Demo)</span></h1>
+            <h1 className="mt-5 text-3xl font-semibold leading-[1.02] tracking-[-0.05em] @[48rem]:text-4xl @[62rem]:text-5xl">Protection Plan Ready <span className="text-[color:var(--accent)]">(Demo)</span></h1>
             <p className="mt-4 text-lg font-semibold">No funds moved; no protected position was created</p>
             <p className="mt-2 max-w-3xl text-[color:var(--foreground-on-strong-muted)]">This is a time-limited, unsigned snapshot of the approved plan and wallet requirements.</p>
           </div>

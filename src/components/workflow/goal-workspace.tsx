@@ -7,10 +7,17 @@ import { Alert } from "@/components/ui/alert";
 import { FloatingEditorialNavbar } from "@/components/navigation/floating-editorial-navbar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Drawer } from "@/components/ui/drawer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WalletControl } from "@/components/wallet/wallet-control";
 import { useWallet } from "@/components/wallet/wallet-provider";
-import { StageShell } from "@/components/workflow/workflow-primitives";
+import { CouncilRail } from "@/components/dashboard/council-rail";
+import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { GoalRail } from "@/components/dashboard/goal-rail";
+import { CenterTabPanel, CenterTabs, type CenterTab } from "@/components/dashboard/center-tabs";
+import { AuditTabPanel, CandidateReviewPanel, InlineWorkflowError, ScenarioTabPanel } from "@/components/dashboard/center-tab-panels";
+import { MarketOverview } from "@/components/market/market-overview";
+import { ProtectionMarketPanel } from "@/components/market/protection-market-panel";
 import {
   ActiveProtectionPanel,
   CouncilDrawer,
@@ -19,14 +26,14 @@ import {
   PreviewConfirmationPanel,
   ProtectionPlanPanel,
   ReadOnlyTradePanel,
-  WorkflowErrorPanel,
 } from "@/components/workflow/workflow-panels";
 import type { CouncilRoleProgress, UpdateGoalRequest } from "@/lib/contracts";
+import type { DemoGoalSummary } from "@/components/dashboard/goal-rail";
 import { ApiClientError, goalGuardApi } from "@/lib/frontend/api-client";
 import {
   clearPreviewRetry,
-  readActiveGoalId,
   readPreviewRetry,
+  saveRecentGoal,
   savePreviewRetry,
   storageKeys,
 } from "@/lib/frontend/storage";
@@ -47,7 +54,7 @@ function stagePresentation(stage: WorkflowStage) {
   return { step: 1, eyebrow: "Safe stop", title: "GoalGuard needs your attention" };
 }
 
-export function GoalWorkspace({ goalId }: { goalId: string }) {
+export function GoalWorkspace({ goalId = null, demoGoal = null }: { goalId?: string | null; demoGoal?: DemoGoalSummary | null }) {
   const router = useRouter();
   const wallet = useWallet();
   const [state, dispatch] = useReducer(workflowReducer, initialWorkflowState);
@@ -55,6 +62,9 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
   const [busy, setBusy] = useState(false);
   const [councilOpen, setCouncilOpen] = useState(false);
   const [councilProgress, setCouncilProgress] = useState<CouncilRoleProgress[] | null>(null);
+  // Market is the persistent starting view. Workflow actions move focus to Plan when the user
+  // starts a guarded step, so the next required action remains easy to find.
+  const [centerTab, setCenterTab] = useState<CenterTab>("market");
   // Client wall-clock fallback for "how long has the running role been running", used only until
   // that role's own server-derived startedAt is available.
   const [reviewStartedAt, setReviewStartedAt] = useState<number | null>(null);
@@ -63,15 +73,20 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
   const previewRequest = useRef<AbortController | null>(null);
 
   const fail = useCallback((reason: unknown, returnStage: WorkflowStage) => {
+    setCenterTab("plan");
     dispatch({ type: "error", error: workflowError(reason, returnStage) });
   }, []);
 
   const hydrate = useCallback(async (signal?: AbortSignal) => {
-    if (readActiveGoalId() !== goalId) {
-      fail(new ApiClientError("This goal is not available in this browser.", "NOT_FOUND", false), "new_goal");
+    // The goal-free workspace (/dashboard) has nothing to hydrate: the market board and the rails
+    // stand on their own, and a goal only arrives once the visitor creates or opens one.
+    if (goalId === null) {
       setHydrating(false);
       return;
     }
+    // Ownership is decided by the server's session cookie, not by this browser's localStorage.
+    // An earlier localStorage gate here rejected goals the server would happily have returned --
+    // a cleared cache or a shared link became "not available in this browser".
     try {
       const response = await goalGuardApi.getGoal(goalId, signal);
       dispatch({ type: "hydrate", response });
@@ -92,6 +107,19 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
   useEffect(() => {
     if (!hydrating) focusTarget.current?.focus({ preventScroll: true });
   }, [hydrating, state.stage]);
+
+  useEffect(() => {
+    const goal = state.goal;
+    if (!goal) return;
+    saveRecentGoal({
+      id: goal.id,
+      createdAt: goal.createdAt,
+      goalType: goal.goalType,
+      customGoalLabel: goal.customGoalLabel,
+      protectedValueUsd: goal.protectedValueUsd,
+      status: goal.status,
+    });
+  }, [state.goal]);
 
   // Polls the real, already-committed per-role gonka_inferences rows (see
   // /api/council/review/status) while the council review is in flight, so the loading screen can
@@ -137,6 +165,7 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
   }, [state.stage, wallet.address, wallet.chainId]);
 
   const saveGoal = useCallback(async (value: UpdateGoalRequest) => {
+    if (goalId === null) return;
     setBusy(true);
     try {
       const response = await goalGuardApi.updateGoal(goalId, value);
@@ -146,6 +175,7 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
   }, [fail, goalId]);
 
   const findAndReview = useCallback(async (value?: UpdateGoalRequest, refresh = false) => {
+    if (goalId === null) return;
     setBusy(true);
     try {
       let goal = state.goal;
@@ -155,11 +185,12 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
         dispatch({ type: "goal_updated", goal });
       }
       if (!goal) throw new ApiClientError("The goal must be saved before searching.", "GOAL_INCOMPLETE", false);
+      setCenterTab("plan");
       dispatch({ type: "search_started" });
       const candidateResponse = await goalGuardApi.generateCandidates({ goalId, refresh });
       const selected = candidateResponse.data.candidates.find((candidate) => candidate.id === candidateResponse.data.selectedCandidateId);
       if (!selected) throw new ApiClientError("No live option safely matched these limits.", "NO_SUITABLE_CANDIDATE", true, {}, candidateResponse.meta.requestId, candidateResponse.data.rejected);
-      dispatch({ type: "candidates_found", goal: candidateResponse.data.goal, candidates: candidateResponse.data.candidates, selected });
+      dispatch({ type: "candidates_found", goal: candidateResponse.data.goal, candidates: candidateResponse.data.candidates, selected, market: { chain: candidateResponse.data.chain, rejected: candidateResponse.data.rejected, ethSpotUsd: candidateResponse.data.ethSpotUsd, marketAsOf: candidateResponse.data.marketAsOf } });
       dispatch({ type: "review_started" });
       const review = await goalGuardApi.reviewCandidate({ goalId, candidateId: selected.id });
       dispatch({ type: "review_completed", goal: review.data.goal, candidate: review.data.candidate, decision: review.data.decision });
@@ -170,7 +201,7 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
   }, [fail, goalId, state.goal, state.selectedCandidate]);
 
   const retryReview = useCallback(async () => {
-    if (!state.selectedCandidate) return;
+    if (goalId === null || !state.selectedCandidate) return;
     setBusy(true);
     dispatch({ type: "review_started" });
     try {
@@ -219,14 +250,25 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
     router.push("/goals/new");
   }
 
+  // The shared demo goal is readable by any visitor but owned by one session, so its write
+  // actions would 404 for everyone else. Hide them rather than offer a button that cannot work.
+  const demoReadOnly = demoGoal !== null && demoGoal.id === goalId;
+
   const presentation = stagePresentation(state.stage);
-  const renderStage = () => {
+  const renderStage = (surface: "center" | "drawer" = "center") => {
+    if (surface === "drawer") {
+      if (state.stage === "confirming_preview" && state.goal && state.selectedCandidate && wallet.address) {
+        return <PreviewConfirmationPanel goal={state.goal} candidate={state.selectedCandidate} walletAddress={wallet.address} acknowledged={state.previewAcknowledged} physicalSettlementAcknowledged={state.physicalSettlementAcknowledged} busy={busy} onAcknowledged={(acknowledged) => dispatch({ type: "preview_acknowledgment_changed", acknowledged })} onPhysicalSettlementAcknowledged={(acknowledged) => dispatch({ type: "physical_settlement_acknowledgment_changed", acknowledged })} onBack={() => { previewWallet.current = null; dispatch({ type: "preview_confirmation_cancelled" }); }} onGenerate={() => void generatePreview()} />;
+      }
+      if (state.stage === "generating_preview") return <ActiveProtectionPanel stage="generating_preview" />;
+      return null;
+    }
     if (hydrating) return <Card className="mx-auto max-w-5xl p-6 sm:p-9"><Skeleton className="h-5 w-32" /><Skeleton className="mt-5 h-14 w-3/4" /><div className="mt-8 grid gap-3 sm:grid-cols-3"><Skeleton className="h-28" /><Skeleton className="h-28" /><Skeleton className="h-28" /></div></Card>;
-    if (state.error && ["recoverable_error", "terminal_error"].includes(state.stage)) return <WorkflowErrorPanel error={state.error} onRetry={() => { const target = state.error?.returnStage; dispatch({ type: "clear_error" }); if (target === "plan_approved" && state.selectedCandidate) void retryReview(); }} onEdit={() => { if (state.goal) dispatch({ type: "goal_updated", goal: state.goal }); else router.push("/goals/new"); }} />;
+    if (state.error && ["recoverable_error", "terminal_error"].includes(state.stage)) return <InlineWorkflowError error={state.error} onRetry={() => { const target = state.error?.returnStage; dispatch({ type: "clear_error" }); if (target === "plan_approved" && state.selectedCandidate) void retryReview(); }} onEdit={() => { if (state.goal) dispatch({ type: "goal_updated", goal: state.goal }); else router.push("/goals/new"); }} />;
     if (state.stage === "confirming_goal" && state.goal) return <GoalConfirmationForm goal={state.goal} busy={busy} fieldErrors={state.error?.fieldErrors ?? {}} onSave={saveGoal} onFind={(value) => void findAndReview(value)} />;
-    if (["searching_candidates", "reviewing_candidate", "generating_preview"].includes(state.stage)) return <ActiveProtectionPanel stage={state.stage as "searching_candidates" | "reviewing_candidate" | "generating_preview"} councilProgress={councilProgress} reviewStartedAt={reviewStartedAt} />;
-    if (["plan_approved", "plan_disputed", "plan_blocked"].includes(state.stage) && state.goal && state.selectedCandidate && state.decision) return <ProtectionPlanPanel goal={state.goal} candidate={state.selectedCandidate} alternatives={state.candidates.filter((candidate) => candidate.id !== state.selectedCandidate?.id)} decision={state.decision} busy={busy} walletStatus={wallet.status === "connected" ? "connected" : wallet.status === "wrong-network" ? "wrong-network" : "other"} suppressMascot={councilOpen} onContinue={() => void beginPreview()} onRefresh={() => void findAndReview(undefined, true)} onRetryReview={() => void retryReview()} onOpenCouncil={() => setCouncilOpen(true)} />;
-    if (state.stage === "confirming_preview" && state.goal && state.selectedCandidate && wallet.address) return <PreviewConfirmationPanel goal={state.goal} candidate={state.selectedCandidate} walletAddress={wallet.address} acknowledged={state.previewAcknowledged} physicalSettlementAcknowledged={state.physicalSettlementAcknowledged} busy={busy} onAcknowledged={(acknowledged) => dispatch({ type: "preview_acknowledgment_changed", acknowledged })} onPhysicalSettlementAcknowledged={(acknowledged) => dispatch({ type: "physical_settlement_acknowledgment_changed", acknowledged })} onBack={() => { previewWallet.current = null; dispatch({ type: "preview_confirmation_cancelled" }); }} onGenerate={() => void generatePreview()} />;
+    if (state.stage === "reviewing_candidate" && state.goal && state.selectedCandidate) return <CandidateReviewPanel goal={state.goal} candidate={state.selectedCandidate} />;
+    if (["searching_candidates", "reviewing_candidate"].includes(state.stage)) return <ActiveProtectionPanel stage={state.stage as "searching_candidates" | "reviewing_candidate"} councilProgress={councilProgress} reviewStartedAt={reviewStartedAt} />;
+    if (["plan_approved", "plan_disputed", "plan_blocked", "confirming_preview", "generating_preview"].includes(state.stage) && state.goal && state.selectedCandidate && state.decision) return <ProtectionPlanPanel goal={state.goal} candidate={state.selectedCandidate} alternatives={state.candidates.filter((candidate) => candidate.id !== state.selectedCandidate?.id)} decision={state.decision} busy={busy} walletStatus={wallet.status === "connected" ? "connected" : wallet.status === "wrong-network" ? "wrong-network" : "other"} suppressMascot={councilOpen} showScenarios={false} hoistRail onContinue={() => void beginPreview()} onRefresh={() => void findAndReview(undefined, true)} onRetryReview={() => void retryReview()} onOpenCouncil={() => setCouncilOpen(true)} />;
     if (state.stage === "demo_preview_ready" && state.goal && state.preview && state.previewMeta && state.decision) return <DemoPreviewReadyPanel goal={state.goal} preview={state.preview} meta={state.previewMeta} decision={state.decision} onStartAnother={startAnother} onFreshPreview={() => dispatch({ type: "preview_invalidated", notice: "The previous preview expired. Confirm a fresh snapshot from the approved plan." })} />;
     if (state.stage === "read_only_trade" && state.goal && state.trade) return <ReadOnlyTradePanel goal={state.goal} trade={state.trade} onStartAnother={startAnother} />;
     return <Card className="mx-auto max-w-2xl p-8 text-center"><h1 className="text-4xl font-semibold tracking-[-0.05em]">Goal not available</h1><p className="mt-3 text-[color:var(--foreground-soft)]">Return home and start a new goal in this browser session.</p><Button className="mt-6" onClick={() => router.push("/")}>Return home</Button></Card>;
@@ -235,14 +277,49 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
   return (
     <main className="min-h-screen bg-[var(--background)] pb-12">
       <a href="#workflow-content" className="skip-link">Skip to current step</a>
-      <FloatingEditorialNavbar variant="workflow" contextLabel={`${presentation.eyebrow} · ${presentation.title}`} walletSlot={<WalletControl compact />} />
-      <div id="workflow-content" ref={focusTarget} tabIndex={-1} className="outline-none">
-        <StageShell {...presentation}>
+      <FloatingEditorialNavbar
+        variant="workflow"
+        contextLabel={state.goal ? `${presentation.eyebrow} · ${presentation.title}` : "Protection workspace · Live market"}
+        walletSlot={<WalletControl compact />}
+        mobileDrawerContent={<GoalRail goal={state.goal} demoGoal={demoGoal} />}
+      />
+      <DashboardShell
+        left={<GoalRail goal={state.goal} demoGoal={demoGoal} />}
+        right={<CouncilRail stage={state.stage} councilProgress={councilProgress} reviewStartedAt={reviewStartedAt} decision={state.decision} planStale={state.planStale} goal={state.goal} candidate={state.selectedCandidate} busy={busy} readOnly={demoReadOnly} walletStatus={wallet.status === "connected" ? "connected" : wallet.status === "wrong-network" ? "wrong-network" : "other"} onContinue={() => void beginPreview()} onRefresh={() => void findAndReview(undefined, true)} onRetryReview={() => void retryReview()} onOpenCouncil={() => setCouncilOpen(true)} />}
+      >
+        <div id="workflow-content" ref={focusTarget} tabIndex={-1} data-focus-target="programmatic" className="outline-none">
+          <div className="sr-only"><p>{presentation.eyebrow}</p><h1>{presentation.title}</h1></div>
           {state.notice ? <Alert className="mb-5" tone="info" title="Safety note">{state.notice}</Alert> : null}
-          {renderStage()}
-        </StageShell>
-      </div>
+          <CenterTabs activeTab={centerTab} onTabChange={setCenterTab} />
+          <div className="mt-5">
+            <CenterTabPanel tab="market" activeTab={centerTab}>
+              {/* A goal-scoped search re-prices the chain against the real protected value; until
+                  then the goal-free board is the honest, and far more useful, default. */}
+              {state.market && state.goal
+                ? <MarketOverview goal={state.goal} market={state.market} selectedCandidate={state.selectedCandidate} stale={state.planStale} />
+                : <ProtectionMarketPanel onCreateGoal={() => router.push("/goals/new")} />}
+            </CenterTabPanel>
+            <CenterTabPanel tab="plan" activeTab={centerTab}>{renderStage()}</CenterTabPanel>
+            <CenterTabPanel tab="scenarios" activeTab={centerTab}><ScenarioTabPanel goal={state.goal} candidate={state.selectedCandidate} onOpenPlan={() => setCenterTab("plan")} /></CenterTabPanel>
+            <CenterTabPanel tab="audit" activeTab={centerTab}><AuditTabPanel goal={state.goal} candidate={state.selectedCandidate} decision={state.decision} trade={state.trade} stale={state.planStale} onOpenPlan={() => setCenterTab("plan")} /></CenterTabPanel>
+          </div>
+        </div>
+      </DashboardShell>
       {state.decision ? <CouncilDrawer decision={state.decision} open={councilOpen} onClose={() => setCouncilOpen(false)} /> : null}
+      <Drawer
+        open={state.stage === "confirming_preview" || state.stage === "generating_preview"}
+        title={state.stage === "generating_preview" ? "Preview progress" : "Confirm unsigned preview"}
+        labelledId="preview-confirmation-drawer"
+        closeInstantly
+        restoreFocusRef={focusTarget}
+        onClose={() => {
+          if (state.stage !== "confirming_preview") return;
+          previewWallet.current = null;
+          dispatch({ type: "preview_confirmation_cancelled" });
+        }}
+      >
+        {renderStage("drawer")}
+      </Drawer>
     </main>
   );
 }
