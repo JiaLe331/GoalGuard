@@ -13,6 +13,7 @@ import { useWallet } from "@/components/wallet/wallet-provider";
 import { CouncilRail } from "@/components/dashboard/council-rail";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { GoalRail } from "@/components/dashboard/goal-rail";
+import { MarketOverview } from "@/components/market/market-overview";
 import { StageProgress } from "@/components/workflow/workflow-primitives";
 import {
   ActiveProtectionPanel,
@@ -162,7 +163,7 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
       const candidateResponse = await goalGuardApi.generateCandidates({ goalId, refresh });
       const selected = candidateResponse.data.candidates.find((candidate) => candidate.id === candidateResponse.data.selectedCandidateId);
       if (!selected) throw new ApiClientError("No live option safely matched these limits.", "NO_SUITABLE_CANDIDATE", true, {}, candidateResponse.meta.requestId, candidateResponse.data.rejected);
-      dispatch({ type: "candidates_found", goal: candidateResponse.data.goal, candidates: candidateResponse.data.candidates, selected });
+      dispatch({ type: "candidates_found", goal: candidateResponse.data.goal, candidates: candidateResponse.data.candidates, selected, market: { chain: candidateResponse.data.chain, rejected: candidateResponse.data.rejected, ethSpotUsd: candidateResponse.data.ethSpotUsd, marketAsOf: candidateResponse.data.marketAsOf } });
       dispatch({ type: "review_started" });
       const review = await goalGuardApi.reviewCandidate({ goalId, candidateId: selected.id });
       dispatch({ type: "review_completed", goal: review.data.goal, candidate: review.data.candidate, decision: review.data.decision });
@@ -247,7 +248,8 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
         <div id="workflow-content" ref={focusTarget} tabIndex={-1} data-focus-target="programmatic" className="outline-none">
           <div className="sr-only"><p>{presentation.eyebrow}</p><h1>{presentation.title}</h1></div>
           {state.notice ? <Alert className="mb-5" tone="info" title="Safety note">{state.notice}</Alert> : null}
-          {renderStage()}
+          {state.market && state.goal ? <MarketOverview goal={state.goal} market={state.market} selectedCandidate={state.selectedCandidate} stale={state.planStale} /> : null}
+          {state.market ? <div className="mt-6">{renderStage()}</div> : renderStage()}
         </div>
       </DashboardShell>
       {state.decision ? <CouncilDrawer decision={state.decision} open={councilOpen} onClose={() => setCouncilOpen(false)} /> : null}

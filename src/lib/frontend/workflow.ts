@@ -6,6 +6,8 @@ import type {
   GoalDraft,
   JsonValue,
   PreviewTradeResponse,
+  CandidateRejection,
+  ProtectionChainEntry,
   PublicProtectionCandidate,
   Trade,
   TradePreview,
@@ -42,6 +44,7 @@ export interface WorkflowState {
   goal: Goal | null;
   draft: GoalDraft;
   candidates: PublicProtectionCandidate[];
+  market: MarketContext | null;
   selectedCandidate: PublicProtectionCandidate | null;
   decision: CouncilDecision | null;
   preview: TradePreview | null;
@@ -57,11 +60,19 @@ export interface WorkflowState {
   planStale: boolean;
 }
 
+export interface MarketContext {
+  chain: ProtectionChainEntry[];
+  rejected: CandidateRejection[];
+  ethSpotUsd: string;
+  marketAsOf: string;
+}
+
 export const initialWorkflowState: WorkflowState = {
   stage: "new_goal",
   goal: null,
   draft: {},
   candidates: [],
+  market: null,
   selectedCandidate: null,
   decision: null,
   preview: null,
@@ -78,7 +89,7 @@ export type WorkflowAction =
   | { type: "hydrate"; response: GetGoalResponse }
   | { type: "goal_updated"; goal: Goal }
   | { type: "search_started" }
-  | { type: "candidates_found"; goal: Goal; candidates: PublicProtectionCandidate[]; selected: PublicProtectionCandidate }
+  | { type: "candidates_found"; goal: Goal; candidates: PublicProtectionCandidate[]; selected: PublicProtectionCandidate; market: MarketContext }
   | { type: "review_started" }
   | { type: "review_completed"; goal: Goal; candidate: PublicProtectionCandidate; decision: CouncilDecision }
   | { type: "preview_confirmation_started" }
@@ -141,7 +152,7 @@ export function workflowReducer(state: WorkflowState, action: WorkflowAction): W
     case "search_started":
       return { ...state, stage: "searching_candidates", error: null, notice: null, preview: null, previewMeta: null, previewAcknowledged: false, physicalSettlementAcknowledged: false };
     case "candidates_found":
-      return { ...state, goal: action.goal, candidates: action.candidates, selectedCandidate: action.selected, error: null, planStale: false };
+      return { ...state, goal: action.goal, candidates: action.candidates, selectedCandidate: action.selected, market: action.market, error: null, planStale: false };
     case "review_started":
       return { ...state, stage: "reviewing_candidate", error: null };
     case "review_completed":

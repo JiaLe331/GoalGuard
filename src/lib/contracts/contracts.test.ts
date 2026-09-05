@@ -6,6 +6,7 @@ import {
   CouncilDecisionSchema,
   DecimalStringSchema,
   GoalSchema,
+  GenerateCandidatesResponseSchema,
   GenerateCandidatesRequestSchema,
   IntegrationStatusResponseSchema,
   ProtectionCandidateSchema,
@@ -14,7 +15,7 @@ import {
   SignedDecimalStringSchema,
   UpdateGoalRequestSchema,
 } from "@/lib/contracts";
-import { fixtureCandidate, previewTradeResponse } from "@/test/fixtures/goalguard";
+import { fixtureCandidate, generateCandidatesResponse, previewTradeResponse } from "@/test/fixtures/goalguard";
 
 const now = "2026-08-31T12:00:00.000Z";
 const ids = {
@@ -108,6 +109,12 @@ describe("canonical entity contracts", () => {
 });
 
 describe("API envelopes", () => {
+  it("accepts the full ranked market context without exposing raw protocol data", () => {
+    const parsed = GenerateCandidatesResponseSchema.parse(generateCandidatesResponse);
+    expect(parsed.data.chain).toHaveLength(1);
+    expect(parsed.data.ethSpotUsd).toBe("3000");
+  });
+
   it("redacts protocolRaw from public candidates and rejects attempts to add it back", () => {
     const { protocolRaw, ...publicFields } = fixtureCandidate;
     void protocolRaw;
