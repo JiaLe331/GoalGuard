@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { RecentGoalsList } from "@/components/goals/recent-goals-list";
 import { IntegrationStatus } from "@/components/integrations/integration-status";
+import { MarketStrip } from "@/components/market/market-strip";
 import { StatusBadge } from "@/components/ui/status-badge";
 import type { Goal, GoalType } from "@/lib/contracts";
 import { formatUsd } from "@/lib/frontend/format";
@@ -49,7 +50,9 @@ export function GoalRail({ goal }: { goal: Goal | null }) {
         </section>
       ) : null}
 
-      <RecentGoalsList />
+      <RecentGoalsList activeGoalId={goal?.id ?? null} activeGoalStatus={goal?.status ?? null} />
+
+      <MarketStrip />
 
       <IntegrationStatus compact />
     </div>

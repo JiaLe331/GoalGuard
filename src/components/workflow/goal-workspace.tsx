@@ -33,6 +33,7 @@ import {
   clearPreviewRetry,
   readActiveGoalId,
   readPreviewRetry,
+  saveRecentGoal,
   savePreviewRetry,
   storageKeys,
 } from "@/lib/frontend/storage";
@@ -102,6 +103,19 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
   useEffect(() => {
     if (!hydrating) focusTarget.current?.focus({ preventScroll: true });
   }, [hydrating, state.stage]);
+
+  useEffect(() => {
+    const goal = state.goal;
+    if (!goal) return;
+    saveRecentGoal({
+      id: goal.id,
+      createdAt: goal.createdAt,
+      goalType: goal.goalType,
+      customGoalLabel: goal.customGoalLabel,
+      protectedValueUsd: goal.protectedValueUsd,
+      status: goal.status,
+    });
+  }, [state.goal]);
 
   // Polls the real, already-committed per-role gonka_inferences rows (see
   // /api/council/review/status) while the council review is in flight, so the loading screen can
@@ -244,7 +258,7 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
     if (state.stage === "confirming_goal" && state.goal) return <GoalConfirmationForm goal={state.goal} busy={busy} fieldErrors={state.error?.fieldErrors ?? {}} onSave={saveGoal} onFind={(value) => void findAndReview(value)} />;
     if (state.stage === "reviewing_candidate" && state.goal && state.selectedCandidate) return <CandidateReviewPanel goal={state.goal} candidate={state.selectedCandidate} />;
     if (["searching_candidates", "reviewing_candidate"].includes(state.stage)) return <ActiveProtectionPanel stage={state.stage as "searching_candidates" | "reviewing_candidate"} councilProgress={councilProgress} reviewStartedAt={reviewStartedAt} />;
-    if (["plan_approved", "plan_disputed", "plan_blocked", "confirming_preview", "generating_preview"].includes(state.stage) && state.goal && state.selectedCandidate && state.decision) return <ProtectionPlanPanel goal={state.goal} candidate={state.selectedCandidate} alternatives={state.candidates.filter((candidate) => candidate.id !== state.selectedCandidate?.id)} decision={state.decision} busy={busy} walletStatus={wallet.status === "connected" ? "connected" : wallet.status === "wrong-network" ? "wrong-network" : "other"} suppressMascot={councilOpen} showScenarios={false} onContinue={() => void beginPreview()} onRefresh={() => void findAndReview(undefined, true)} onRetryReview={() => void retryReview()} onOpenCouncil={() => setCouncilOpen(true)} />;
+    if (["plan_approved", "plan_disputed", "plan_blocked", "confirming_preview", "generating_preview"].includes(state.stage) && state.goal && state.selectedCandidate && state.decision) return <ProtectionPlanPanel goal={state.goal} candidate={state.selectedCandidate} alternatives={state.candidates.filter((candidate) => candidate.id !== state.selectedCandidate?.id)} decision={state.decision} busy={busy} walletStatus={wallet.status === "connected" ? "connected" : wallet.status === "wrong-network" ? "wrong-network" : "other"} suppressMascot={councilOpen} showScenarios={false} hoistRail onContinue={() => void beginPreview()} onRefresh={() => void findAndReview(undefined, true)} onRetryReview={() => void retryReview()} onOpenCouncil={() => setCouncilOpen(true)} />;
     if (state.stage === "demo_preview_ready" && state.goal && state.preview && state.previewMeta && state.decision) return <DemoPreviewReadyPanel goal={state.goal} preview={state.preview} meta={state.previewMeta} decision={state.decision} onStartAnother={startAnother} onFreshPreview={() => dispatch({ type: "preview_invalidated", notice: "The previous preview expired. Confirm a fresh snapshot from the approved plan." })} />;
     if (state.stage === "read_only_trade" && state.goal && state.trade) return <ReadOnlyTradePanel goal={state.goal} trade={state.trade} onStartAnother={startAnother} />;
     return <Card className="mx-auto max-w-2xl p-8 text-center"><h1 className="text-4xl font-semibold tracking-[-0.05em]">Goal not available</h1><p className="mt-3 text-[color:var(--foreground-soft)]">Return home and start a new goal in this browser session.</p><Button className="mt-6" onClick={() => router.push("/")}>Return home</Button></Card>;
@@ -261,7 +275,7 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
       />
       <DashboardShell
         left={<GoalRail goal={state.goal} />}
-        right={<CouncilRail stage={state.stage} councilProgress={councilProgress} reviewStartedAt={reviewStartedAt} decision={state.decision} planStale={state.planStale} onOpenCouncil={() => setCouncilOpen(true)} />}
+        right={<CouncilRail stage={state.stage} councilProgress={councilProgress} reviewStartedAt={reviewStartedAt} decision={state.decision} planStale={state.planStale} goal={state.goal} candidate={state.selectedCandidate} busy={busy} walletStatus={wallet.status === "connected" ? "connected" : wallet.status === "wrong-network" ? "wrong-network" : "other"} onContinue={() => void beginPreview()} onRefresh={() => void findAndReview(undefined, true)} onRetryReview={() => void retryReview()} onOpenCouncil={() => setCouncilOpen(true)} />}
         progress={<StageProgress step={presentation.step} />}
       >
         <div id="workflow-content" ref={focusTarget} tabIndex={-1} data-focus-target="programmatic" className="outline-none">

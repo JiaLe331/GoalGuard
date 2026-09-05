@@ -256,7 +256,7 @@ export function ActiveProtectionPanel({ stage, councilProgress = null, reviewSta
   );
 }
 
-export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, busy, walletStatus, suppressMascot = false, showScenarios = true, onContinue, onRefresh, onRetryReview, onOpenCouncil }: {
+export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, busy, walletStatus, suppressMascot = false, showScenarios = true, hoistRail = false, onContinue, onRefresh, onRetryReview, onOpenCouncil }: {
   goal: Goal;
   candidate: PublicProtectionCandidate;
   alternatives: PublicProtectionCandidate[];
@@ -265,6 +265,8 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
   walletStatus: "connected" | "wrong-network" | "other";
   suppressMascot?: boolean;
   showScenarios?: boolean;
+  /** On the dashboard, the xl rail owns these actions; keep the fallback aside below xl. */
+  hoistRail?: boolean;
   onContinue: () => void;
   onRefresh: () => void;
   onRetryReview: () => void;
@@ -274,7 +276,7 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
   const cta = walletStatus === "wrong-network" ? "Switch to Base" : walletStatus === "connected" ? "Continue to unsigned preview" : "Connect wallet to continue";
   const isPhysical = candidate.settlementType === "physical";
   return (
-    <div className="grid gap-6 @[62rem]:grid-cols-[minmax(0,1fr)_23rem]">
+    <div className={`grid gap-6 @[62rem]:grid-cols-[minmax(0,1fr)_23rem] ${hoistRail ? "xl:grid-cols-1" : ""}`}>
       <Card className="overflow-hidden">
         <div className="p-6 sm:p-9">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -326,7 +328,7 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
           </div>
         </div>
       </Card>
-      <aside className="space-y-4">
+      <aside className={hoistRail ? "space-y-4 xl:hidden" : "space-y-4"}>
         {/* Hidden at xl, where the persistent council rail already carries the verdict summary. */}
         <Card tone="accent" className="p-6 xl:hidden">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--foreground-soft)]">Independent review</p>

@@ -3,7 +3,7 @@ import { ZeroAddress, isAddress } from "ethers";
 
 import { MarketSnapshotSchema, type MarketSnapshot, type ProtectionChainEntry } from "@/lib/contracts";
 import { deriveProtectionIndex } from "@/lib/thetanuts/protection-index";
-import { fetchEthPutOrders, parseThetanutsMarketData, resolveKnownToken, type ThetanutsOrder, type ThetanutsReadClient } from "@/lib/thetanuts/client";
+import { fetchEthPutOrders, parseThetanutsMarketData, resolveKnownToken, type ThetanutsOrder, type ThetanutsReadClient } from "@/lib/thetanuts/client-core";
 import { impliedVolatilityBps } from "@/lib/thetanuts/iv";
 import { premiumForContracts, underlyingFromContractBaseUnits, usdFromPriceBaseUnits, decimalToBaseUnits } from "@/lib/thetanuts/units";
 

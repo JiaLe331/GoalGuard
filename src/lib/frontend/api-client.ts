@@ -5,6 +5,7 @@ import {
   GenerateCandidatesResponseSchema,
   GetCouncilReviewStatusResponseSchema,
   GetGoalResponseSchema,
+  MarketSummaryResponseSchema,
   type JsonValue,
   ParseGoalResponseSchema,
   PreviewTradeResponseSchema,
@@ -112,6 +113,8 @@ export const goalGuardApi = {
     post<ReturnType<typeof ReviewCandidateResponseSchema.parse>>("/api/council/review", body, ReviewCandidateResponseSchema, undefined, signal),
   getCouncilReviewStatus: (goalId: string, candidateId: string, signal?: AbortSignal) =>
     requestGoalGuard<ReturnType<typeof GetCouncilReviewStatusResponseSchema.parse>>(`/api/council/review/status?goalId=${encodeURIComponent(goalId)}&candidateId=${encodeURIComponent(candidateId)}`, { schema: GetCouncilReviewStatusResponseSchema, signal }),
+  getMarketSummary: (signal?: AbortSignal) =>
+    requestGoalGuard<ReturnType<typeof MarketSummaryResponseSchema.parse>>("/api/market/summary", { schema: MarketSummaryResponseSchema, signal }),
   previewTrade: (body: PreviewTradeRequest, idempotencyKey: string, signal?: AbortSignal) =>
     post<ReturnType<typeof PreviewTradeResponseSchema.parse>>("/api/trades/preview", body, PreviewTradeResponseSchema, { "Idempotency-Key": idempotencyKey }, signal),
 };

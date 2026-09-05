@@ -1,11 +1,14 @@
 import { randomUUID } from "node:crypto";
 import { JsonRpcProvider } from "ethers";
 
+import { loadLocalEnvironment } from "../../scripts/load-local-env";
 import { readServerEnvironment } from "@/lib/config/env";
 import { PostgresGoalGuardRepository } from "@/lib/db/repository";
-import { createConfiguredThetanutsClient } from "@/lib/thetanuts/client";
+import { createConfiguredThetanutsClient } from "@/lib/thetanuts/client-core";
 import { verifySubmittedTrade } from "@/lib/trades/monitor";
 import { captureMarketSnapshot } from "./market-snapshot";
+
+loadLocalEnvironment();
 
 const env = readServerEnvironment();
 if (!env.THETANUTS_RPC_URL) throw new Error("THETANUTS_RPC_URL is required by the trade monitor.");

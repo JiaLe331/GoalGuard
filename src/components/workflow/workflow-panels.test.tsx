@@ -67,6 +67,13 @@ describe("workflow panels", () => {
     expect(container.querySelector("[data-niulai-pose]")).not.toBeInTheDocument();
   });
 
+  it("can hand the plan actions to the persistent council rail at xl", () => {
+    const callbacks = { onContinue: vi.fn(), onRefresh: vi.fn(), onRetryReview: vi.fn(), onOpenCouncil: vi.fn() };
+    const { container } = render(<ProtectionPlanPanel goal={fixtureGoal} candidate={fixturePublicCandidate} alternatives={[]} decision={fixtureDecision} busy={false} walletStatus="other" hoistRail {...callbacks} />);
+    expect(container.firstElementChild).toHaveClass("xl:grid-cols-1");
+    expect(container.querySelector("aside")).toHaveClass("xl:hidden");
+  });
+
   it("uses safe-stop Niu Lai for blocked plans and workflow errors", () => {
     const callbacks = { onContinue: vi.fn(), onRefresh: vi.fn(), onRetryReview: vi.fn(), onOpenCouncil: vi.fn() };
     const { container, rerender } = render(<ProtectionPlanPanel goal={fixtureGoal} candidate={fixturePublicCandidate} alternatives={[]} decision={fixtureBlockedDecision} busy={false} walletStatus="other" {...callbacks} />);

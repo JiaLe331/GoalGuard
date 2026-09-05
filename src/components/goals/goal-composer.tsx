@@ -98,6 +98,7 @@ export function GoalComposer() {
           goalType: response.data.goal.goalType,
           customGoalLabel: response.data.goal.customGoalLabel,
           protectedValueUsd: response.data.goal.protectedValueUsd,
+          status: response.data.goal.status,
         });
         window.localStorage.removeItem(storageKeys.draft);
         router.push(`/goals/${response.data.goal.id}`);
