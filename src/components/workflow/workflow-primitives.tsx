@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, CheckCircle, Copy, HourglassHigh, Question, ShieldCheck, XCircle } from "@phosphor-icons/react";
+import { CheckCircle, Copy, HourglassHigh, Question, ShieldCheck, XCircle } from "@phosphor-icons/react";
 import Decimal from "decimal.js";
 import { motion, useReducedMotion } from "motion/react";
 import { useState, type ReactNode } from "react";
@@ -57,30 +57,8 @@ export function StageShell({ step, title, eyebrow, children }: { step: number; t
   const reducedMotion = useReducedMotion();
   return (
     <div className="reading-shell py-6 sm:py-10 lg:py-12">
-      <div className="mb-8 rounded-[var(--radius-card)] bg-[var(--surface-subtle)] p-3 sm:p-4">
-        <div className="flex items-center justify-between gap-4 lg:hidden">
-          <div><p className="text-xs font-bold uppercase tracking-[0.1em] text-[color:var(--foreground-muted)]">Step {step} of 5</p><p className="mt-1 font-semibold">{steps[step - 1]}</p></div>
-          <span className="text-xs text-[color:var(--foreground-soft)]">{eyebrow}</span>
-        </div>
-        <ol className="hidden grid-cols-5 lg:grid" aria-label="Goal protection progress">
-          {steps.map((label, index) => {
-            const number = index + 1;
-            const complete = number < step;
-            const current = number === step;
-            const stateClass = current ? "text-[color:var(--foreground)]" : "text-[color:var(--foreground-soft)]";
-            const numberClass = current
-              ? "border-[var(--surface-strong)] bg-[var(--surface-strong)] text-[color:var(--foreground-on-strong)]"
-              : complete
-                ? "border-[var(--accent)] bg-[var(--accent)] text-[color:var(--accent-foreground)]"
-                : "border-[var(--border-strong)] bg-[var(--surface-raised)]";
-            return (
-              <li key={label} aria-current={current ? "step" : undefined} className={"relative flex min-h-12 items-center gap-3 rounded-xl px-3 " + stateClass}>
-                <span className={"grid size-7 shrink-0 place-items-center rounded-full border text-xs font-semibold tabular-nums " + numberClass}>{complete ? <Check className="size-4" aria-hidden="true" /> : number}</span>
-                <span className={current ? "font-semibold" : ""}>{label}</span>
-              </li>
-            );
-          })}
-        </ol>
+      <div className="mb-8 rounded-[var(--radius-card)] bg-[var(--surface-subtle)] px-4 py-3">
+        <StageProgress step={step} />
       </div>
       <motion.section
         className="workflow-stage"
