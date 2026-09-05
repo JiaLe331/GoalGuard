@@ -40,6 +40,7 @@ async function installWorkflowFixtures(page: Page, preview = previewTradeRespons
     const request = route.request();
     const path = new URL(request.url()).pathname;
     if (path === "/api/integrations/status") return json(route, { data: { database: { status: "ready" }, gonka: { status: "ready", model: "gonka-model-a", requestId: "gonka-ready" }, thetanuts: { status: "ready", chainId: 8453, activeEthPutCount: 3, marketAsOf: fixtureMeta.timestamp } }, meta: fixtureMeta });
+    if (path === "/api/integrations/telegram/connection") return json(route, { data: { status: "unavailable" }, meta: fixtureMeta });
     if (path === "/api/market/summary") return json(route, { data: { snapshot: { capturedAt: fixtureMeta.timestamp, ethSpotUsd: "3000", optionCount: 58, medianIvBps: 6500, costPer100Usd30d: "2.1" } }, meta: fixtureMeta });
     if (path === "/api/goals/parse") return json(route, parseGoalResponse);
     if (path.endsWith(parseGoalResponse.data.goal!.id) && request.method() === "GET") return json(route, getDraftGoalResponse);
@@ -67,6 +68,7 @@ async function completeToPlan(page: Page) {
   expect((await parseCompleted).ok()).toBe(true);
   await expect(page.locator("#goal-input-error")).toHaveCount(0);
   await expect(page).toHaveURL(new RegExp(`/goals/${parseGoalResponse.data.goal!.id}$`), { timeout: 10_000 });
+  await page.getByRole("tab", { name: "Plan" }).click();
   await expect(page.getByRole("heading", { name: /make the goal exact/i })).toBeVisible();
 
   await page.getByRole("button", { name: /find live protection/i }).click();
@@ -122,6 +124,7 @@ test("moves the goals and services rail into the workflow menu on phones", async
   const drawer = page.getByRole("dialog", { name: "Goal workspace menu" });
   await expect(drawer).toBeVisible();
   await expect(drawer.getByRole("link", { name: "New goal" })).toBeVisible();
+  await expect(drawer.getByRole("region", { name: "Telegram alerts" })).toBeVisible();
   await expect(drawer.getByRole("region", { name: "Service readiness" })).toBeVisible();
   await expect(drawer.getByText("Supabase data")).toBeVisible();
   await drawer.getByRole("button", { name: "Close panel" }).click();

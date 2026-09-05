@@ -5,17 +5,23 @@ import {
   GenerateCandidatesResponseSchema,
   GetCouncilReviewStatusResponseSchema,
   GetGoalResponseSchema,
+  GetTelegramConnectionResponseSchema,
   MarketSummaryResponseSchema,
   type JsonValue,
   ParseGoalResponseSchema,
   PreviewTradeResponseSchema,
   ReviewCandidateResponseSchema,
+  CreateTelegramLinkResponseSchema,
+  DeleteTelegramConnectionResponseSchema,
+  UpdateTelegramPreferencesResponseSchema,
   UpdateGoalResponseSchema,
   type ApiErrorCode,
+  type CreateTelegramLinkRequest,
   type GenerateCandidatesRequest,
   type ParseGoalRequest,
   type PreviewTradeRequest,
   type ReviewCandidateRequest,
+  type TelegramPublicPreferences,
   type UpdateGoalRequest,
 } from "@/lib/contracts";
 
@@ -95,6 +101,9 @@ export async function requestGoalGuard<T>(path: string, options: RequestOptions)
 const post = <T>(path: string, body: unknown, schema: ZodType, headers?: HeadersInit, signal?: AbortSignal) =>
   requestGoalGuard<T>(path, { method: "POST", body: JSON.stringify(body), schema, headers, signal });
 
+const patch = <T>(path: string, body: unknown, schema: ZodType, signal?: AbortSignal) =>
+  requestGoalGuard<T>(path, { method: "PATCH", body: JSON.stringify(body), schema, signal });
+
 export const goalGuardApi = {
   parseGoal: (body: ParseGoalRequest, signal?: AbortSignal) =>
     post<ReturnType<typeof ParseGoalResponseSchema.parse>>("/api/goals/parse", body, ParseGoalResponseSchema, undefined, signal),
@@ -117,4 +126,12 @@ export const goalGuardApi = {
     requestGoalGuard<ReturnType<typeof MarketSummaryResponseSchema.parse>>("/api/market/summary", { schema: MarketSummaryResponseSchema, signal }),
   previewTrade: (body: PreviewTradeRequest, idempotencyKey: string, signal?: AbortSignal) =>
     post<ReturnType<typeof PreviewTradeResponseSchema.parse>>("/api/trades/preview", body, PreviewTradeResponseSchema, { "Idempotency-Key": idempotencyKey }, signal),
+  getTelegramConnection: (signal?: AbortSignal) =>
+    requestGoalGuard<ReturnType<typeof GetTelegramConnectionResponseSchema.parse>>("/api/integrations/telegram/connection", { schema: GetTelegramConnectionResponseSchema, signal }),
+  createTelegramLink: (body: CreateTelegramLinkRequest, signal?: AbortSignal) =>
+    post<ReturnType<typeof CreateTelegramLinkResponseSchema.parse>>("/api/integrations/telegram/link", body, CreateTelegramLinkResponseSchema, undefined, signal),
+  updateTelegramPreferences: (body: TelegramPublicPreferences, signal?: AbortSignal) =>
+    patch<ReturnType<typeof UpdateTelegramPreferencesResponseSchema.parse>>("/api/integrations/telegram/preferences", body, UpdateTelegramPreferencesResponseSchema, signal),
+  disconnectTelegram: (signal?: AbortSignal) =>
+    requestGoalGuard<ReturnType<typeof DeleteTelegramConnectionResponseSchema.parse>>("/api/integrations/telegram/connection", { method: "DELETE", schema: DeleteTelegramConnectionResponseSchema, signal }),
 };

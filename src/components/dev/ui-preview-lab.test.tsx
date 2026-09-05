@@ -32,6 +32,8 @@ describe("UiPreviewLab", () => {
   it("discloses sample mode and exposes every state through a labelled control", () => {
     renderLab("goal-confirmation");
     expect(screen.getByText("Development UI preview: sample data")).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Canonical alert states" })).toBeVisible();
+    expect(screen.getAllByRole("article", { name: /Telegram alerts .* state/ })).toHaveLength(6);
     const selector = screen.getByLabelText("Interface state");
     expect(selector).toBeVisible();
     expect(within(selector).getAllByRole("option")).toHaveLength(uiPreviewStates.length);

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/drawer";
 import { FloatingEditorialNavbar } from "@/components/navigation/floating-editorial-navbar";
 import { NiulaiChatPreview } from "@/components/dev/niulai-chat-preview";
+import { TelegramAlertsPreview } from "@/components/dev/telegram-alerts-preview";
 import {
   ActiveProtectionPanel,
   CouncilDrawer,
@@ -248,6 +249,10 @@ export function UiPreviewLab({ initialState, samples }: { initialState: UiPrevie
 
         <div className="reading-shell mt-8">
           <NiulaiChatPreview />
+        </div>
+
+        <div className="reading-shell mt-8">
+          <TelegramAlertsPreview />
         </div>
 
         <StageShell step={frame.step} title={frame.title} eyebrow={frame.eyebrow}>
