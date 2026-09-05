@@ -103,6 +103,30 @@ test("keeps the goal workflow available while switching center views", async ({ 
   await expect(page.getByRole("heading", { name: /a protection plan for rent/i })).toBeVisible();
 });
 
+test("moves the goals and services rail into the workflow menu on phones", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await installWorkflowFixtures(page);
+  await completeToPlan(page);
+
+  const goalsRail = page.getByRole("navigation", { name: "Goals" });
+  await expect(goalsRail).not.toBeVisible();
+
+  const menu = page.getByRole("button", { name: /menu/i });
+  await expect(menu).toBeVisible();
+  await menu.click();
+  const drawer = page.getByRole("dialog", { name: "Goal workspace menu" });
+  await expect(drawer).toBeVisible();
+  await expect(drawer.getByRole("link", { name: "New goal" })).toBeVisible();
+  await expect(drawer.getByRole("region", { name: "Service readiness" })).toBeVisible();
+  await expect(drawer.getByText("Supabase data")).toBeVisible();
+  await drawer.getByRole("button", { name: "Close panel" }).click();
+  await expect(drawer).not.toBeVisible();
+
+  await page.setViewportSize({ width: 1024, height: 768 });
+  await expect(goalsRail).toBeVisible();
+  await expect(menu).not.toBeVisible();
+});
+
 test("completes the contract-wired frontend through a preview-only trade", async ({ page }) => {
   const log = await installWorkflowFixtures(page);
   await completeToPlan(page);

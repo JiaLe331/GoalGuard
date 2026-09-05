@@ -51,7 +51,7 @@ export function GoalRail({ goal }: { goal: Goal | null }) {
 
       <RecentGoalsList />
 
-      <div className="hidden lg:block"><IntegrationStatus compact /></div>
+      <IntegrationStatus compact />
     </div>
   );
 }

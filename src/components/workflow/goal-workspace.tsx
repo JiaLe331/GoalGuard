@@ -253,7 +253,12 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
   return (
     <main className="min-h-screen bg-[var(--background)] pb-12">
       <a href="#workflow-content" className="skip-link">Skip to current step</a>
-      <FloatingEditorialNavbar variant="workflow" contextLabel={`${presentation.eyebrow} · ${presentation.title}`} walletSlot={<WalletControl compact />} />
+      <FloatingEditorialNavbar
+        variant="workflow"
+        contextLabel={`${presentation.eyebrow} · ${presentation.title}`}
+        walletSlot={<WalletControl compact />}
+        mobileDrawerContent={<GoalRail goal={state.goal} />}
+      />
       <DashboardShell
         left={<GoalRail goal={state.goal} />}
         right={<CouncilRail stage={state.stage} councilProgress={councilProgress} reviewStartedAt={reviewStartedAt} decision={state.decision} planStale={state.planStale} onOpenCouncil={() => setCouncilOpen(true)} />}
