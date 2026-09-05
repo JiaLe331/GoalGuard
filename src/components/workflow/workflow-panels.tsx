@@ -256,7 +256,7 @@ export function ActiveProtectionPanel({ stage, councilProgress = null, reviewSta
   );
 }
 
-export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, busy, walletStatus, suppressMascot = false, onContinue, onRefresh, onRetryReview, onOpenCouncil }: {
+export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, busy, walletStatus, suppressMascot = false, showScenarios = true, onContinue, onRefresh, onRetryReview, onOpenCouncil }: {
   goal: Goal;
   candidate: PublicProtectionCandidate;
   alternatives: PublicProtectionCandidate[];
@@ -264,6 +264,7 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
   busy: boolean;
   walletStatus: "connected" | "wrong-network" | "other";
   suppressMascot?: boolean;
+  showScenarios?: boolean;
   onContinue: () => void;
   onRefresh: () => void;
   onRetryReview: () => void;
@@ -283,6 +284,9 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
             </div>
             <span className="text-xs text-[color:var(--foreground-soft)] tabular-nums">Market {formatDate(candidate.marketAsOf, { hour: "numeric", minute: "2-digit" })}</span>
           </div>
+          <Alert className="mt-5" tone={approved ? "success" : decision.status === "disputed" ? "warning" : "error"} title={`${decision.approvedReviewCount} of 3 checks passed`}>
+            {approved ? "The council approved this candidate. Review the plan facts before continuing." : decision.status === "disputed" ? "The council needs another look before this plan can continue." : "The council found a hard stop. Read the audit details before trying another option."}
+          </Alert>
           <h1 className="mt-6 max-w-3xl text-3xl font-semibold leading-[1.05] tracking-[-0.05em] @[48rem]:text-4xl @[62rem]:text-5xl">A protection plan for {goalName(goal)}.</h1>
           <p className="mt-4 max-w-2xl text-[color:var(--foreground-soft)]">A live ETH put limits the selected downside through its displayed expiry. It does not guarantee the full goal after that time.</p>
           <p className="mt-4 max-w-2xl rounded-[var(--radius-card)] bg-[var(--surface-subtle)] p-4 text-sm leading-6 text-[color:var(--foreground-soft)]"><span className="font-semibold text-[color:var(--foreground)]">Why this plan? </span>{whyThisPlan(goal, candidate)}</p>
@@ -300,13 +304,15 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
             <MetricCard label="Ends" value={formatDate(candidate.expiry)} />
           </div>
           <Alert className="mt-5" tone={candidate.deadlineGapHours > 24 ? "warning" : "info"} title="Deadline alignment">Protection expires {candidate.deadlineGapHours} hour{candidate.deadlineGapHours === 1 ? "" : "s"} from the goal deadline. Settlement conditions apply at expiry.</Alert>
-          <section className="mt-9 rounded-[var(--radius-card)] bg-[var(--surface-subtle)] p-5 sm:p-7" aria-labelledby="scenario-title">
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--foreground-soft)]">Scenario comparison</p><h2 id="scenario-title" className="mt-2 text-3xl font-semibold tracking-[-0.045em]">What the protection changes</h2></div>
-              <p className="text-xs text-[color:var(--foreground-soft)]">Estimated net value after cost</p>
-            </div>
-            <div className="mt-6"><ScenarioComparison scenarios={candidate.scenarios} settlementType={candidate.settlementType} strikeUsd={candidate.strikeUsd} /></div>
-          </section>
+          {showScenarios ? (
+            <section className="mt-9 rounded-[var(--radius-card)] bg-[var(--surface-subtle)] p-5 sm:p-7" aria-labelledby="scenario-title">
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--foreground-soft)]">Scenario comparison</p><h2 id="scenario-title" className="mt-2 text-3xl font-semibold tracking-[-0.045em]">What the protection changes</h2></div>
+                <p className="text-xs text-[color:var(--foreground-soft)]">Estimated net value after cost</p>
+              </div>
+              <div className="mt-6"><ScenarioComparison scenarios={candidate.scenarios} settlementType={candidate.settlementType} strikeUsd={candidate.strikeUsd} /></div>
+            </section>
+          ) : null}
           <div className="mt-8">
             <Accordion title="Protocol facts">
               <dl className="grid gap-4 sm:grid-cols-2">
@@ -324,7 +330,7 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
         {/* Hidden at xl, where the persistent council rail already carries the verdict summary. */}
         <Card tone="accent" className="p-6 xl:hidden">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--foreground-soft)]">Independent review</p>
-          <h2 className="mt-2 text-3xl font-semibold tracking-[-0.045em]">{decision.approvedReviewCount} of 3 checks passed</h2>
+          <h2 className="mt-2 text-3xl font-semibold tracking-[-0.045em]">Council review summary</h2>
           <p className="mt-2 text-sm leading-6 text-[color:var(--foreground-soft)]">Council attempt {decision.attempt}. Reviewers explain and challenge; deterministic financial values stay fixed.</p>
           <Button className="mt-5 w-full" variant="secondary" onClick={onOpenCouncil}>Open council review</Button>
         </Card>

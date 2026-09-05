@@ -89,7 +89,7 @@ export function CouncilRail({ stage, councilProgress, reviewStartedAt, decision,
                 );
               })}
             </ul>
-            <p className="mt-3 text-sm text-[color:var(--foreground-soft)]">{decision.approvedReviewCount} of 3 checks passed · attempt {decision.attempt}</p>
+            <p className="mt-3 text-sm text-[color:var(--foreground-soft)]">{decision.approvedReviewCount}/3 checks passed · attempt {decision.attempt}</p>
             <Button variant="secondary" className="mt-3 w-full" onClick={onOpenCouncil}>Open full review</Button>
           </div>
         ) : (

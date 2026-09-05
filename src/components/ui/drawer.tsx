@@ -6,7 +6,7 @@ import { useEffect, useRef, type ReactNode, type RefObject } from "react";
 
 import { Button } from "./button";
 
-export function Drawer({ open, title, onClose, children, labelledId = "drawer-panel", restoreFocusRef }: { open: boolean; title: string; onClose: () => void; children: ReactNode; labelledId?: string; restoreFocusRef?: RefObject<HTMLElement | null> }) {
+export function Drawer({ open, title, onClose, children, labelledId = "drawer-panel", restoreFocusRef, closeInstantly = false }: { open: boolean; title: string; onClose: () => void; children: ReactNode; labelledId?: string; restoreFocusRef?: RefObject<HTMLElement | null>; closeInstantly?: boolean }) {
   const dialog = useRef<HTMLDivElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
   const reduceMotion = useReducedMotion();
@@ -32,10 +32,8 @@ export function Drawer({ open, title, onClose, children, labelledId = "drawer-pa
     return () => { document.removeEventListener("keydown", handleKey); document.body.style.overflow = previousOverflow; restoreFocusTarget?.focus(); };
   }, [onClose, open, restoreFocusRef]);
 
-  return (
-    <AnimatePresence>
-      {open ? (
-        <motion.div
+  const content = open ? (
+    <motion.div
           className="pointer-events-auto fixed inset-0 z-[100] flex items-end justify-end bg-[var(--scrim)] sm:items-stretch"
           role="presentation"
           initial={reduceMotion ? false : { opacity: 0 }}
@@ -65,7 +63,10 @@ export function Drawer({ open, title, onClose, children, labelledId = "drawer-pa
             {children}
           </motion.div>
         </motion.div>
-      ) : null}
-    </AnimatePresence>
-  );
+  ) : null;
+
+  // A preview drawer closes at the same moment that its underlying workflow state changes.
+  // Keeping an exiting overlay around during that transition makes the old screen briefly
+  // visible to accessibility tooling. Other drawers retain their entrance/exit choreography.
+  return closeInstantly ? content : <AnimatePresence>{content}</AnimatePresence>;
 }
