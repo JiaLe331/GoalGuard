@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DecimalStringSchema, GoalTypeSchema, ISODateTimeSchema, UUIDSchema } from "@/lib/contracts";
+import { DecimalStringSchema, GoalStatusSchema, GoalTypeSchema, ISODateTimeSchema, UUIDSchema } from "@/lib/contracts";
 
 export const storageKeys = {
   draft: "goalguard:goal-draft",
@@ -38,8 +38,8 @@ export function readPreviewRetry(): PreviewRetry | null {
 export function savePreviewRetry(value: PreviewRetry) { window.localStorage.setItem(storageKeys.previewRetry, JSON.stringify(value)); }
 export function clearPreviewRetry() { window.localStorage.removeItem(storageKeys.previewRetry); }
 
-// A per-browser, best-effort "recent goals" list -- a cached snapshot from goal-creation time,
-// not live status (re-opening a goal always re-hydrates its real current state from the server).
+// A per-browser, best-effort "recent goals" list -- cached metadata plus the last status observed
+// by a goal workspace, not an authority (re-opening a goal always re-hydrates live state from the server).
 // This needs no new backend capability: goals are already scoped to this browser's 30-day
 // anonymous session cookie, and GET /api/goals/[goalId] already returns full live state for any
 // goal ID this browser owns -- the only missing piece was a client-side list of IDs to link to.
@@ -49,6 +49,9 @@ const RecentGoalEntrySchema = z.object({
   goalType: GoalTypeSchema,
   customGoalLabel: z.string().trim().min(1).max(80).nullable(),
   protectedValueUsd: DecimalStringSchema,
+  // Older browser entries predate the status cue, so this stays optional and is treated as
+  // "saved locally" until the goal is opened and its live status is known.
+  status: GoalStatusSchema.optional(),
 }).strict();
 
 export type RecentGoalEntry = z.infer<typeof RecentGoalEntrySchema>;

@@ -4,6 +4,7 @@ import { CouncilRoleSchema, CouncilVerdictSchema, CoverageModeSchema, GoalTypeSc
 import {
   CouncilDecisionSchema,
   GoalSchema,
+  MarketSnapshotSchema,
   PublicProtectionCandidateSchema,
   TradeSchema,
 } from "./entities";
@@ -306,6 +307,13 @@ export const IntegrationStatusResponseSchema = z.object({
   meta: ApiMetaSchema,
 }).strict();
 
+// The dashboard rail receives only the small worker-owned market snapshot. Raw Thetanuts orders
+// and protocol payloads remain server-only; a missing snapshot is an honest empty state.
+export const MarketSummaryResponseSchema = z.object({
+  data: z.object({ snapshot: MarketSnapshotSchema.nullable() }).strict(),
+  meta: ApiMetaSchema,
+}).strict();
+
 export type GoalDraftField = z.infer<typeof GoalDraftFieldSchema>;
 export type GoalDraft = z.infer<typeof GoalDraftSchema>;
 export type InferenceSummary = z.infer<typeof InferenceSummarySchema>;
@@ -337,3 +345,4 @@ export type RecordSubmissionResponse = z.infer<typeof RecordSubmissionResponseSc
 export type GetTradeResponse = z.infer<typeof GetTradeResponseSchema>;
 export type GetGoalResponse = z.infer<typeof GetGoalResponseSchema>;
 export type IntegrationStatusResponse = z.infer<typeof IntegrationStatusResponseSchema>;
+export type MarketSummaryResponse = z.infer<typeof MarketSummaryResponseSchema>;
