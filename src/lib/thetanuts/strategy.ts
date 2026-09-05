@@ -219,7 +219,7 @@ function rankViable(viable: ProtectionCandidate[]): ProtectionCandidate[] {
 }
 
 function rankAndSelect(viable: ProtectionCandidate[]): ProtectionCandidate[] {
-  return rankViable(viable).slice(0, 3).map((candidate, index) => ({ ...candidate, status: index === 0 ? "selected" as const : "viable" as const }));
+  return rankViable(viable).slice(0, 5).map((candidate, index) => ({ ...candidate, status: index === 0 ? "selected" as const : "viable" as const }));
 }
 
 function chainEntry(candidate: ProtectionCandidate): ProtectionChainEntry {

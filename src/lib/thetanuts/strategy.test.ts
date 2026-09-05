@@ -48,11 +48,11 @@ describe("deterministic Thetanuts strategy", () => {
     expect(result.chain[0]).toMatchObject({ protocolOrderId: result.candidates[0]!.protocolOrderId, premiumUsd: "3", settlementType: "cash", impliedVolatilityBps: 6500 });
   });
 
-  it("returns the full ranked viable chain while persisting only the first three", async () => {
-    const result = await generateProtectionCandidates(goal, { client: client([order(21n), order(22n), order(23n), order(24n), order(25n)]), now, maxDeadlineGapHours: 168 });
-    expect(result.candidates).toHaveLength(3);
+  it("returns the full ranked viable chain while persisting the first five", async () => {
+    const result = await generateProtectionCandidates(goal, { client: client([order(21n), order(22n), order(23n), order(24n), order(25n), order(26n)]), now, maxDeadlineGapHours: 168 });
+    expect(result.candidates).toHaveLength(5);
     expect(result.candidates.filter(({ status }) => status === "selected")).toHaveLength(1);
-    expect(result.chain).toHaveLength(5);
+    expect(result.chain).toHaveLength(6);
     expect(result.chain.map(({ protocolOrderId }) => protocolOrderId)).toEqual(result.chain.slice().sort((a, b) => a.protocolOrderId.localeCompare(b.protocolOrderId)).map(({ protocolOrderId }) => protocolOrderId));
   });
 
