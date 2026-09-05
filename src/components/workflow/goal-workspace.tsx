@@ -61,9 +61,9 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
   const [busy, setBusy] = useState(false);
   const [councilOpen, setCouncilOpen] = useState(false);
   const [councilProgress, setCouncilProgress] = useState<CouncilRoleProgress[] | null>(null);
-  // Plan stays selected for an active goal so the guarded next action remains easy to find. The
-  // Market tab is available as soon as a live search has populated the market context.
-  const [centerTab, setCenterTab] = useState<CenterTab>("plan");
+  // Market is the persistent starting view. Workflow actions move focus to Plan when the user
+  // starts a guarded step, so the next required action remains easy to find.
+  const [centerTab, setCenterTab] = useState<CenterTab>("market");
   // Client wall-clock fallback for "how long has the running role been running", used only until
   // that role's own server-derived startedAt is available.
   const [reviewStartedAt, setReviewStartedAt] = useState<number | null>(null);
