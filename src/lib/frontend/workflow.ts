@@ -51,6 +51,10 @@ export interface WorkflowState {
   trade: Trade | null;
   error: WorkflowError | null;
   notice: string | null;
+  // True when the goal was edited after a plan/decision was produced, so the candidate and
+  // council verdict on screen describe a previous version of the goal. The wizard hid this by
+  // navigating away; the dashboard keeps every region mounted, so it has to be stated instead.
+  planStale: boolean;
 }
 
 export const initialWorkflowState: WorkflowState = {
@@ -67,6 +71,7 @@ export const initialWorkflowState: WorkflowState = {
   trade: null,
   error: null,
   notice: null,
+  planStale: false,
 };
 
 export type WorkflowAction =
@@ -130,11 +135,13 @@ export function workflowReducer(state: WorkflowState, action: WorkflowAction): W
       };
     }
     case "goal_updated":
-      return { ...state, goal: action.goal, stage: "confirming_goal", error: null, notice: "Goal changes saved.", previewAcknowledged: false, physicalSettlementAcknowledged: false };
+      // The prior candidate and verdict are kept rather than cleared -- they are still useful
+      // context -- but flagged so nothing presents them as current for the edited goal.
+      return { ...state, goal: action.goal, stage: "confirming_goal", error: null, notice: "Goal changes saved.", previewAcknowledged: false, physicalSettlementAcknowledged: false, planStale: Boolean(state.selectedCandidate ?? state.decision) };
     case "search_started":
       return { ...state, stage: "searching_candidates", error: null, notice: null, preview: null, previewMeta: null, previewAcknowledged: false, physicalSettlementAcknowledged: false };
     case "candidates_found":
-      return { ...state, goal: action.goal, candidates: action.candidates, selectedCandidate: action.selected, error: null };
+      return { ...state, goal: action.goal, candidates: action.candidates, selectedCandidate: action.selected, error: null, planStale: false };
     case "review_started":
       return { ...state, stage: "reviewing_candidate", error: null };
     case "review_completed":
@@ -149,6 +156,7 @@ export function workflowReducer(state: WorkflowState, action: WorkflowAction): W
         previewAcknowledged: false,
         physicalSettlementAcknowledged: false,
         error: null,
+        planStale: false,
       };
     case "preview_confirmation_started":
       if (state.stage !== "plan_approved") return state;
