@@ -1196,6 +1196,7 @@ export interface ProtectionCandidate {
   underlyingAsset: SupportedAsset;
   optionType: OptionType;
   settlementType: SettlementType;
+  impliedVolatilityBps: number | null;
   strikeUsd: DecimalString;
   expiry: ISODateTime;
   settlementTokenAddress: EvmAddress;
@@ -1656,15 +1657,34 @@ export interface GenerateCandidatesRequest {
 
 export interface CandidateRejection {
   protocolOrderId: string | null;
+  strikeUsd: DecimalString | null;
+  expiry: ISODateTime | null;
+  premiumUsd: DecimalString | null;
   reasons: string[];
+}
+
+export interface ProtectionChainEntry {
+  protocolOrderId: string;
+  strikeUsd: DecimalString;
+  expiry: ISODateTime;
+  premiumUsd: DecimalString;
+  estimatedFloorUsd: DecimalString;
+  impliedVolatilityBps: number | null;
+  goalCoverageBps: number;
+  settlementType: SettlementType;
+  availableQuantityBaseUnits: BaseUnitString;
+  settlementTokenSymbol: string;
+  settlementTokenDecimals: number;
 }
 
 export interface GenerateCandidatesResponse {
   data: {
     goal: Goal;
     candidates: ProtectionCandidate[]; // viable/selected candidates only, ranked
+    chain: ProtectionChainEntry[]; // full ranked viable chain; ephemeral market context
     selectedCandidateId: UUID | null;
     rejected: CandidateRejection[];
+    ethSpotUsd: DecimalString;
     marketAsOf: ISODateTime;
   };
   meta: ApiMeta;

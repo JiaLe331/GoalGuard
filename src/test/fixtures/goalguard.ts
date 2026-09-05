@@ -51,6 +51,7 @@ export const fixtureCandidate: ProtectionCandidate = {
   underlyingAsset: "ETH",
   optionType: "put",
   settlementType: "cash",
+  impliedVolatilityBps: 6500,
   strikeUsd: "2800",
   expiry: "2099-09-30T08:00:00.000Z",
   settlementTokenAddress: "0x1111111111111111111111111111111111111111",
@@ -175,7 +176,7 @@ export const fixtureTrade: Trade = {
 
 export const parseGoalResponse: ParseGoalResponse = { data: { draft: {}, missingFields: [], clarificationQuestion: null, goal: fixtureGoal, inference: { id: "6b3e798c-e0e8-4ab5-9e37-d4526424eb8f", purpose: "goal_parse", model: "gonka-model-a", requestId: "gonka-parse-1", status: "succeeded" } }, meta: fixtureMeta };
 export const updateGoalResponse: UpdateGoalResponse = { data: { goal: fixtureGoal }, meta: fixtureMeta };
-export const generateCandidatesResponse: GenerateCandidatesResponse = { data: { goal: { ...fixtureGoal, status: "reviewing", selectedCandidateId: fixtureIds.candidate }, candidates: [fixturePublicCandidate], selectedCandidateId: fixtureIds.candidate, rejected: [], marketAsOf: fixtureCandidate.marketAsOf }, meta: fixtureMeta };
+export const generateCandidatesResponse: GenerateCandidatesResponse = { data: { goal: { ...fixtureGoal, status: "reviewing", selectedCandidateId: fixtureIds.candidate }, candidates: [fixturePublicCandidate], chain: [{ protocolOrderId: fixtureCandidate.protocolOrderId!, strikeUsd: fixtureCandidate.strikeUsd, expiry: fixtureCandidate.expiry, premiumUsd: fixtureCandidate.premiumUsd, estimatedFloorUsd: fixtureCandidate.estimatedFloorUsd, impliedVolatilityBps: fixtureCandidate.impliedVolatilityBps, goalCoverageBps: fixtureCandidate.goalCoverageBps, settlementType: fixtureCandidate.settlementType, availableQuantityBaseUnits: fixtureCandidate.availableQuantityBaseUnits!, settlementTokenSymbol: fixtureCandidate.settlementTokenSymbol, settlementTokenDecimals: fixtureCandidate.settlementTokenDecimals }], selectedCandidateId: fixtureIds.candidate, rejected: [], ethSpotUsd: "3000", marketAsOf: fixtureCandidate.marketAsOf }, meta: fixtureMeta };
 export const reviewCandidateResponse: ReviewCandidateResponse = { data: { goal: fixtureReadyGoal, candidate: fixturePublicCandidate, decision: fixtureDecision, inferences: fixtureDecision.reviews.map((item) => ({ id: item.inferenceId, purpose: `${item.role === "strategist" ? "strategist" : item.role}_review` as "strategist_review" | "risk_auditor_review" | "consumer_advocate_review", model: item.model, requestId: item.requestId, status: "succeeded" })) }, meta: fixtureMeta };
 export const getDraftGoalResponse: GetGoalResponse = { data: { goal: fixtureGoal, selectedCandidate: null, councilDecision: null, trade: null }, meta: fixtureMeta };
 export const previewTradeResponse: PreviewTradeResponse = {

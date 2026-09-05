@@ -18,7 +18,7 @@ export async function POST(request: Request) {
       if (!result.candidates.length) throw new ApiRouteError("NO_SUITABLE_CANDIDATE", "No live ETH put satisfies the goal's expiry, cost, coverage, liquidity, and fillability constraints.", 422, true, result.rejected.slice(0, 10));
       await repository.replaceCandidates(goal.id, ownerSessionHash, result.candidates);
       const updated = await repository.getGoal(goal.id, ownerSessionHash);
-      return jsonSuccess(GenerateCandidatesResponseSchema, { data: { goal: updated!, candidates: result.candidates.map(publicCandidate), selectedCandidateId: result.candidates[0]!.id, rejected: result.rejected, marketAsOf: result.marketAsOf }, meta: apiMeta(requestId) });
+      return jsonSuccess(GenerateCandidatesResponseSchema, { data: { goal: updated!, candidates: result.candidates.map(publicCandidate), chain: result.chain, selectedCandidateId: result.candidates[0]!.id, rejected: result.rejected, ethSpotUsd: result.ethSpotUsd, marketAsOf: result.marketAsOf }, meta: apiMeta(requestId) });
     } catch (error) {
       try { await repository.updateGoalStatus(goal.id, ownerSessionHash, "failed"); } catch { /* Preserve the original integration error if state changed concurrently. */ }
       throw error;
