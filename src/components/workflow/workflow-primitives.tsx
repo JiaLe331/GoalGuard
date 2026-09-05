@@ -21,6 +21,38 @@ function assetCompositionLabel(settlementType: SettlementType, strikeUsd: string
 
 const steps = ["Define goal", "Live options", "Council review", "Confirm preview", "Demo ready"] as const;
 
+export const workflowSteps = steps;
+
+// The dashboard's secondary progress read-out. Same source of truth as StageShell's full tracker,
+// but sized to sit above the workspace rather than to be the page.
+export function StageProgress({ step, className = "" }: { step: number; className?: string }) {
+  return (
+    <div className={"flex flex-wrap items-center gap-x-3 gap-y-2 " + className}>
+      <p className="text-xs font-semibold text-[color:var(--foreground-soft)]">
+        <span className="tabular-nums">Step {step} of {steps.length}</span>
+        <span aria-hidden="true"> · </span>
+        <span className="text-[color:var(--foreground)]">{steps[step - 1]}</span>
+      </p>
+      <ol className="flex min-w-0 flex-1 items-center gap-1.5" aria-label="Goal protection progress">
+        {steps.map((label, index) => {
+          const number = index + 1;
+          const current = number === step;
+          const complete = number < step;
+          return (
+            <li
+              key={label}
+              aria-current={current ? "step" : undefined}
+              className={"h-1.5 min-w-4 flex-1 rounded-full " + (complete ? "bg-[var(--accent)]" : current ? "bg-[var(--surface-strong)]" : "bg-[var(--surface-hover)]")}
+            >
+              <span className="sr-only">{label}{complete ? " (complete)" : current ? " (current)" : ""}</span>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}
+
 export function StageShell({ step, title, eyebrow, children }: { step: number; title: string; eyebrow: string; children: ReactNode }) {
   const reducedMotion = useReducedMotion();
   return (

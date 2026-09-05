@@ -24,7 +24,7 @@ const goalLabels: Record<GoalType, string> = {
   custom: "Custom goal",
 };
 
-const roleLabels = {
+export const roleLabels = {
   strategist: "Strategist",
   risk_auditor: "Risk Auditor",
   consumer_advocate: "Consumer Advocate",
@@ -121,11 +121,11 @@ export function GoalConfirmationForm({ goal, busy, fieldErrors, onSave, onFind }
   const describedBy = (key: string) => firstError(errors, key) ? key + "-description" : undefined;
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
+    <div className="grid gap-6 @[62rem]:grid-cols-[minmax(0,1fr)_22rem]">
       <Card className="p-5 sm:p-8 lg:p-10">
         <div className="max-w-2xl">
           <p className="section-eyebrow text-[color:var(--foreground-muted)]">Define the guardrail</p>
-          <h1 className="mt-4 text-4xl font-semibold leading-[1.02] tracking-[-0.05em] sm:text-5xl">Make the goal exact.</h1>
+          <h1 className="mt-4 text-3xl font-semibold leading-[1.02] tracking-[-0.05em] @[48rem]:text-4xl @[62rem]:text-5xl">Make the goal exact.</h1>
           <p className="mt-4 max-w-xl text-[color:var(--foreground-soft)]">Confirm the amount, deadline, and acceptable downside before GoalGuard checks a live option.</p>
         </div>
 
@@ -215,15 +215,16 @@ export function ActiveProtectionPanel({ stage, councilProgress = null, reviewSta
           <div className="absolute -bottom-44 -left-32 size-[30rem] rounded-full border-[5rem] border-[var(--accent)] opacity-15" aria-hidden="true" />
           <div className="relative">
             <StatusBadge tone="info" label="Live request active" />
-            <h1 className="mt-6 max-w-2xl text-4xl font-semibold leading-[1.02] tracking-[-0.05em] sm:text-5xl">{content[0]}</h1>
+            <h1 className="mt-6 max-w-2xl text-3xl font-semibold leading-[1.02] tracking-[-0.05em] @[48rem]:text-4xl @[62rem]:text-5xl">{content[0]}</h1>
             <p className="mt-4 max-w-xl text-base leading-7 text-[color:var(--text-on-dark-muted)]">{content[1]}</p>
             <div className="mt-6 flex items-center gap-3 text-sm" role="status">
               <HourglassHigh className="size-5 animate-pulse motion-reduce:animate-none" aria-hidden="true" />
-              Each role&rsquo;s status below reflects what Gonka has actually returned so far. No simulated percentage.
+              Each role&rsquo;s status reflects what Gonka has actually returned so far. No simulated percentage.
             </div>
           </div>
         </div>
-        <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        {/* Hidden at xl, where the persistent council rail is the single home for these cards. */}
+        <div className="mt-6 grid gap-4 sm:grid-cols-3 xl:hidden">
           {councilProgress.map((progress) => (
             <CouncilRoleProgressCard key={progress.role} progress={progress} label={roleLabels[progress.role]} elapsedSeconds={progress.status === "running" ? runningElapsedSeconds : null} />
           ))}
@@ -237,7 +238,7 @@ export function ActiveProtectionPanel({ stage, councilProgress = null, reviewSta
       <div className="absolute -bottom-44 -left-32 size-[30rem] rounded-full border-[5rem] border-[var(--accent)] opacity-15" aria-hidden="true" />
       <div className="relative flex flex-col justify-center p-7 sm:p-12 lg:p-16">
         <div><StatusBadge tone="info" label="Live request active" /></div>
-        <h1 className="mt-7 max-w-2xl text-5xl font-semibold leading-[0.98] tracking-[-0.05em] sm:text-6xl">{content[0]}</h1>
+        <h1 className="mt-7 max-w-2xl text-3xl font-semibold leading-[1.02] tracking-[-0.05em] @[48rem]:text-4xl @[62rem]:text-5xl">{content[0]}</h1>
         <p className="mt-6 max-w-xl text-base leading-7 text-[color:var(--text-on-dark-muted)]">{content[1]}</p>
         <div className="mt-9 flex items-center gap-3 text-sm" role="status"><HourglassHigh className="size-5 animate-pulse motion-reduce:animate-none" aria-hidden="true" />Waiting for a truthful backend result. No simulated percentage.</div>
       </div>
@@ -272,7 +273,7 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
   const cta = walletStatus === "wrong-network" ? "Switch to Base" : walletStatus === "connected" ? "Continue to unsigned preview" : "Connect wallet to continue";
   const isPhysical = candidate.settlementType === "physical";
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_23rem]">
+    <div className="grid gap-6 @[62rem]:grid-cols-[minmax(0,1fr)_23rem]">
       <Card className="overflow-hidden">
         <div className="p-6 sm:p-9">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -282,7 +283,7 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
             </div>
             <span className="text-xs text-[color:var(--foreground-soft)] tabular-nums">Market {formatDate(candidate.marketAsOf, { hour: "numeric", minute: "2-digit" })}</span>
           </div>
-          <h1 className="mt-6 max-w-3xl text-4xl font-semibold leading-[1.02] tracking-[-0.055em] sm:text-6xl">A protection plan for {goalName(goal)}.</h1>
+          <h1 className="mt-6 max-w-3xl text-3xl font-semibold leading-[1.05] tracking-[-0.05em] @[48rem]:text-4xl @[62rem]:text-5xl">A protection plan for {goalName(goal)}.</h1>
           <p className="mt-4 max-w-2xl text-[color:var(--foreground-soft)]">A live ETH put limits the selected downside through its displayed expiry. It does not guarantee the full goal after that time.</p>
           <p className="mt-4 max-w-2xl rounded-[var(--radius-card)] bg-[var(--surface-subtle)] p-4 text-sm leading-6 text-[color:var(--foreground-soft)]"><span className="font-semibold text-[color:var(--foreground)]">Why this plan? </span>{whyThisPlan(goal, candidate)}</p>
           <Alert className="mt-4" tone={isPhysical ? "warning" : "info"} title={isPhysical ? "This is asset-delivery protection" : "This is cash protection"}>
@@ -320,7 +321,8 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
         </div>
       </Card>
       <aside className="space-y-4">
-        <Card tone="accent" className="p-6">
+        {/* Hidden at xl, where the persistent council rail already carries the verdict summary. */}
+        <Card tone="accent" className="p-6 xl:hidden">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--foreground-soft)]">Independent review</p>
           <h2 className="mt-2 text-3xl font-semibold tracking-[-0.045em]">{decision.approvedReviewCount} of 3 checks passed</h2>
           <p className="mt-2 text-sm leading-6 text-[color:var(--foreground-soft)]">Council attempt {decision.attempt}. Reviewers explain and challenge; deterministic financial values stay fixed.</p>
@@ -372,7 +374,7 @@ export function PreviewConfirmationPanel({ goal, candidate, walletAddress, ackno
             <StatusBadge label="Final review · no wallet signature" tone="info" />
             <StatusBadge tone={isPhysical ? "warning" : "info"} label={isPhysical ? "Asset-Delivery Protection" : "Cash Protection"} />
           </div>
-          <h1 className="mt-5 text-4xl font-semibold leading-[1.02] tracking-[-0.05em] sm:text-5xl">Confirm the facts before generating an unsigned preview.</h1>
+          <h1 className="mt-5 text-3xl font-semibold leading-[1.02] tracking-[-0.05em] @[48rem]:text-4xl @[62rem]:text-5xl">Confirm the facts before generating an unsigned preview.</h1>
           <p className="mt-3 max-w-3xl text-[color:var(--foreground-soft)]">Back makes no API change. Generate calls the preview endpoint once and returns transaction data for inspection only.</p>
         </div>
         <NiulaiMascot key={acknowledged ? "acknowledged" : "unacknowledged"} pose="attentive" active={acknowledged} size="sm" className="-mr-2 sm:mr-0" />
@@ -428,7 +430,7 @@ export function DemoPreviewReadyPanel({ goal, preview, meta, decision, onStartAn
   const proportional = preview.candidate.coverageMode === "proportional_demo";
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
+    <div className="grid gap-6 @[62rem]:grid-cols-[minmax(0,1fr)_24rem]">
       <Card tone="white" className="overflow-hidden">
         <div className="relative min-h-[22rem] overflow-hidden bg-[var(--surface-strong)] p-6 text-[color:var(--foreground-on-strong)] sm:p-10 min-[700px]:min-h-[24rem]">
           <div data-niulai-copy="demo-ready" className="relative z-10 min-[700px]:max-w-[calc(100%_-_13rem)]">
@@ -436,7 +438,7 @@ export function DemoPreviewReadyPanel({ goal, preview, meta, decision, onStartAn
               <StatusBadge label={expired ? "Preview expired" : "Demo preview ready"} tone={expired ? "warning" : "ready"} />
               {proportional ? <StatusBadge label="Proportional micro-hedge demo" tone="warning" /> : null}
             </div>
-            <h1 className="mt-5 text-4xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl">Protection Plan Ready <span className="text-[color:var(--accent)]">(Demo)</span></h1>
+            <h1 className="mt-5 text-3xl font-semibold leading-[1.02] tracking-[-0.05em] @[48rem]:text-4xl @[62rem]:text-5xl">Protection Plan Ready <span className="text-[color:var(--accent)]">(Demo)</span></h1>
             <p className="mt-4 text-lg font-semibold">No funds moved; no protected position was created</p>
             <p className="mt-2 max-w-3xl text-[color:var(--foreground-on-strong-muted)]">This is a time-limited, unsigned snapshot of the approved plan and wallet requirements.</p>
           </div>

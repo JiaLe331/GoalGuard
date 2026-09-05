@@ -10,7 +10,10 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WalletControl } from "@/components/wallet/wallet-control";
 import { useWallet } from "@/components/wallet/wallet-provider";
-import { StageShell } from "@/components/workflow/workflow-primitives";
+import { CouncilRail } from "@/components/dashboard/council-rail";
+import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { GoalRail } from "@/components/dashboard/goal-rail";
+import { StageProgress } from "@/components/workflow/workflow-primitives";
 import {
   ActiveProtectionPanel,
   CouncilDrawer,
@@ -236,12 +239,17 @@ export function GoalWorkspace({ goalId }: { goalId: string }) {
     <main className="min-h-screen bg-[var(--background)] pb-12">
       <a href="#workflow-content" className="skip-link">Skip to current step</a>
       <FloatingEditorialNavbar variant="workflow" contextLabel={`${presentation.eyebrow} · ${presentation.title}`} walletSlot={<WalletControl compact />} />
-      <div id="workflow-content" ref={focusTarget} tabIndex={-1} className="outline-none">
-        <StageShell {...presentation}>
+      <DashboardShell
+        left={<GoalRail goal={state.goal} />}
+        right={<CouncilRail stage={state.stage} councilProgress={councilProgress} reviewStartedAt={reviewStartedAt} decision={state.decision} planStale={state.planStale} onOpenCouncil={() => setCouncilOpen(true)} />}
+        progress={<StageProgress step={presentation.step} />}
+      >
+        <div id="workflow-content" ref={focusTarget} tabIndex={-1} data-focus-target="programmatic" className="outline-none">
+          <div className="sr-only"><p>{presentation.eyebrow}</p><h1>{presentation.title}</h1></div>
           {state.notice ? <Alert className="mb-5" tone="info" title="Safety note">{state.notice}</Alert> : null}
           {renderStage()}
-        </StageShell>
-      </div>
+        </div>
+      </DashboardShell>
       {state.decision ? <CouncilDrawer decision={state.decision} open={councilOpen} onClose={() => setCouncilOpen(false)} /> : null}
     </main>
   );
