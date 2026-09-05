@@ -20,8 +20,25 @@ import {
   gonkaInferences,
   marketSnapshots,
   protectionCandidates,
+  telegramConnections,
+  telegramLinkTokens,
+  telegramNotificationDeliveries,
+  telegramNotificationPreferences,
+  telegramWebhookUpdates,
   trades,
 } from "@/lib/db/schema";
+import {
+  TelegramConnectionSchema,
+  TelegramLinkTokenSchema,
+  TelegramNotificationDeliverySchema,
+  TelegramNotificationPreferencesSchema,
+  TelegramWebhookUpdateSchema,
+  type TelegramConnection,
+  type TelegramLinkToken,
+  type TelegramNotificationDelivery,
+  type TelegramNotificationPreferences,
+  type TelegramWebhookUpdate,
+} from "@/lib/telegram/contracts";
 
 type GoalRow = typeof goals.$inferSelect;
 type CandidateRow = typeof protectionCandidates.$inferSelect;
@@ -30,6 +47,11 @@ type DecisionRow = typeof councilDecisions.$inferSelect;
 type ReviewRow = typeof councilReviews.$inferSelect;
 type TradeRow = typeof trades.$inferSelect;
 type MarketSnapshotRow = typeof marketSnapshots.$inferSelect;
+type TelegramConnectionRow = typeof telegramConnections.$inferSelect;
+type TelegramLinkTokenRow = typeof telegramLinkTokens.$inferSelect;
+type TelegramNotificationPreferencesRow = typeof telegramNotificationPreferences.$inferSelect;
+type TelegramNotificationDeliveryRow = typeof telegramNotificationDeliveries.$inferSelect;
+type TelegramWebhookUpdateRow = typeof telegramWebhookUpdates.$inferSelect;
 
 export interface GoalReadReferences {
   parseInferenceId?: string | null;
@@ -205,4 +227,76 @@ export function marketSnapshotFromRow(row: MarketSnapshotRow) {
 
 export function marketSnapshotToRow(snapshot: import("./entities").MarketSnapshot): typeof marketSnapshots.$inferInsert {
   return MarketSnapshotSchema.parse(snapshot);
+}
+
+export function telegramConnectionFromRow(row: TelegramConnectionRow): TelegramConnection {
+  return TelegramConnectionSchema.parse({
+    ...row,
+    linkedAt: iso(row.linkedAt),
+    lastInteractionAt: iso(row.lastInteractionAt),
+    revokedAt: row.revokedAt ? iso(row.revokedAt) : null,
+    createdAt: iso(row.createdAt),
+    updatedAt: iso(row.updatedAt),
+  });
+}
+
+export function telegramConnectionToRow(connection: TelegramConnection): typeof telegramConnections.$inferInsert {
+  const value = TelegramConnectionSchema.parse(connection);
+  return value;
+}
+
+export function telegramLinkTokenFromRow(row: TelegramLinkTokenRow): TelegramLinkToken {
+  return TelegramLinkTokenSchema.parse({
+    ...row,
+    expiresAt: iso(row.expiresAt),
+    consumedAt: row.consumedAt ? iso(row.consumedAt) : null,
+    createdAt: iso(row.createdAt),
+    updatedAt: iso(row.updatedAt),
+  });
+}
+
+export function telegramLinkTokenToRow(token: TelegramLinkToken): typeof telegramLinkTokens.$inferInsert {
+  const value = TelegramLinkTokenSchema.parse(token);
+  return value;
+}
+
+export function telegramNotificationPreferencesFromRow(row: TelegramNotificationPreferencesRow): TelegramNotificationPreferences {
+  return TelegramNotificationPreferencesSchema.parse({
+    ...row,
+    createdAt: iso(row.createdAt),
+    updatedAt: iso(row.updatedAt),
+  });
+}
+
+export function telegramNotificationPreferencesToRow(preferences: TelegramNotificationPreferences): typeof telegramNotificationPreferences.$inferInsert {
+  const value = TelegramNotificationPreferencesSchema.parse(preferences);
+  return value;
+}
+
+export function telegramNotificationDeliveryFromRow(row: TelegramNotificationDeliveryRow): TelegramNotificationDelivery {
+  const { payloadJson, ...columns } = row;
+  return TelegramNotificationDeliverySchema.parse({
+    ...columns,
+    payload: payloadJson,
+    nextAttemptAt: iso(columns.nextAttemptAt),
+    leaseUntil: columns.leaseUntil ? iso(columns.leaseUntil) : null,
+    createdAt: iso(columns.createdAt),
+    updatedAt: iso(columns.updatedAt),
+    sentAt: columns.sentAt ? iso(columns.sentAt) : null,
+  });
+}
+
+export function telegramNotificationDeliveryToRow(delivery: TelegramNotificationDelivery): typeof telegramNotificationDeliveries.$inferInsert {
+  const value = TelegramNotificationDeliverySchema.parse(delivery);
+  const { payload, ...columns } = value;
+  return { ...columns, payloadJson: payload };
+}
+
+export function telegramWebhookUpdateFromRow(row: TelegramWebhookUpdateRow): TelegramWebhookUpdate {
+  return TelegramWebhookUpdateSchema.parse({ ...row, processedAt: iso(row.processedAt) });
+}
+
+export function telegramWebhookUpdateToRow(update: TelegramWebhookUpdate): typeof telegramWebhookUpdates.$inferInsert {
+  const value = TelegramWebhookUpdateSchema.parse(update);
+  return value;
 }

@@ -314,6 +314,68 @@ export const MarketSummaryResponseSchema = z.object({
   meta: ApiMetaSchema,
 }).strict();
 
+export const TelegramPublicPreferencesSchema = z.object({
+  councilResults: z.boolean(),
+  previewReady: z.boolean(),
+  previewExpiring: z.boolean(),
+  goalDeadlines: z.boolean(),
+  optionExpiry: z.boolean(),
+}).strict();
+
+const TelegramPublicConnectedStatusSchema = z.object({
+  status: z.literal("connected"),
+  linkedAt: ISODateTimeSchema,
+  preferences: TelegramPublicPreferencesSchema,
+}).strict();
+
+const TelegramPublicPausedStatusSchema = z.object({
+  status: z.literal("paused"),
+  linkedAt: ISODateTimeSchema,
+  preferences: TelegramPublicPreferencesSchema,
+}).strict().superRefine((value, context) => {
+  if (Object.values(value.preferences).some(Boolean)) context.addIssue({ code: "custom", path: ["preferences"], message: "Paused Telegram alerts require every preference to be disabled." });
+});
+
+export const TelegramPublicConnectionStatusSchema = z.discriminatedUnion("status", [
+  z.object({ status: z.literal("unavailable") }).strict(),
+  z.object({ status: z.literal("disconnected") }).strict(),
+  TelegramPublicConnectedStatusSchema,
+  TelegramPublicPausedStatusSchema,
+  z.object({ status: z.literal("blocked") }).strict(),
+]);
+
+export const GetTelegramConnectionResponseSchema = z.object({
+  data: TelegramPublicConnectionStatusSchema,
+  meta: ApiMetaSchema,
+}).strict();
+
+export const CreateTelegramLinkRequestSchema = z.object({
+  timezone: z.string().trim().min(1).max(100).optional().default("UTC"),
+}).strict();
+
+const TelegramDeepLinkSchema = z.string().url().refine((value) => {
+  const url = new URL(value);
+  const token = url.searchParams.get("start");
+  return url.protocol === "https:" && url.hostname === "t.me" && /^\/[A-Za-z0-9_]{1,64}$/.test(url.pathname) && token !== null && /^[A-Za-z0-9_-]{43}$/.test(token);
+}, "Expected a GoalGuard Telegram deep link.");
+
+export const CreateTelegramLinkResponseSchema = z.object({
+  data: z.object({ deepLink: TelegramDeepLinkSchema, expiresAt: ISODateTimeSchema }).strict(),
+  meta: ApiMetaSchema,
+}).strict();
+
+export const UpdateTelegramPreferencesRequestSchema = TelegramPublicPreferencesSchema;
+
+export const UpdateTelegramPreferencesResponseSchema = GetTelegramConnectionResponseSchema;
+export const DeleteTelegramConnectionResponseSchema = GetTelegramConnectionResponseSchema;
+
+export type TelegramPublicPreferences = z.infer<typeof TelegramPublicPreferencesSchema>;
+export type TelegramPublicConnectionStatus = z.infer<typeof TelegramPublicConnectionStatusSchema>;
+export type CreateTelegramLinkRequest = z.infer<typeof CreateTelegramLinkRequestSchema>;
+export type CreateTelegramLinkResponse = z.infer<typeof CreateTelegramLinkResponseSchema>;
+export type UpdateTelegramPreferencesRequest = z.infer<typeof UpdateTelegramPreferencesRequestSchema>;
+export type GetTelegramConnectionResponse = z.infer<typeof GetTelegramConnectionResponseSchema>;
+
 export type GoalDraftField = z.infer<typeof GoalDraftFieldSchema>;
 export type GoalDraft = z.infer<typeof GoalDraftSchema>;
 export type InferenceSummary = z.infer<typeof InferenceSummarySchema>;

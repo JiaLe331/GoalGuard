@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { check, date, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
+import { boolean, check, date, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
 
 const utcTimestamp = (name: string) => timestamp(name, { withTimezone: true, mode: "string" });
 
@@ -135,6 +135,103 @@ export const tradeRequestIdempotency = pgTable.withRLS("trade_request_idempotenc
 export const workerHeartbeats = pgTable.withRLS("worker_heartbeats", {
   workerName: text("worker_name").primaryKey(), instanceId: uuid("instance_id").notNull(), lastSeenAt: utcTimestamp("last_seen_at").notNull(),
 });
+
+export const telegramConnections = pgTable.withRLS("telegram_connections", {
+  id: uuid("id").primaryKey(),
+  ownerSessionHash: varchar("owner_session_hash", { length: 64 }).notNull(),
+  telegramUserId: varchar("telegram_user_id", { length: 32 }).notNull(),
+  telegramChatId: varchar("telegram_chat_id", { length: 32 }).notNull(),
+  status: text("status").notNull(),
+  timezone: varchar("timezone", { length: 100 }).notNull().default("UTC"),
+  linkedAt: utcTimestamp("linked_at").notNull(),
+  lastInteractionAt: utcTimestamp("last_interaction_at").notNull(),
+  revokedAt: utcTimestamp("revoked_at"),
+  createdAt: utcTimestamp("created_at").notNull(),
+  updatedAt: utcTimestamp("updated_at").notNull(),
+}, (table) => [
+  check("telegram_connections_status_check", sql`${table.status} IN ('connected', 'revoked', 'blocked')`),
+  check("telegram_connections_owner_hash_check", sql`${table.ownerSessionHash} ~ '^[0-9a-f]{64}$'`),
+  check("telegram_connections_user_id_check", sql`${table.telegramUserId} ~ '^[0-9]{1,32}$'`),
+  check("telegram_connections_chat_id_check", sql`${table.telegramChatId} ~ '^[0-9]{1,32}$'`),
+  check("telegram_connections_revoked_at_check", sql`(${table.status} = 'connected' AND ${table.revokedAt} IS NULL) OR (${table.status} IN ('revoked', 'blocked') AND ${table.revokedAt} IS NOT NULL)`),
+  index("telegram_connections_owner_idx").on(table.ownerSessionHash),
+  index("telegram_connections_chat_idx").on(table.telegramChatId),
+  index("telegram_connections_user_idx").on(table.telegramUserId),
+  uniqueIndex("telegram_connections_owner_active_idx").on(table.ownerSessionHash).where(sql`${table.status} = 'connected'`),
+  uniqueIndex("telegram_connections_chat_active_idx").on(table.telegramChatId).where(sql`${table.status} = 'connected'`),
+  uniqueIndex("telegram_connections_user_active_idx").on(table.telegramUserId).where(sql`${table.status} = 'connected'`),
+]);
+
+export const telegramLinkTokens = pgTable.withRLS("telegram_link_tokens", {
+  id: uuid("id").primaryKey(),
+  ownerSessionHash: varchar("owner_session_hash", { length: 64 }).notNull(),
+  tokenHash: varchar("token_hash", { length: 64 }).notNull(),
+  timezone: varchar("timezone", { length: 100 }).notNull().default("UTC"),
+  status: text("status").notNull(),
+  expiresAt: utcTimestamp("expires_at").notNull(),
+  consumedAt: utcTimestamp("consumed_at"),
+  createdAt: utcTimestamp("created_at").notNull(),
+  updatedAt: utcTimestamp("updated_at").notNull(),
+}, (table) => [
+  check("telegram_link_tokens_status_check", sql`${table.status} IN ('pending', 'consumed', 'superseded', 'expired')`),
+  check("telegram_link_tokens_owner_hash_check", sql`${table.ownerSessionHash} ~ '^[0-9a-f]{64}$'`),
+  check("telegram_link_tokens_hash_check", sql`${table.tokenHash} ~ '^[0-9a-f]{64}$'`),
+  check("telegram_link_tokens_consumed_at_check", sql`(${table.status} = 'consumed' AND ${table.consumedAt} IS NOT NULL) OR (${table.status} <> 'consumed' AND ${table.consumedAt} IS NULL)`),
+  uniqueIndex("telegram_link_tokens_hash_idx").on(table.tokenHash),
+  index("telegram_link_tokens_owner_status_idx").on(table.ownerSessionHash, table.status),
+  index("telegram_link_tokens_expiry_idx").on(table.status, table.expiresAt),
+]);
+
+export const telegramNotificationPreferences = pgTable.withRLS("telegram_notification_preferences", {
+  connectionId: uuid("connection_id").primaryKey().references(() => telegramConnections.id, { onDelete: "cascade" }),
+  councilResults: boolean("council_results").notNull().default(true),
+  previewReady: boolean("preview_ready").notNull().default(true),
+  previewExpiring: boolean("preview_expiring").notNull().default(false),
+  goalDeadlines: boolean("goal_deadlines").notNull().default(true),
+  optionExpiry: boolean("option_expiry").notNull().default(true),
+  createdAt: utcTimestamp("created_at").notNull(),
+  updatedAt: utcTimestamp("updated_at").notNull(),
+});
+
+export const telegramNotificationDeliveries = pgTable.withRLS("telegram_notification_deliveries", {
+  id: uuid("id").primaryKey(),
+  connectionId: uuid("connection_id").references(() => telegramConnections.id, { onDelete: "set null" }),
+  telegramChatId: varchar("telegram_chat_id", { length: 32 }).notNull(),
+  kind: text("kind").notNull(),
+  goalId: uuid("goal_id").references(() => goals.id, { onDelete: "set null" }),
+  candidateId: uuid("candidate_id").references(() => protectionCandidates.id, { onDelete: "set null" }),
+  decisionId: uuid("decision_id").references(() => councilDecisions.id, { onDelete: "set null" }),
+  tradeId: uuid("trade_id").references(() => trades.id, { onDelete: "set null" }),
+  dedupeKey: varchar("dedupe_key", { length: 160 }).notNull(),
+  payloadJson: jsonb("payload_json").$type<unknown>().notNull(),
+  status: text("status").notNull(),
+  attemptCount: integer("attempt_count").notNull().default(0),
+  nextAttemptAt: utcTimestamp("next_attempt_at").notNull(),
+  leaseUntil: utcTimestamp("lease_until"),
+  telegramMessageId: varchar("telegram_message_id", { length: 32 }),
+  lastErrorCode: varchar("last_error_code", { length: 64 }),
+  createdAt: utcTimestamp("created_at").notNull(),
+  updatedAt: utcTimestamp("updated_at").notNull(),
+  sentAt: utcTimestamp("sent_at"),
+}, (table) => [
+  check("telegram_deliveries_chat_id_check", sql`${table.telegramChatId} ~ '^[0-9]{1,32}$'`),
+  check("telegram_deliveries_kind_check", sql`${table.kind} IN ('connection_receipt', 'command_reply', 'unlink_confirmation', 'council_approved', 'council_disputed', 'council_blocked', 'preview_ready', 'preview_expiring', 'goal_deadline', 'option_expiry')`),
+  check("telegram_deliveries_status_check", sql`${table.status} IN ('pending', 'processing', 'sent', 'failed', 'cancelled')`),
+  check("telegram_deliveries_attempt_count_check", sql`${table.attemptCount} >= 0`),
+  check("telegram_deliveries_lease_check", sql`${table.status} <> 'processing' OR ${table.leaseUntil} IS NOT NULL`),
+  uniqueIndex("telegram_deliveries_dedupe_key_idx").on(table.dedupeKey),
+  index("telegram_deliveries_due_idx").on(table.status, table.nextAttemptAt),
+  index("telegram_deliveries_connection_status_idx").on(table.connectionId, table.status),
+  index("telegram_deliveries_goal_idx").on(table.goalId, table.status),
+]);
+
+export const telegramWebhookUpdates = pgTable.withRLS("telegram_webhook_updates", {
+  updateId: varchar("update_id", { length: 32 }).primaryKey(),
+  processedAt: utcTimestamp("processed_at").notNull(),
+}, (table) => [
+  check("telegram_webhook_updates_id_check", sql`${table.updateId} ~ '^[0-9]{1,32}$'`),
+  index("telegram_webhook_updates_processed_idx").on(table.processedAt),
+]);
 
 export const marketSnapshots = pgTable.withRLS("market_snapshots", {
   capturedAt: utcTimestamp("captured_at").primaryKey(),

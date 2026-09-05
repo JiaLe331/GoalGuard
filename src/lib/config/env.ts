@@ -7,6 +7,8 @@ const optional = <T extends z.ZodType>(schema: T) => z.preprocess(
 
 const optionalNonEmpty = optional(z.string().trim().min(1));
 const optionalUrl = optional(z.string().url());
+const optionalTelegramBotUsername = optional(z.string().regex(/^[A-Za-z][A-Za-z0-9_]{4,31}bot$/i, "Expected a valid BotFather username."));
+const optionalTelegramWebhookSecret = optional(z.string().regex(/^[A-Za-z0-9_-]{1,256}$/, "Expected a Telegram webhook secret token."));
 
 export const ServerEnvironmentSchema = z.object({
   GONKA_API_KEY: optionalNonEmpty,
@@ -24,6 +26,13 @@ export const ServerEnvironmentSchema = z.object({
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
   DATABASE_URL: optional(z.string().startsWith("postgres")),
   DATABASE_DIRECT_URL: optional(z.string().startsWith("postgres")),
+  TELEGRAM_NOTIFICATIONS_ENABLED: z.enum(["true", "false"]).default("false"),
+  TELEGRAM_BOT_TOKEN: optionalNonEmpty,
+  TELEGRAM_BOT_USERNAME: optionalTelegramBotUsername,
+  TELEGRAM_WEBHOOK_SECRET: optionalTelegramWebhookSecret,
+  TELEGRAM_LINK_TTL_SECONDS: z.coerce.number().int().min(60).max(600).default(600),
+  TELEGRAM_REMINDER_SCAN_MS: z.coerce.number().int().min(1_000).default(60_000),
+  TELEGRAM_NOTIFICATION_BATCH_SIZE: z.coerce.number().int().min(1).max(100).default(20),
   TRADE_WORKER_NAME: z.string().trim().min(1).default("trade-monitor"),
   TRADE_WORKER_POLL_MS: z.coerce.number().int().min(1000).default(5000),
   TRADE_WORKER_HEARTBEAT_MS: z.coerce.number().int().min(1000).default(15000),
@@ -74,5 +83,51 @@ export function getFrontendCapabilities(environment: NodeJS.ProcessEnv = process
     liveExecutionEnabled: env.ENABLE_LIVE_THETANUTS_EXECUTION === "true",
     chainId: 8453 as const,
     maxLiveTradePremiumUsd: env.MAX_LIVE_TRADE_PREMIUM_USD,
+  };
+}
+
+export function getTelegramWebConfiguration(environment: NodeJS.ProcessEnv = process.env) {
+  const env = readServerEnvironment(environment);
+  if (
+    env.TELEGRAM_NOTIFICATIONS_ENABLED !== "true" ||
+    !env.TELEGRAM_BOT_USERNAME ||
+    !env.TELEGRAM_WEBHOOK_SECRET ||
+    !env.DATABASE_URL ||
+    !env.NEXT_PUBLIC_APP_URL.startsWith("https://")
+  ) return null;
+  return {
+    botUsername: env.TELEGRAM_BOT_USERNAME,
+    webhookSecret: env.TELEGRAM_WEBHOOK_SECRET,
+    appUrl: env.NEXT_PUBLIC_APP_URL,
+    linkTtlSeconds: env.TELEGRAM_LINK_TTL_SECONDS,
+  };
+}
+
+export function getTelegramWorkerConfiguration(environment: NodeJS.ProcessEnv = process.env) {
+  const env = readServerEnvironment(environment);
+  if (
+    env.TELEGRAM_NOTIFICATIONS_ENABLED !== "true" ||
+    !env.TELEGRAM_BOT_TOKEN ||
+    !env.TELEGRAM_BOT_USERNAME ||
+    !env.DATABASE_URL ||
+    !env.NEXT_PUBLIC_APP_URL.startsWith("https://")
+  ) return null;
+  return {
+    botToken: env.TELEGRAM_BOT_TOKEN,
+    botUsername: env.TELEGRAM_BOT_USERNAME,
+    appUrl: env.NEXT_PUBLIC_APP_URL,
+    reminderScanMs: env.TELEGRAM_REMINDER_SCAN_MS,
+    notificationBatchSize: env.TELEGRAM_NOTIFICATION_BATCH_SIZE,
+  };
+}
+
+export function getTelegramSetupConfiguration(environment: NodeJS.ProcessEnv = process.env) {
+  const env = readServerEnvironment(environment);
+  if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_BOT_USERNAME || !env.TELEGRAM_WEBHOOK_SECRET || !env.NEXT_PUBLIC_APP_URL.startsWith("https://")) return null;
+  return {
+    botToken: env.TELEGRAM_BOT_TOKEN,
+    botUsername: env.TELEGRAM_BOT_USERNAME,
+    webhookSecret: env.TELEGRAM_WEBHOOK_SECRET,
+    appUrl: env.NEXT_PUBLIC_APP_URL,
   };
 }

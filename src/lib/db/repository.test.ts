@@ -5,6 +5,7 @@ import { migrate } from "drizzle-orm/pglite/migrator";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { CouncilReview, Goal, GonkaInference, MarketSnapshot } from "@/lib/contracts";
+import type { TelegramLinkToken } from "@/lib/telegram/contracts";
 import type { GoalGuardDatabase } from "@/lib/db/client";
 import { PostgresGoalGuardRepository, RepositoryConflictError, RepositoryIdempotencyConflictError } from "@/lib/db/repository";
 import { fixtureCandidate, fixtureDecision, fixtureGoal, fixtureTrade } from "@/test/fixtures/goalguard";
@@ -12,6 +13,12 @@ import { fixtureCandidate, fixtureDecision, fixtureGoal, fixtureTrade } from "@/
 let client: PGlite; let repository: PostgresGoalGuardRepository;
 const owner = "a".repeat(64); const stranger = "b".repeat(64);
 const goal: Goal = { schemaVersion: 1, id: "4b3e798c-e0e8-4ab5-9e37-d4526424eb8f", goalType: "rent", customGoalLabel: null, underlyingAsset: "ETH", protectedValueUsd: "1200", deadline: "2026-09-30", maxLossBps: 500, maxPremiumUsd: null, originalUserMessage: "Protect my rent fund.", status: "draft", createdAt: "2026-08-31T12:00:00.000Z", updatedAt: "2026-08-31T12:00:00.000Z", parseInferenceId: null, selectedCandidateId: null, councilDecisionId: null, tradeId: null };
+
+async function linkTelegram(at = "2026-08-30T12:00:00.000Z") {
+  const token: TelegramLinkToken = { id: "a0000000-0000-4000-8000-00000000000a", ownerSessionHash: owner, tokenHash: "f".repeat(64), timezone: "UTC", status: "pending", expiresAt: "2099-09-30T12:00:00.000Z", consumedAt: null, createdAt: at, updatedAt: at };
+  await repository.createTelegramLinkToken(token);
+  await repository.consumeTelegramLinkToken({ tokenHash: token.tokenHash, telegramUserId: "9001", telegramChatId: "9001", connectionId: "b0000000-0000-4000-8000-00000000000b", now: at });
+}
 
 function inferenceFor(review: CouncilReview): GonkaInference {
   const purpose = review.role === "strategist" ? "strategist_review" : review.role === "risk_auditor" ? "risk_auditor_review" : "consumer_advocate_review";
@@ -54,6 +61,7 @@ describe("PostgresGoalGuardRepository", () => {
     expect((await repository.claimTradeRequest(staleKey, "submission", owner, requestHash, -1)).status).toBe("claimed");
   });
   it("reuses an unchanged council input and allocates a forced attempt atomically", async () => {
+    await linkTelegram();
     await repository.createGoal(fixtureGoal, owner);
     await repository.updateGoalStatus(fixtureGoal.id, owner, "searching");
     await repository.replaceCandidates(fixtureGoal.id, owner, [fixtureCandidate]);
@@ -61,8 +69,10 @@ describe("PostgresGoalGuardRepository", () => {
     const inputHash = "8".repeat(64);
     const first = await repository.saveDecision(fixtureDecision, inputHash, owner);
     expect(first.attempt).toBe(1);
+    await expect(repository.getTelegramDeliveryByDedupeKey(`council:${first.id}`)).resolves.toMatchObject({ kind: "council_approved", connectionId: "b0000000-0000-4000-8000-00000000000b", status: "pending" });
     const replay = await repository.saveDecision({ ...fixtureDecision, id: "70000000-0000-4000-8000-000000000007" }, inputHash, owner);
     expect(replay.id).toBe(first.id);
+    await expect(repository.getTelegramDeliveryByDedupeKey(`council:${first.id}`)).resolves.toMatchObject({ status: "pending" });
     const forcedId = "80000000-0000-4000-8000-000000000008";
     const forcedReviews = fixtureDecision.reviews.map((review, index) => ({ ...review, id: `20000000-0000-4000-8000-00000000000${index + 1}`, decisionId: forcedId, inferenceId: `30000000-0000-4000-8000-00000000000${index + 1}`, requestId: `gonka-forced-${index + 1}` })) as [CouncilReview, CouncilReview, CouncilReview];
     for (const review of forcedReviews) await repository.saveInference(inferenceFor(review));
@@ -83,6 +93,7 @@ describe("PostgresGoalGuardRepository", () => {
   });
 
   it("atomically replaces an active preview only when the candidate and decision are current", async () => {
+    await linkTelegram();
     await repository.createGoal(fixtureGoal, owner);
     await repository.updateGoalStatus(fixtureGoal.id, owner, "searching");
     await repository.replaceCandidates(fixtureGoal.id, owner, [fixtureCandidate]);
@@ -90,6 +101,8 @@ describe("PostgresGoalGuardRepository", () => {
     await repository.saveDecision(fixtureDecision, "7".repeat(64), owner);
     const expectation = { target: "0x2222222222222222222222222222222222222222", calldataHash: "b".repeat(64), valueBaseUnits: "0", verificationDeadline: "2099-09-30T08:10:00.000Z" };
     const first = await repository.createTrade(fixtureTrade, expectation, owner);
+    await expect(repository.getTelegramDeliveryByDedupeKey(`preview:${first.id}`)).resolves.toMatchObject({ kind: "preview_ready", status: "pending" });
+    await expect(repository.getTelegramDeliveryByDedupeKey(`preview-expiry:${first.id}`)).resolves.toBeNull();
     const replacement = await repository.createTrade({ ...fixtureTrade, id: "90000000-0000-4000-8000-000000000009", idempotencyKey: "preview-replacement-000000000001", createdAt: "2026-08-31T12:01:00.000Z", updatedAt: "2026-08-31T12:01:00.000Z" }, expectation, owner);
     expect(replacement.status).toBe("previewed");
     await expect(repository.getTrade(first.id, owner)).resolves.toMatchObject({ status: "stale" });
