@@ -19,7 +19,7 @@ function assetCompositionLabel(settlementType: SettlementType, strikeUsd: string
   return Number(settlementPriceUsd) < Number(strikeUsd) ? "You would hold: a USD-linked settlement asset instead of ETH" : "You would hold: your ETH, unchanged";
 }
 
-const steps = ["Define goal", "Live options", "Council review", "Confirm preview", "Demo ready"] as const;
+const steps = ["Define goal", "Live options", "Council review", "Confirm preview", "Preview ready"] as const;
 
 export const workflowSteps = steps;
 

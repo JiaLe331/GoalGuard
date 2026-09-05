@@ -9,6 +9,7 @@ import { MarketStrip } from "@/components/market/market-strip";
 import { StatusBadge } from "@/components/ui/status-badge";
 import type { Goal, GoalStatus, GoalType } from "@/lib/contracts";
 import { formatUsd } from "@/lib/frontend/format";
+import { withPresentationFlow } from "@/lib/frontend/presentation/flag";
 
 /** A read-only goal any visitor may open, resolved on the server (see lib/server/demo-goal). */
 export interface DemoGoalSummary {
@@ -45,7 +46,7 @@ export function GoalRail({ goal, demoGoal = null }: { goal: Goal | null; demoGoa
   return (
     <div className="flex flex-col gap-5">
       <Link
-        href="/goals/new"
+        href={withPresentationFlow("/goals/new")}
         className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[var(--button-primary-bg)] px-4 text-sm font-semibold text-[color:var(--button-primary-fg)] transition-[background-color,transform] duration-[var(--duration-press)] hover:bg-[var(--button-primary-hover)] active:scale-[0.98]"
       >
         <Plus className="size-4" aria-hidden="true" />New goal
@@ -66,7 +67,7 @@ export function GoalRail({ goal, demoGoal = null }: { goal: Goal | null; demoGoa
         <section aria-label="Example goal">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--foreground-soft)]">Example goal</p>
           <Link
-            href={`/goals/${demoGoal.id}`}
+            href={withPresentationFlow(`/goals/${demoGoal.id}`)}
             className="mt-2 flex min-h-11 items-center justify-between gap-3 rounded-[var(--radius-card)] border border-dashed border-[var(--border-strong)] px-3 py-2.5 text-sm transition-colors hover:bg-[var(--surface-subtle)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
           >
             <span className="min-w-0 truncate font-medium">{demoGoal.customGoalLabel ?? goalLabels[demoGoal.goalType]}</span>

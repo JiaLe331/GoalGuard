@@ -80,7 +80,7 @@ function stageFrame(state: UiPreviewState) {
   if (["searching", "no-candidate"].includes(state)) return { step: 2, title: "Find live protection", eyebrow: "Live options" };
   if (["reviewing", "plan-approved", "plan-disputed", "plan-blocked", "council-drawer", "stale-candidate", "reload-after-preview"].includes(state)) return { step: 3, title: "Review the plan", eyebrow: "Council review" };
   if (["preview-confirmation", "generating-preview", "preview-failure"].includes(state)) return { step: 4, title: "Confirm the unsigned preview", eyebrow: "Confirm preview" };
-  return { step: 5, title: "Inspect the demo result", eyebrow: "Demo ready" };
+  return { step: 5, title: "Inspect the unsigned preview", eyebrow: "Preview ready" };
 }
 
 export function UiPreviewLab({ initialState, samples }: { initialState: UiPreviewState; samples: UiPreviewSamples }) {

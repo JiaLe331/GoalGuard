@@ -37,6 +37,7 @@ import {
   savePreviewRetry,
   storageKeys,
 } from "@/lib/frontend/storage";
+import { isPresentationFlow, withPresentationFlow } from "@/lib/frontend/presentation/flag";
 import {
   initialWorkflowState,
   workflowError,
@@ -50,7 +51,7 @@ function stagePresentation(stage: WorkflowStage) {
   if (stage === "reviewing_candidate") return { step: 3, eyebrow: "Council review", title: "Running three independent checks" };
   if (["plan_approved", "plan_disputed", "plan_blocked"].includes(stage)) return { step: 3, eyebrow: "Council review", title: "Review your protection plan" };
   if (["confirming_preview", "generating_preview"].includes(stage)) return { step: 4, eyebrow: "Confirm preview", title: "Confirm the unsigned preview" };
-  if (["demo_preview_ready", "read_only_trade"].includes(stage)) return { step: 5, eyebrow: "Demo ready", title: "Protection plan demo ready" };
+  if (["demo_preview_ready", "read_only_trade"].includes(stage)) return { step: 5, eyebrow: "Preview ready", title: "Unsigned protection preview ready" };
   return { step: 1, eyebrow: "Safe stop", title: "GoalGuard needs your attention" };
 }
 
@@ -247,12 +248,12 @@ export function GoalWorkspace({ goalId = null, demoGoal = null }: { goalId?: str
     clearPreviewRetry();
     window.localStorage.removeItem(storageKeys.activeGoalId);
     dispatch({ type: "restart" });
-    router.push("/goals/new");
+    router.push(withPresentationFlow("/goals/new"));
   }
 
   // The shared demo goal is readable by any visitor but owned by one session, so its write
   // actions would 404 for everyone else. Hide them rather than offer a button that cannot work.
-  const demoReadOnly = demoGoal !== null && demoGoal.id === goalId;
+  const demoReadOnly = !isPresentationFlow() && demoGoal !== null && demoGoal.id === goalId;
 
   const presentation = stagePresentation(state.stage);
   const renderStage = (surface: "center" | "drawer" = "center") => {
@@ -264,7 +265,7 @@ export function GoalWorkspace({ goalId = null, demoGoal = null }: { goalId?: str
       return null;
     }
     if (hydrating) return <Card className="mx-auto max-w-5xl p-6 sm:p-9"><Skeleton className="h-5 w-32" /><Skeleton className="mt-5 h-14 w-3/4" /><div className="mt-8 grid gap-3 sm:grid-cols-3"><Skeleton className="h-28" /><Skeleton className="h-28" /><Skeleton className="h-28" /></div></Card>;
-    if (state.error && ["recoverable_error", "terminal_error"].includes(state.stage)) return <InlineWorkflowError error={state.error} onRetry={() => { const target = state.error?.returnStage; dispatch({ type: "clear_error" }); if (target === "plan_approved" && state.selectedCandidate) void retryReview(); }} onEdit={() => { if (state.goal) dispatch({ type: "goal_updated", goal: state.goal }); else router.push("/goals/new"); }} />;
+    if (state.error && ["recoverable_error", "terminal_error"].includes(state.stage)) return <InlineWorkflowError error={state.error} onRetry={() => { const target = state.error?.returnStage; dispatch({ type: "clear_error" }); if (target === "plan_approved" && state.selectedCandidate) void retryReview(); }} onEdit={() => { if (state.goal) dispatch({ type: "goal_updated", goal: state.goal }); else router.push(withPresentationFlow("/goals/new")); }} />;
     if (state.stage === "confirming_goal" && state.goal) return <GoalConfirmationForm goal={state.goal} busy={busy} fieldErrors={state.error?.fieldErrors ?? {}} onSave={saveGoal} onFind={(value) => void findAndReview(value)} />;
     if (state.stage === "reviewing_candidate" && state.goal && state.selectedCandidate) return <CandidateReviewPanel goal={state.goal} candidate={state.selectedCandidate} />;
     if (["searching_candidates", "reviewing_candidate"].includes(state.stage)) return <ActiveProtectionPanel stage={state.stage as "searching_candidates" | "reviewing_candidate"} councilProgress={councilProgress} reviewStartedAt={reviewStartedAt} />;
@@ -297,7 +298,7 @@ export function GoalWorkspace({ goalId = null, demoGoal = null }: { goalId?: str
                   then the goal-free board is the honest, and far more useful, default. */}
               {state.market && state.goal
                 ? <MarketOverview goal={state.goal} market={state.market} selectedCandidate={state.selectedCandidate} stale={state.planStale} />
-                : <ProtectionMarketPanel onCreateGoal={() => router.push("/goals/new")} />}
+                : <ProtectionMarketPanel onCreateGoal={() => router.push(withPresentationFlow("/goals/new"))} />}
             </CenterTabPanel>
             <CenterTabPanel tab="plan" activeTab={centerTab}>{renderStage()}</CenterTabPanel>
             <CenterTabPanel tab="scenarios" activeTab={centerTab}><ScenarioTabPanel goal={state.goal} candidate={state.selectedCandidate} onOpenPlan={() => setCenterTab("plan")} /></CenterTabPanel>

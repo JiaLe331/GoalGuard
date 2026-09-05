@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import type { GoalDraft, GoalType } from "@/lib/contracts";
 import { ApiClientError, goalGuardApi } from "@/lib/frontend/api-client";
 import { saveActiveGoalId, saveRecentGoal, storageKeys } from "@/lib/frontend/storage";
+import { withPresentationFlow } from "@/lib/frontend/presentation/flag";
 
 const categories: ReadonlyArray<{ label: string; value: GoalType; icon: Icon }> = [
   { label: "Rent", value: "rent", icon: House },
@@ -101,7 +102,7 @@ export function GoalComposer() {
           status: response.data.goal.status,
         });
         window.localStorage.removeItem(storageKeys.draft);
-        router.push(`/goals/${response.data.goal.id}`);
+        router.push(withPresentationFlow(`/goals/${response.data.goal.id}`));
         return;
       }
       setDraft(response.data.draft);

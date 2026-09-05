@@ -5,6 +5,7 @@ import {
   GenerateCandidatesResponseSchema,
   GetCouncilReviewStatusResponseSchema,
   GetGoalResponseSchema,
+  IntegrationStatusResponseSchema,
   MarketSummaryResponseSchema,
   type JsonValue,
   ParseGoalResponseSchema,
@@ -18,6 +19,8 @@ import {
   type ReviewCandidateRequest,
   type UpdateGoalRequest,
 } from "@/lib/contracts";
+import { isPresentationFlow } from "@/lib/frontend/presentation/flag";
+import { presentationResponse } from "@/lib/frontend/presentation/transport";
 
 export type FrontendErrorCode = ApiErrorCode | "NETWORK_ERROR";
 
@@ -52,6 +55,20 @@ async function readJson(response: Response) {
 }
 
 export async function requestGoalGuard<T>(path: string, options: RequestOptions): Promise<T> {
+  // The presentation flow serves one recorded run on a compressed clock. It is resolved here,
+  // at the single transport seam, so no component, reducer or spinner behaves differently --
+  // they receive the same schema-validated shapes, only sooner. Inert unless explicitly armed.
+  if (isPresentationFlow()) {
+    const scripted = presentationResponse(options.method ?? "GET", path, options.signal ?? undefined);
+    if (scripted) {
+      const parsedScript = options.schema.safeParse(await scripted);
+      if (!parsedScript.success) {
+        throw new ApiClientError("GoalGuard received data that did not match its safety contract.", "UPSTREAM_INVALID_RESPONSE", true);
+      }
+      return parsedScript.data as T;
+    }
+  }
+
   let response: Response;
   try {
     response = await fetch(path, {
@@ -113,6 +130,8 @@ export const goalGuardApi = {
     post<ReturnType<typeof ReviewCandidateResponseSchema.parse>>("/api/council/review", body, ReviewCandidateResponseSchema, undefined, signal),
   getCouncilReviewStatus: (goalId: string, candidateId: string, signal?: AbortSignal) =>
     requestGoalGuard<ReturnType<typeof GetCouncilReviewStatusResponseSchema.parse>>(`/api/council/review/status?goalId=${encodeURIComponent(goalId)}&candidateId=${encodeURIComponent(candidateId)}`, { schema: GetCouncilReviewStatusResponseSchema, signal }),
+  getIntegrationStatus: (signal?: AbortSignal) =>
+    requestGoalGuard<ReturnType<typeof IntegrationStatusResponseSchema.parse>>("/api/integrations/status", { schema: IntegrationStatusResponseSchema, cache: "no-store", signal }),
   getMarketSummary: (signal?: AbortSignal) =>
     requestGoalGuard<ReturnType<typeof MarketSummaryResponseSchema.parse>>("/api/market/summary", { schema: MarketSummaryResponseSchema, signal }),
   previewTrade: (body: PreviewTradeRequest, idempotencyKey: string, signal?: AbortSignal) =>

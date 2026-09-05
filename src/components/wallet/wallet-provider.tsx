@@ -3,6 +3,9 @@
 import { BrowserProvider } from "ethers";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
+import { isPresentationFlow } from "@/lib/frontend/presentation/flag";
+import { PRESENTATION_WALLET } from "@/lib/frontend/presentation/preview";
+
 const BASE_CHAIN_ID = 8453n;
 
 export type WalletStatus = "idle" | "connecting" | "connected" | "wrong-network" | "unavailable" | "error";
@@ -34,6 +37,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const [permissionRequested, setPermissionRequested] = useState(false);
 
   const readConnectedState = useCallback(async () => {
+    if (isPresentationFlow()) return;
     if (!window.ethereum || !permissionRequested) return;
     const provider = new BrowserProvider(window.ethereum);
     const accounts = await provider.send("eth_accounts", []) as string[];
@@ -62,6 +66,15 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   }, [permissionRequested, readConnectedState]);
 
   const connect = useCallback(async () => {
+    // The presentation flow resolves the connect click itself, so a live demo does not depend
+    // on a browser extension being installed, unlocked and already on Base. The button, the
+    // connecting state and every downstream network guard behave exactly as they do normally.
+    if (isPresentationFlow()) {
+      setState({ status: "connecting", address: null, chainId: null, message: null });
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      setState({ status: "connected", address: PRESENTATION_WALLET, chainId: 8453, message: null });
+      return;
+    }
     if (!window.ethereum) {
       setState({ status: "unavailable", address: null, chainId: null, message: "Install an EIP-1193 wallet to connect." });
       return;

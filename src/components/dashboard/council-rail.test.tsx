@@ -63,7 +63,7 @@ describe("CouncilRail", () => {
 
     // A summary rail still has to say why, or "disputed" is a label with no answer behind it.
     expect(screen.getByText("The deadline gap needs clearer disclosure.")).toBeVisible();
-    expect(screen.getByText("Uncertain")).toBeVisible();
+    expect(screen.getAllByText("Uncertain")).toHaveLength(2);
     expect(screen.getByRole("button", { name: /ask the council to re-review/i })).toBeVisible();
     expect(screen.getByRole("button", { name: "Plan cannot continue" })).toBeDisabled();
 

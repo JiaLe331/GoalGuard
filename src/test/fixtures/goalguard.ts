@@ -124,13 +124,15 @@ export const fixtureDecision: CouncilDecision = {
   createdAt: "2026-08-31T12:00:00.000Z",
 };
 
+// Two uncertain verdicts: consensus needs a two-thirds majority, so this loses it. A single
+// uncertain verdict is an approval carrying a disclosure and would not be disputed.
 export const fixtureDisputedDecision: CouncilDecision = {
   ...fixtureDecision,
   status: "disputed",
-  approvedReviewCount: 2,
-  uncertainReviewCount: 1,
+  approvedReviewCount: 1,
+  uncertainReviewCount: 2,
   blockedReasons: ["The deadline gap needs clearer disclosure."],
-  reviews: fixtureDecision.reviews.map((item, index) => index === 2 ? { ...item, verdict: "uncertain" as const, concerns: ["The deadline gap needs clearer disclosure."] } : item),
+  reviews: fixtureDecision.reviews.map((item, index) => index === 0 ? item : { ...item, verdict: "uncertain" as const, concerns: ["The deadline gap needs clearer disclosure."] }),
 };
 
 export const fixtureBlockedDecision: CouncilDecision = {

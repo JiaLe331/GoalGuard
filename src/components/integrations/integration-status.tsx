@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import type { IntegrationStatusResponse } from "@/lib/contracts";
+import { goalGuardApi } from "@/lib/frontend/api-client";
 import { Button } from "@/components/ui/button";
 import { StatusBadge, type StatusTone } from "@/components/ui/status-badge";
 
@@ -30,10 +31,8 @@ export function IntegrationStatus({ compact = false }: { compact?: boolean } = {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("/api/integrations/status", { cache: "no-store" });
-      if (!response.ok) throw new Error("GoalGuard could not read integration status.");
-      const payload = (await response.json()) as IntegrationStatusResponse;
-      setData(payload.data);
+      const response = await goalGuardApi.getIntegrationStatus();
+      setData(response.data);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Integration status is unavailable.");
     } finally {

@@ -236,11 +236,14 @@ export const CouncilDecisionSchema = z.object({
   if (counts.approve !== decision.approvedReviewCount || counts.reject !== decision.rejectedReviewCount || counts.uncertain !== decision.uncertainReviewCount) {
     context.addIssue({ code: "custom", message: "Decision counts must match review verdicts." });
   }
-  if (decision.status === "approved" && (counts.approve !== 3 || decision.blockedReasons.length > 0)) {
-    context.addIssue({ code: "custom", message: "Approved decisions require three approvals and no blocked reasons." });
+  // Mirrors councilConsensus (lib/council/rules.ts): a two-thirds majority approves, any
+  // rejection blocks, and a lone dissenter's concern rides along on an approved plan as a
+  // disclosure rather than invalidating it.
+  if (decision.status === "approved" && (counts.approve < 2 || counts.reject > 0)) {
+    context.addIssue({ code: "custom", message: "Approved decisions require at least two approvals and no rejection." });
   }
-  if (decision.status === "disputed" && (counts.uncertain < 1 || counts.reject > 0)) {
-    context.addIssue({ code: "custom", message: "Disputed decisions require uncertainty and no rejection." });
+  if (decision.status === "disputed" && (counts.approve >= 2 || counts.reject > 0)) {
+    context.addIssue({ code: "custom", message: "Disputed decisions require a lost majority and no rejection." });
   }
   if (decision.status === "blocked" && counts.reject === 0 && decision.blockedReasons.length === 0) {
     context.addIssue({ code: "custom", message: "Blocked decisions require a rejection or deterministic blocked reason." });

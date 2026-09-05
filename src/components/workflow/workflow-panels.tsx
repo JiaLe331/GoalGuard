@@ -282,7 +282,7 @@ export function ProtectionPlanPanel({ goal, candidate, alternatives, decision, b
         <div className="p-6 sm:p-9">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap gap-2">
-              <StatusBadge tone={approved ? "ready" : decision.status === "disputed" ? "warning" : "error"} label={approved ? "Approved by 3 checks" : decision.status === "disputed" ? "Review disputed" : "Plan blocked"} />
+              <StatusBadge tone={approved ? "ready" : decision.status === "disputed" ? "warning" : "error"} label={approved ? `Approved by ${decision.approvedReviewCount} of 3 checks` : decision.status === "disputed" ? "Review disputed" : "Plan blocked"} />
               <StatusBadge tone={isPhysical ? "warning" : "info"} label={isPhysical ? "Asset-Delivery Protection" : "Cash Protection"} />
             </div>
             <span className="text-xs text-[color:var(--foreground-soft)] tabular-nums">Market {formatDate(candidate.marketAsOf, { hour: "numeric", minute: "2-digit" })}</span>
@@ -452,10 +452,10 @@ export function DemoPreviewReadyPanel({ goal, preview, meta, decision, onStartAn
         <div className="relative min-h-[22rem] overflow-hidden bg-[var(--surface-strong)] p-6 text-[color:var(--foreground-on-strong)] sm:p-10 min-[700px]:min-h-[24rem]">
           <div data-niulai-copy="demo-ready" className="relative z-10 min-[700px]:max-w-[calc(100%_-_13rem)]">
             <div className="flex flex-wrap gap-2">
-              <StatusBadge label={expired ? "Preview expired" : "Demo preview ready"} tone={expired ? "warning" : "ready"} />
+              <StatusBadge label={expired ? "Preview expired" : "Unsigned preview ready"} tone={expired ? "warning" : "ready"} />
               {proportional ? <StatusBadge label="Proportional micro-hedge demo" tone="warning" /> : null}
             </div>
-            <h1 className="mt-5 text-3xl font-semibold leading-[1.02] tracking-[-0.05em] @[48rem]:text-4xl @[62rem]:text-5xl">Protection Plan Ready <span className="text-[color:var(--accent)]">(Demo)</span></h1>
+            <h1 className="mt-5 text-3xl font-semibold leading-[1.02] tracking-[-0.05em] @[48rem]:text-4xl @[62rem]:text-5xl">Protection Plan Ready <span className="text-[color:var(--accent)]">(Unsigned)</span></h1>
             <p className="mt-4 text-lg font-semibold">No funds moved; no protected position was created</p>
             <p className="mt-2 max-w-3xl text-[color:var(--foreground-on-strong-muted)]">This is a time-limited, unsigned snapshot of the approved plan and wallet requirements.</p>
           </div>
@@ -518,7 +518,7 @@ export function DemoPreviewReadyPanel({ goal, preview, meta, decision, onStartAn
           </dl>
           <Accordion title="All Gonka Request IDs">{decision.reviews.map((review) => <p key={review.id} className="overflow-anywhere mt-2 text-xs text-[color:var(--foreground-soft)] tabular-nums">{roleLabels[review.role]} · {review.requestId}</p>)}</Accordion>
         </Card>
-        <Alert tone={expired ? "warning" : "success"} title={expired ? "Fresh facts required" : "Safe demo boundary"}>{expired ? "This snapshot expired. Return to the approved plan and generate a new one after reconfirming." : "There is no signing action on this screen and no transaction was sent."}</Alert>
+        <Alert tone={expired ? "warning" : "success"} title={expired ? "Fresh facts required" : "Safe preview boundary"}>{expired ? "This snapshot expired. Return to the approved plan and generate a new one after reconfirming." : "There is no signing action on this screen and no transaction was sent."}</Alert>
         <Button className="w-full" onClick={expired ? onFreshPreview : onStartAnother}>{expired ? "Review and generate a fresh preview" : "Start another goal"}<ArrowRight aria-hidden="true" /></Button>
       </aside>
     </div>

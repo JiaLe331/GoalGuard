@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import type { GoalStatus, GoalType } from "@/lib/contracts";
 import { formatDate, formatUsd } from "@/lib/frontend/format";
 import { readRecentGoals, type RecentGoalEntry } from "@/lib/frontend/storage";
+import { withPresentationFlow } from "@/lib/frontend/presentation/flag";
 
 const goalLabels: Record<GoalType, string> = {
   rent: "Rent",
@@ -51,7 +52,7 @@ export function RecentGoalsList({ activeGoalId = null, activeGoalStatus = null }
           return (
             <li key={entry.id}>
               <Link
-                href={`/goals/${entry.id}`}
+                href={withPresentationFlow(`/goals/${entry.id}`)}
                 aria-current={active ? "page" : undefined}
                 data-active={active ? "true" : undefined}
                 title={entryLabel(entry)}
