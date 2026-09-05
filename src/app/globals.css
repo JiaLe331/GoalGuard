@@ -60,6 +60,13 @@ a[href] {
   outline-offset: 3px;
 }
 
+/* Programmatic focus targets (stage/skip-link landing spots) stay focusable so screen readers
+   announce the new content, but must not paint a ring around a whole region the user never
+   navigated to by keyboard. */
+[data-focus-target="programmatic"]:focus-visible {
+  outline: none;
+}
+
 .font-display,
 .font-sans,
 code,
