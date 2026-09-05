@@ -61,6 +61,18 @@ describe("preview-only workflow reducer", () => {
     expect(hydrated.notice).toMatch(/never restored/i);
   });
 
+  it("flags an existing plan as stale when the goal is edited, and clears the flag on fresh results", () => {
+    const reviewed = { ...initialWorkflowState, stage: "plan_approved" as const, goal: fixtureReadyGoal, selectedCandidate: fixtureCandidate, decision: fixtureDecision };
+    const edited = workflowReducer(reviewed, { type: "goal_updated", goal: fixtureReadyGoal });
+    expect(edited.planStale).toBe(true);
+    expect(edited.decision).toBe(fixtureDecision);
+    expect(workflowReducer(edited, { type: "candidates_found", goal: fixtureReadyGoal, candidates: [fixtureCandidate], selected: fixtureCandidate }).planStale).toBe(false);
+  });
+
+  it("does not flag staleness when there was no plan to invalidate", () => {
+    expect(workflowReducer({ ...initialWorkflowState, goal: fixtureGoal }, { type: "goal_updated", goal: fixtureGoal }).planStale).toBe(false);
+  });
+
   it("contains no signing or broadcast stage", () => {
     expect(JSON.stringify(initialWorkflowState)).not.toMatch(/signature|broadcast|approval_signature/);
   });
