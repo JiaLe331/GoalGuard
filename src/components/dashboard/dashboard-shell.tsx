@@ -16,10 +16,10 @@ export function DashboardShell({ left, right, progress, children }: {
 }) {
   return (
     <div className="page-shell py-4 sm:py-6">
-      <div className="grid items-start gap-5 lg:grid-cols-[16rem_minmax(0,1fr)] xl:grid-cols-[16rem_minmax(0,1fr)_22rem]">
+      <div className="grid items-start gap-5 lg:grid-cols-[17rem_minmax(0,1fr)] xl:grid-cols-[17rem_minmax(0,1fr)_23rem]">
         <nav
           aria-label="Goals"
-          className="order-2 min-w-0 lg:order-none lg:sticky lg:top-24 lg:max-h-[calc(100dvh-7.5rem)] lg:overflow-y-auto lg:pb-4"
+          className="order-2 hidden min-w-0 lg:order-none lg:block lg:sticky lg:top-24 lg:max-h-[calc(100dvh-7.5rem)] lg:overflow-y-auto lg:pb-4"
         >
           {left}
         </nav>
