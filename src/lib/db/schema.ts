@@ -34,6 +34,7 @@ export const protectionCandidates = pgTable.withRLS("protection_candidates", {
   source: text("source").notNull(), protocolOrderId: text("protocol_order_id"),
   underlyingAsset: text("underlying_asset").notNull(), optionType: text("option_type").notNull(),
   settlementType: text("settlement_type").notNull(),
+  impliedVolatilityBps: integer("implied_volatility_bps"),
   strikeUsd: text("strike_usd").notNull(), expiry: utcTimestamp("expiry").notNull(),
   settlementTokenAddress: varchar("settlement_token_address", { length: 42 }).notNull(),
   settlementTokenSymbol: varchar("settlement_token_symbol", { length: 16 }).notNull(),
@@ -50,6 +51,7 @@ export const protectionCandidates = pgTable.withRLS("protection_candidates", {
 }, (table) => [
   check("candidates_schema_version_check", sql`${table.schemaVersion} = 1`),
   check("candidates_settlement_type_check", sql`${table.settlementType} IN ('cash', 'physical')`),
+  check("candidates_implied_volatility_check", sql`${table.impliedVolatilityBps} IS NULL OR ${table.impliedVolatilityBps} >= 0`),
   check("candidates_token_decimals_check", sql`${table.settlementTokenDecimals} >= 0 AND ${table.settlementTokenDecimals} <= 255`),
   check("candidates_deadline_gap_check", sql`${table.deadlineGapHours} >= 0`),
   check("candidates_coverage_check", sql`${table.goalCoverageBps} >= 0 AND ${table.goalCoverageBps} <= 10000`),

@@ -111,6 +111,7 @@ describe("API envelopes", () => {
   it("redacts protocolRaw from public candidates and rejects attempts to add it back", () => {
     const { protocolRaw, ...publicFields } = fixtureCandidate;
     void protocolRaw;
+    expect(PublicProtectionCandidateSchema.parse(publicFields)).toMatchObject({ impliedVolatilityBps: 6500 });
     expect(PublicProtectionCandidateSchema.parse(publicFields)).not.toHaveProperty("protocolRaw");
     expect(PublicProtectionCandidateSchema.safeParse(fixtureCandidate).success).toBe(false);
   });

@@ -39,15 +39,27 @@ function client(orders: OrderWithSignature[], previewOverride?: (order: OrderWit
 
 describe("deterministic Thetanuts strategy", () => {
   it("creates a fully covered vanilla ETH put with exact decimal calculations", async () => {
-    const result = await generateProtectionCandidates(goal, { client: client([order(1n)]), now, maxDeadlineGapHours: 168 });
+    const result = await generateProtectionCandidates(goal, { client: client([order(1n, {}, { greeks: { delta: -0.4, iv: 0.65, gamma: 0.01, theta: -0.1, vega: 0.2 } })]), now, maxDeadlineGapHours: 168 });
     expect(result.candidates).toHaveLength(1);
-    expect(result.candidates[0]).toMatchObject({ status: "selected", premiumUsd: "3", quantityUnderlying: "0.4", goalCoverageBps: 10000, coverageMode: "full", estimatedFloorUsd: "1197" });
+    expect(result.candidates[0]).toMatchObject({ status: "selected", premiumUsd: "3", quantityUnderlying: "0.4", goalCoverageBps: 10000, coverageMode: "full", estimatedFloorUsd: "1197", impliedVolatilityBps: 6500 });
     expect(result.candidates[0]!.scenarios.map(({ key }) => key)).toEqual(["down", "flat", "up"]);
+    expect(result.ethSpotUsd).toBe("3000");
+    expect(result.chain).toHaveLength(1);
+    expect(result.chain[0]).toMatchObject({ protocolOrderId: result.candidates[0]!.protocolOrderId, premiumUsd: "3", settlementType: "cash", impliedVolatilityBps: 6500 });
+  });
+
+  it("returns the full ranked viable chain while persisting only the first three", async () => {
+    const result = await generateProtectionCandidates(goal, { client: client([order(21n), order(22n), order(23n), order(24n), order(25n)]), now, maxDeadlineGapHours: 168 });
+    expect(result.candidates).toHaveLength(3);
+    expect(result.candidates.filter(({ status }) => status === "selected")).toHaveLength(1);
+    expect(result.chain).toHaveLength(5);
+    expect(result.chain.map(({ protocolOrderId }) => protocolOrderId)).toEqual(result.chain.slice().sort((a, b) => a.protocolOrderId.localeCompare(b.protocolOrderId)).map(({ protocolOrderId }) => protocolOrderId));
   });
 
   it("rejects orders that make the user sell protection", async () => {
     const result = await generateProtectionCandidates(goal, { client: client([order(2n, { isBuyer: true })]), now, maxDeadlineGapHours: 168 });
     expect(result.candidates).toEqual([]);
+    expect(result.rejected[0]).toMatchObject({ strikeUsd: "3000", expiry: "2026-10-01T00:00:00.000Z", premiumUsd: "3" });
     expect(result.rejected[0]?.reasons).toContain("The order does not let the user buy protection.");
   });
 

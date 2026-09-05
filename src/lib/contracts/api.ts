@@ -93,8 +93,27 @@ export const GenerateCandidatesRequestSchema = z.object({
   coverageMode: CoverageModeSchema.optional(),
 }).strict();
 
+// A small, ephemeral view of every viable order. It deliberately excludes the
+// persistence/audit fields and the raw protocol payload.
+export const ProtectionChainEntrySchema = z.object({
+  protocolOrderId: z.string().trim().min(1),
+  strikeUsd: DecimalStringSchema,
+  expiry: ISODateTimeSchema,
+  premiumUsd: DecimalStringSchema,
+  estimatedFloorUsd: DecimalStringSchema,
+  impliedVolatilityBps: z.number().int().nonnegative().nullable(),
+  goalCoverageBps: z.number().int().min(0).max(10000),
+  settlementType: z.enum(["cash", "physical"]),
+  availableQuantityBaseUnits: BaseUnitStringSchema,
+  settlementTokenSymbol: z.string().trim().min(1).max(16),
+  settlementTokenDecimals: z.number().int().min(0).max(255),
+}).strict();
+
 export const CandidateRejectionSchema = z.object({
   protocolOrderId: z.string().nullable(),
+  strikeUsd: DecimalStringSchema.nullable(),
+  expiry: ISODateTimeSchema.nullable(),
+  premiumUsd: DecimalStringSchema.nullable(),
   reasons: z.array(z.string().trim().min(1)),
 }).strict();
 
@@ -102,8 +121,10 @@ export const GenerateCandidatesResponseSchema = z.object({
   data: z.object({
     goal: GoalSchema,
     candidates: z.array(PublicProtectionCandidateSchema),
+    chain: z.array(ProtectionChainEntrySchema),
     selectedCandidateId: UUIDSchema.nullable(),
     rejected: z.array(CandidateRejectionSchema),
+    ethSpotUsd: DecimalStringSchema,
     marketAsOf: ISODateTimeSchema,
   }).strict(),
   meta: ApiMetaSchema,
@@ -294,6 +315,7 @@ export type UpdateGoalRequest = z.infer<typeof UpdateGoalRequestSchema>;
 export type UpdateGoalResponse = z.infer<typeof UpdateGoalResponseSchema>;
 export type GenerateCandidatesRequest = z.infer<typeof GenerateCandidatesRequestSchema>;
 export type CandidateRejection = z.infer<typeof CandidateRejectionSchema>;
+export type ProtectionChainEntry = z.infer<typeof ProtectionChainEntrySchema>;
 export type GenerateCandidatesResponse = z.infer<typeof GenerateCandidatesResponseSchema>;
 export type ReviewCandidateRequest = z.infer<typeof ReviewCandidateRequestSchema>;
 export type ReviewCandidateResponse = z.infer<typeof ReviewCandidateResponseSchema>;

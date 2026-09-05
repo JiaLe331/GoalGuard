@@ -78,6 +78,9 @@ export const ProtectionCandidateSchema = z.object({
   underlyingAsset: SupportedAssetSchema,
   optionType: OptionTypeSchema,
   settlementType: SettlementTypeSchema,
+  // Thetanuts' option-book Greek is promoted as a curated, integer basis-point
+  // value. The raw order payload remains server-only below.
+  impliedVolatilityBps: z.number().int().nonnegative().nullable(),
   strikeUsd: positiveDecimal,
   expiry: ISODateTimeSchema,
   settlementTokenAddress: EvmAddressSchema,
