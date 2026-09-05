@@ -5,6 +5,7 @@ import { readServerEnvironment } from "@/lib/config/env";
 import { PostgresGoalGuardRepository } from "@/lib/db/repository";
 import { createConfiguredThetanutsClient } from "@/lib/thetanuts/client";
 import { verifySubmittedTrade } from "@/lib/trades/monitor";
+import { captureMarketSnapshot } from "./market-snapshot";
 
 const env = readServerEnvironment();
 if (!env.THETANUTS_RPC_URL) throw new Error("THETANUTS_RPC_URL is required by the trade monitor.");
@@ -29,12 +30,22 @@ async function poll() {
   }
 }
 
+async function snapshotMarket() {
+  try {
+    await repository.saveMarketSnapshot(await captureMarketSnapshot(thetanuts, new Date()));
+  } catch (error) {
+    console.error("Market snapshot failed", error);
+  }
+}
+
 async function run() {
   let nextHeartbeat = 0;
+  let nextMarketSnapshot = 0;
   while (!stopping) {
     const now = Date.now();
     if (now >= nextHeartbeat) { await repository.heartbeat(env.TRADE_WORKER_NAME, instanceId); nextHeartbeat = now + env.TRADE_WORKER_HEARTBEAT_MS; }
     await poll();
+    if (now >= nextMarketSnapshot) { nextMarketSnapshot = now + env.MARKET_SNAPSHOT_MS; await snapshotMarket(); }
     await new Promise<void>((resolve) => setTimeout(resolve, env.TRADE_WORKER_POLL_MS));
   }
 }

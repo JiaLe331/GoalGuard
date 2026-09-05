@@ -1689,6 +1689,14 @@ export interface GenerateCandidatesResponse {
   };
   meta: ApiMeta;
 }
+
+export interface MarketSnapshot {
+  capturedAt: ISODateTime;
+  ethSpotUsd: DecimalString;
+  optionCount: number;
+  medianIvBps: number | null;
+  costPer100Usd30d: DecimalString | null;
+}
 ```
 
 Behavior:

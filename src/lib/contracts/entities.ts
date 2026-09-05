@@ -31,6 +31,7 @@ import {
 } from "./scalars";
 
 const positiveDecimal = DecimalStringSchema.refine((value) => new Decimal(value).greaterThan(0), "Expected a value greater than zero.");
+const nonNegativeDecimal = DecimalStringSchema.refine((value) => new Decimal(value).greaterThanOrEqualTo(0), "Expected a non-negative value.");
 const nonEmptyShortString = z.string().trim().min(1).max(500);
 
 export const GoalSchema = z.object({
@@ -127,6 +128,16 @@ export const ProtectionCandidateSchema = z.object({
 // protocolRaw is deliberately an internal-only persistence field. Public API
 // responses must be built with this schema so upstream payloads cannot leak.
 export const PublicProtectionCandidateSchema = ProtectionCandidateSchema.omit({ protocolRaw: true });
+
+/** Small worker-owned market history; raw order payloads never enter this entity. */
+export const MarketSnapshotSchema = z.object({
+  capturedAt: ISODateTimeSchema,
+  ethSpotUsd: positiveDecimal,
+  optionCount: z.number().int().nonnegative(),
+  medianIvBps: z.number().int().nonnegative().nullable(),
+  costPer100Usd30d: nonNegativeDecimal.nullable(),
+}).strict();
+export type MarketSnapshot = z.infer<typeof MarketSnapshotSchema>;
 
 export const GonkaInferenceSchema = z.object({
   schemaVersion: z.literal(1),
