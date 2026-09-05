@@ -1918,6 +1918,44 @@ Do not create separate frontend-only versions of these entities. Frontend view m
 
 ---
 
+### 17.13 Telegram Companion V1 (P2 optional)
+
+Telegram Companion V1 is an optional notification surface for goals created on the GoalGuard website. The
+website remains authoritative: Telegram cannot create or edit goals, invoke Gonka, choose a strategy, sign,
+submit, broadcast, or execute a trade. Free-form Telegram messages are never forwarded to a model. The
+existing demo-only boundary remains unchanged; `ENABLE_LIVE_THETANUTS_EXECUTION` stays `false`, and the
+workflow still ends at “Protection Plan Ready (Demo)”.
+
+The user links a private Telegram chat once by requesting a ten-minute, single-use HTTPS `t.me` deep link
+from the anonymous GoalGuard browser session and pressing Telegram’s Start button. Only the SHA-256 owner
+session hash is persisted. A link does not authenticate another browser or weaken `/goals/{goalId}` ownership
+checks. A transferred Telegram account revokes its former active connection, and unlinking or blocking the
+bot cancels unsent personalized deliveries. Telegram user IDs, chat IDs, raw updates, link tokens, wallet
+addresses, transaction data, model payloads, and secrets are server-only.
+
+The feature adds `telegram_connections`, `telegram_link_tokens`, `telegram_notification_preferences`,
+`telegram_notification_deliveries`, and `telegram_webhook_updates`. The delivery table is a deduplicated,
+auditable outbox; lifecycle persistence and reminder reconciliation enqueue deterministic, validated payloads.
+The existing Render trade-monitor worker delivers them with leases and bounded retries. Telegram failures
+must not affect the GoalGuard web workflow, trade verification, heartbeat, or market snapshot duties.
+
+The browser API is:
+
+- `GET /api/integrations/telegram/connection` for `unavailable`, `disconnected`, `connected`, `paused`, or
+  `blocked` state;
+- `POST /api/integrations/telegram/link` for a validated browser timezone and a no-store deep link;
+- `PATCH /api/integrations/telegram/preferences` for the complete five-boolean preference object; and
+- `DELETE /api/integrations/telegram/connection` for an idempotent revoke.
+
+The Telegram webhook accepts only validated private-chat text commands. Supported commands are `/start`,
+`/status`, `/goals`, `/alerts`, `/stop`, `/unlink`, and `/help`, including the documented `/alerts` toggles.
+Unknown commands and free-form text receive help and never reach an LLM. Lifecycle messages report only
+authoritative council results, unsigned-preview receipts, and explicitly enabled deadline, selected-option,
+or preview-expiry reminders. They use the exact demo-only and settlement disclosures from this PRD and carry
+at most one allowlisted HTTPS GoalGuard URL button. The complete message catalog, payload allowlist,
+deduplication keys, retry semantics, setup procedure, and acceptance matrix are frozen in
+[docs/telegram-bot-integration-plan.md](docs/telegram-bot-integration-plan.md).
+
 ## 18. Team Ownership
 
 ### Person A — AI / Backend
